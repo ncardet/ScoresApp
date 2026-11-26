@@ -287,10 +287,13 @@ export async function refreshLive(dateKey) {
   notify(dateKey);
 }
 
+/** Auto-refresh is needed while a game is live or about to start (or overdue to start). */
 export function hasLive(dateKey) {
   const day = days.get(dateKey);
   if (!day) return false;
-  return [...day.games.values()].some((g) => g.state === 'in');
+  const soon = Date.now() + 5 * 60e3;
+  return [...day.games.values()].some((g) => g.state === 'in'
+    || (g.state === 'pre' && !g.canceled && new Date(g.start).getTime() < soon && new Date(g.start).getTime() > Date.now() - 3 * 3600e3));
 }
 
 /** Displayed rating for a game: live/final when known, else predicted. */
