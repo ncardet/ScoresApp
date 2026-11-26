@@ -4,6 +4,7 @@
 //
 // Usage:
 //   node scripts/backfill.mjs                       # all leagues, ~220 games each, last 365 days
+//                                                   (2 seasons for UCL/UEL/WSL/NWSL)
 //   node scripts/backfill.mjs --leagues nba,nhl --games 300 --days 400
 //   node scripts/backfill.mjs --leagues f1 --years 2024,2025,2026
 // Behind an HTTPS proxy add NODE_USE_ENV_PROXY=1 (Node >= 22.21).
@@ -29,10 +30,19 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
 }, []));
 const LEAGUE_KEYS = args.leagues ? String(args.leagues).split(',') : LEAGUES.map((l) => l.key);
 const TARGET = +args.games || 220;
-const DAYS = +args.days || 365;
 const CONC = +args.concurrency || 6;
 const OUT = args.out || 'site/data/calibration';
-const MAX_SCOREBOARDS = +args.scoreboards || 160;
+// Weekly sports need every date to find enough games; small competitions need two seasons.
+const LEAGUE_DEFAULTS = {
+  nfl: { scoreboards: 365 },
+  cfb: { scoreboards: 365 },
+  ucl: { days: 730, scoreboards: 500 },
+  uel: { days: 730, scoreboards: 500 },
+  wsl: { days: 730, scoreboards: 500 },
+  nwsl: { days: 730, scoreboards: 500 },
+};
+const daysFor = (key) => +args.days || LEAGUE_DEFAULTS[key]?.days || 365;
+const scoreboardsFor = (key) => +args.scoreboards || LEAGUE_DEFAULTS[key]?.scoreboards || 160;
 
 // Deterministic shuffle so re-runs sample the same games.
 function shuffle(arr, seed = 42) {
@@ -51,6 +61,8 @@ const r4 = (x) => (Number.isFinite(x) ? Math.round(x * 10000) / 10000 : 0);
 async function collectGames(key) {
   const a = ADAPTERS[key];
   const today = todayKey();
+  const DAYS = daysFor(key);
+  const MAX_SCOREBOARDS = scoreboardsFor(key);
   const dates = shuffle(Array.from({ length: DAYS }, (_, i) => addDays(today, -(i + 1))), key.length * 7919);
   const favIds = FAVORITES.filter((f) => f.leagues.includes(key)).map((f) => f.id);
   const games = new Map();
@@ -93,7 +105,7 @@ async function backfillLeague(key) {
     league: key,
     engine: ENGINE_VERSION,
     generated: new Date().toISOString(),
-    window: `last ${DAYS} days to ${todayKey()}`,
+    window: `last ${daysFor(key)} days to ${todayKey()}`,
     n: rows.length,
     sources: { espnWinProbability: espn, fallbackModel: model },
     columns: COMPONENTS,

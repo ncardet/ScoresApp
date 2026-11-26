@@ -1,0 +1,51 @@
+# Morning brief: writes site/data/brief.json + brief.md before 6:45 am Pacific, commits them and
+# redeploys Pages. Cron is UTC, so it is scheduled twice; the script itself exits unless it is
+# 4-9 am in Los Angeles and today's brief is missing (daylight-saving-proof):
+#   12:50 UTC = 4:50 PST / 5:50 PDT   (normal run)
+#   13:50 UTC = 5:50 PST / 6:50 PDT   (backup if the first was delayed or failed)
+# The daily commit also keeps the repo "active", so GitHub never auto-disables this schedule.
+name: Morning brief
+
+on:
+  schedule:
+    - cron: '50 12 * * *'
+    - cron: '50 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: brief
+  cancel-in-progress: false
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    outputs:
+      generated: ${{ steps.build.outputs.generated }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build brief
+        id: build
+        env:
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: node scripts/build-brief.mjs ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
+      - name: Commit brief
+        if: steps.build.outputs.generated == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/data/brief.json site/data/brief.md site/data/ratings
+          git commit -m "Morning brief $(TZ=America/Los_Angeles date +%F)" || exit 0
+          for i in 1 2 3; do git pull --rebase --quiet && git push && break; sleep 5; done
+
+  deploy:
+    needs: brief
+    if: needs.brief.outputs.generated == 'true'
+    uses: ./.github/workflows/deploy.yml

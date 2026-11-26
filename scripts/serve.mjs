@@ -4,6 +4,7 @@
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
+import { writePrecache } from './precache.mjs';
 
 const ROOT = new URL('../site/', import.meta.url).pathname;
 const PORT = +(process.argv[2] || process.env.PORT || 8080);
@@ -12,6 +13,8 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.md': 'text/markdown; charset=utf-8', '.ico': 'image/x-icon',
 };
+
+await writePrecache();
 
 createServer(async (req, res) => {
   try {

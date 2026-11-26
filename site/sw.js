@@ -17,8 +17,20 @@ const CORE = [
   'icons/apple-touch-icon.png',
 ];
 
+// Install: the core shell, then everything listed in precache.json (generated at deploy time),
+// so the app opens offline even right after the first visit.
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(SHELL).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+  event.waitUntil((async () => {
+    const cache = await caches.open(SHELL);
+    await cache.addAll(CORE);
+    try {
+      const res = await fetch('precache.json', { cache: 'no-store' });
+      const { files = [] } = await res.json();
+      // Individually, so one missing file does not abort the install.
+      await Promise.all(files.map((f) => cache.add(f).catch(() => {})));
+    } catch { /* no list: runtime caching fills in */ }
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {

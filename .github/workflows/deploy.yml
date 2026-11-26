@@ -1,0 +1,46 @@
+# Deploy site/ to GitHub Pages. Runs on every push to main, on demand, and is called by the
+# morning-brief and backfill workflows after they commit new data.
+# One-time setup: Settings -> Pages -> Source: "GitHub Actions".
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Callers may have just pushed a data commit: deploy the latest main, not the trigger SHA.
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests (rating maths on saved games, no network)
+        run: npm test
+      - name: Offline file list + service worker build stamp
+        run: |
+          node scripts/precache.mjs
+          sed -i "s/__BUILD__/${GITHUB_SHA::12}-${GITHUB_RUN_NUMBER}/" site/sw.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,48 @@
+# Re-score past games to refresh the rating calibration (site/data/calibration/*.json).
+# Run by hand once a season, or after changing the rating maths (not needed for weight changes).
+name: Recalibrate ratings
+
+on:
+  workflow_dispatch:
+    inputs:
+      leagues:
+        description: 'Comma-separated league keys (blank = all)'
+        required: false
+        default: ''
+      games:
+        description: 'Games per league'
+        required: false
+        default: '220'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Backfill
+        run: |
+          ARGS="--games ${{ inputs.games }}"
+          if [ -n "${{ inputs.leagues }}" ]; then ARGS="$ARGS --leagues ${{ inputs.leagues }}"; fi
+          node scripts/backfill.mjs $ARGS
+      - name: Tests still pass with the new calibration
+        run: npm test
+      - name: Commit calibration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/data/calibration
+          git commit -m "Recalibrate ratings $(date +%F)" || exit 0
+          git push
+
+  deploy:
+    needs: backfill
+    uses: ./.github/workflows/deploy.yml

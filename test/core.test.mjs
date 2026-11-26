@@ -75,3 +75,18 @@ test('odds become vig-free probabilities', () => {
   const soccer = parseOdds([{ moneyline: { home: { close: { odds: '+150' } }, away: { close: { odds: '+170' } } }, drawOdds: { moneyLine: 230 } }], 'soccer');
   assert.ok(Math.abs(soccer.home + soccer.away + soccer.draw - 1) < 1e-9);
 });
+
+test('morning brief gate is daylight-saving-proof', async () => {
+  const { shouldRun } = await import('../scripts/build-brief.mjs');
+  const none = '/nonexistent/brief.json';
+  // Winter (PST, UTC-8): 12:50 UTC = 4:50 am -> run; 13:50 UTC = 5:50 am -> run (backup).
+  assert.equal((await shouldRun(new Date('2026-12-10T12:50:00Z'), none)).run, true);
+  assert.equal((await shouldRun(new Date('2026-12-10T13:50:00Z'), none)).run, true);
+  // Summer (PDT, UTC-7): 12:50 UTC = 5:50 am -> run; 13:50 UTC = 6:50 am -> run.
+  assert.equal((await shouldRun(new Date('2026-07-10T12:50:00Z'), none)).run, true);
+  assert.equal((await shouldRun(new Date('2026-07-10T13:50:00Z'), none)).run, true);
+  // Afternoon in LA -> skip.
+  assert.equal((await shouldRun(new Date('2026-07-10T21:00:00Z'), none)).run, false);
+  // Night before (11 pm PT) -> skip.
+  assert.equal((await shouldRun(new Date('2026-07-11T06:00:00Z'), none)).run, false);
+});

@@ -87,7 +87,8 @@ export function homeView(root, params = {}) {
     const st = dataStatus(dateKey);
     clear(bannerEl);
     const updating = day.loading && day.games.size > 0;
-    const anyStale = st.errors.length > 0 && st.at;
+    // Stale = a league failed outright or was served from the offline copy.
+    const anyStale = !day.loading && (st.errors.length > 0 || [...day.leagues.values()].some((x) => x.stale)) && st.at;
     if (anyStale) {
       bannerEl.append(h('div', { class: 'banner', role: 'status' },
         `Couldn't reach ESPN; showing data from ${formatClock(st.at)}.`));

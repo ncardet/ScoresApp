@@ -136,7 +136,7 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
   const sideBits = [
     showLeague ? h('div', { class: 'league-tag' }, lg.short) : null,
     h('div', { class: `status ${st.cls}` }, st.text),
-    w.status !== 'unknown' && game.state !== 'post' ? h('div', { class: `watch${w.status === 'none' ? ' none' : ''}` }, w.short) : null,
+    w.status !== 'unknown' ? h('div', { class: `watch${w.status === 'none' ? ' none' : ''}` }, w.short) : null,
   ];
   if (game.sport === 'racing') {
     const podium = game.state === 'post' && game.drivers?.length
