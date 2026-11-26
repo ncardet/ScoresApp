@@ -57,7 +57,7 @@ export function parseStatus(st = {}) {
     clockSec: typeof st.clock === 'number' ? st.clock : null,
     detail: type.shortDetail || type.detail || type.description || '',
     description: type.description || '',
-    name,
+    statusName: name,
   };
 }
 

@@ -85,16 +85,29 @@ export function espnLeague(key, overrides = {}) {
       return Object.keys(home).length || Object.keys(away).length ? { home, away } : null;
     },
 
+    /** All teams in the league (for adding favorites). */
+    async teams() {
+      const res = await getJson(`${base}/teams?limit=1000`, { persist: true });
+      const list = res.json?.sports?.[0]?.leagues?.[0]?.teams || [];
+      return list.map(({ team: t }) => ({
+        id: String(t.id),
+        name: t.displayName,
+        short: t.shortDisplayName || t.name,
+        abbr: t.abbreviation,
+        logo: t.logos?.[0]?.href || '',
+      })).sort((a, b) => a.name.localeCompare(b.name));
+    },
+
     async standings(ctx = {}) {
       const res = await getJson(adapter.urls.standings(ctx.params || ''), { persist: true });
-      const parsed = parseStandings(res.json, { college: !!lg.college });
+      const parsed = parseStandings(res.json);
       // Some leagues roll over to next season before it starts (e.g. MLS in November):
       // if nobody has played yet, show the previous season instead.
       const played = parsed.groups.some((g) => g.rows.some((r) => (r.stats.gamesPlayed?.v || r.stats.wins?.v || 0) > 0));
       if (!played && !ctx.params && parsed.seasonYear) {
         const prev = await getJson(adapter.urls.standings(`?season=${parsed.seasonYear - 1}`), { persist: true }).catch(() => null);
         if (prev?.json) {
-          const p = parseStandings(prev.json, { college: !!lg.college });
+          const p = parseStandings(prev.json);
           if (p.groups.length) return { ...p, at: prev.at, stale: prev.stale };
         }
       }

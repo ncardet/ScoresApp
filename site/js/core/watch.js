@@ -3,6 +3,13 @@
 import { NETWORKS, ALIASES, SERVICE_SHORT } from '../../config/services.js';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9+]/g, '');
+
+// Compact network names for the game rows (display only).
+const NETWORK_SHORT = {
+  'CBS Sports Network': 'CBSSN', 'Big Ten Network': 'BTN', 'USA Network': 'USA', 'ESPN Deportes': 'ESPN Dep',
+  'Golf Channel': 'Golf', 'NFL Network': 'NFLN', 'NFL RedZone': 'RedZone', 'MLB Network': 'MLBN', 'NHL Network': 'NHLN',
+  'SEC Network': 'SECN', 'ACC Network': 'ACCN', 'CBS Sports Golazo Network': 'Golazo', 'FOX Deportes': 'FOX Dep',
+};
 const aliasMap = new Map(Object.entries(ALIASES).map(([k, v]) => [norm(k), v]));
 const netMap = new Map(Object.entries(NETWORKS).map(([k, v]) => [norm(k), { name: k, services: v }]));
 
@@ -43,6 +50,7 @@ export function whereToWatch(broadcasts, myServices) {
   const svc = (s) => SERVICE_SHORT[s] || s;
   const sameName = first.services.length === 1 && norm(first.services[0]) === norm(first.network);
   const label = sameName ? first.network : `${first.network} · ${first.services.join(' / ')}`;
-  const short = sameName ? svc(first.network) : `${first.network} · ${first.services.map(svc).join('/')}`;
+  const net = NETWORK_SHORT[first.network] || first.network;
+  const short = sameName ? svc(first.network) : `${net} · ${first.services.map(svc).join('/')}`;
   return { status: 'ok', options, label, short };
 }

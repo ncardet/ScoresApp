@@ -42,6 +42,11 @@ export function clear(el) {
   return el;
 }
 
+/** Replace an element's children (arrays are flattened, unlike Element.append). */
+export function fill(el, ...children) {
+  return append(clear(el), children);
+}
+
 const ICONS = {
   back: '<path d="M15 18l-6-6 6-6"/>',
   left: '<path d="M15 18l-6-6 6-6"/>',

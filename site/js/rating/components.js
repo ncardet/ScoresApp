@@ -206,7 +206,7 @@ export function novelty(tl, detail, result) {
   }
   if (lg.sport === 'soccer') {
     const ke = detail.soccer?.keyEvents || [];
-    const et = /AET|PEN|extra/i.test(`${game.detail} ${game.name || ''} ${game.statusName || ''}`) || ke.some((k) => k.period >= 3) || game.period >= 3;
+    const et = /AET|PEN|extra/i.test(`${game.detail} ${game.statusName || ''}`) || ke.some((k) => k.period >= 3) || game.period >= 3;
     const pens = /PEN|penalt/i.test(game.detail || '') || ke.some((k) => k.shootout) || game.home?.shootout != null;
     if (et) add('overtime', N.overtime, 'Extra time');
     if (pens) add('penalties', N.penalties, 'Penalty shootout');

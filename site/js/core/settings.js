@@ -31,6 +31,7 @@ export function getSettings() {
     favorites: Array.isArray(saved.favorites) ? saved.favorites : FAVORITES.map((f) => ({ ...f })),
     services: Array.isArray(saved.services) ? saved.services : [...MY_SERVICES],
     hiddenLeagues: Array.isArray(saved.hiddenLeagues) ? saved.hiddenLeagues : [],
+    pinFavorites: saved.pinFavorites !== false,
     customized: !!(saved.favorites || saved.services),
   };
   return cache;

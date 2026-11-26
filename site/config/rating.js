@@ -60,7 +60,8 @@ export default {
   bigComebackPoints: { basketball: 15, football: 17 },
 
   // Live: rating = (1 - a) * predicted + a * in-game, a = progress ^ gamma (progress 0..1).
-  live: { gamma: 0.7 },
+  // gamma 1.2: in-game evidence weighs ~18% a quarter of the way in, ~43% at half, ~77% at 80%.
+  live: { gamma: 1.2 },
 
   // Pre-game prediction.
   prior: {

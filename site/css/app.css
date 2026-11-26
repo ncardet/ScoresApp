@@ -162,9 +162,10 @@ img { display: block; }
 /* ---------- game row ---------- */
 .game-row {
   display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center;
-  padding: 12px 14px; width: 100%; text-align: left; position: relative;
+  padding: 12px 14px; width: 100%; text-align: left; position: relative; color: var(--text);
   -webkit-tap-highlight-color: transparent;
 }
+a.game-row:visited { color: var(--text); }
 .game-row:active { background: var(--card-2); }
 .teams { display: grid; gap: 6px; min-width: 0; }
 .team-line { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 8px; min-width: 0; }
@@ -368,7 +369,7 @@ input[type="search"], select.input {
   backdrop-filter: saturate(180%) blur(20px);
   border-top: 0.5px solid var(--line);
 }
-.tab { display: grid; justify-items: center; gap: 2px; font-size: 10px; font-weight: 600; color: var(--text-3); padding: 2px 16px; }
+.tab { display: grid; text-decoration: none; justify-items: center; gap: 2px; font-size: 10px; font-weight: 600; color: var(--text-3); padding: 2px 16px; }
 .tab svg { width: 26px; height: 26px; }
 .tab[aria-current="page"] { color: var(--accent); }
 

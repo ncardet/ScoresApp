@@ -1,27 +1,25 @@
 // ESPN standings JSON -> { season, groups: [{ name, abbr, rows: [{ team, stats, note }] }] }.
-// `stats` is keyed by ESPN stat name; each value is { v: number|null, d: displayValue, a: abbreviation }.
-// College standings repeat stat names per split (conference / overall); the first occurrence
-// of a name is the conference split and is stored under `conf:` + name, the second as plain name.
+// `stats` is keyed by ESPN stat name (first occurrence) and also by `t:<type>`, because college
+// standings repeat names per split (overall / home / road / conference) and only `type` is unique.
+// Each value is { v: number|null, d: displayValue, a: abbreviation }.
 
 import { parseTeam } from './parse.js';
 
-function statsMap(entry, college) {
+function statsMap(entry) {
   const map = {};
   for (const s of entry.stats || []) {
-    const name = s.name || s.type;
-    if (!name) continue;
-    const val = { v: typeof s.value === 'number' ? s.value : (s.value != null ? +s.value : null), d: s.displayValue ?? s.summary ?? '', a: s.abbreviation || s.shortDisplayName || '' };
-    if (college && map[name] && !map[`conf:${name}`]) {
-      map[`conf:${name}`] = map[name];
-      map[name] = val;
-    } else if (!map[name]) {
-      map[name] = val;
-    }
+    const val = {
+      v: typeof s.value === 'number' ? s.value : (s.value != null && s.value !== '' ? +s.value : null),
+      d: s.displayValue ?? s.summary ?? '',
+      a: s.abbreviation || s.shortDisplayName || '',
+    };
+    if (s.name && !(s.name in map)) map[s.name] = val;
+    if (s.type) map[`t:${s.type}`] = val;
   }
   return map;
 }
 
-export function parseStandings(json, { college = false } = {}) {
+export function parseStandings(json) {
   const groups = [];
   const walk = (node, path) => {
     if (!node) return;
@@ -33,7 +31,7 @@ export function parseStandings(json, { college = false } = {}) {
         path: [...path, name].filter(Boolean),
         rows: node.standings.entries.map((e) => ({
           team: e.team ? parseTeam({ team: e.team }) : athleteTeam(e),
-          stats: statsMap(e, college),
+          stats: statsMap(e),
           note: e.note ? { text: e.note.description || '', color: e.note.color || '', rank: e.note.rank } : null,
         })),
       });

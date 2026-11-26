@@ -157,9 +157,10 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
   },
     fav ? h('span', { class: 'fav-flag', 'aria-hidden': 'true' }) : null,
     badge(rating, { pending }),
-    h('div', { class: 'teams' },
-      teamLine(game.away, game, game.home, fav),
-      teamLine(game.home, game, game.away, fav)),
+    // Soccer lists the home side first (European convention); US sports list away @ home.
+    h('div', { class: 'teams' }, game.sport === 'soccer'
+      ? [teamLine(game.home, game, game.away, fav), teamLine(game.away, game, game.home, fav)]
+      : [teamLine(game.away, game, game.home, fav), teamLine(game.home, game, game.away, fav)]),
     h('div', { class: 'row-side' }, sideBits),
   );
 }
