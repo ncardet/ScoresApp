@@ -10,7 +10,7 @@
 import RATING from '../../config/rating.js';
 import { normCdf } from './wp.js';
 
-export const COMPONENTS = ['swing', 'closeness', 'leadChanges', 'comeback', 'novelty', 'pace', 'stakes'];
+export const COMPONENTS = ['swing', 'closeness', 'leadChanges', 'comeback', 'novelty', 'pace', 'stakes', 'quality'];
 export const F1_COMPONENTS = ['leadChanges', 'overtakes', 'finalGap', 'incidents', 'stakes'];
 const SCALED = ['swing', 'leadChanges', 'pace'];
 const F1_SCALED = ['leadChanges', 'overtakes'];
@@ -53,16 +53,24 @@ export function curveValue(p, curve = RATING.curve) {
   return curve[curve.length - 1][1];
 }
 
+/**
+ * Normalise raw components to 0..1. Stakes only amplify a game that was actually competitive:
+ * the stakes component is scaled by sqrt(competitiveness), the best of closeness, swing,
+ * lead changes and (late) comeback, so a blowout final gets little credit for being a final.
+ */
 export function normalize(raw, scales) {
-  return {
+  const n = {
     swing: clamp01(raw.swing / scales.swing),
     closeness: clamp01(raw.closeness),
     leadChanges: clamp01(raw.leadChanges / scales.leadChanges),
     comeback: clamp01(raw.comeback),
     novelty: clamp01(raw.novelty),
     pace: clamp01(raw.pace / scales.pace),
-    stakes: clamp01(raw.stakes),
   };
+  const comp = Math.max(n.closeness, n.swing, n.leadChanges, n.comeback);
+  n.stakes = clamp01(raw.stakes) * Math.sqrt(comp);
+  n.quality = clamp01(raw.quality ?? 0.5);
+  return n;
 }
 
 export function weighted(norm, weights) {
@@ -93,7 +101,11 @@ export function prepareCalibration(file, league) {
   const empty = { league, n: 0, scales: { ...defaults }, finals: null, prior: null, generated: null };
   if (!file?.rows?.length) return empty;
   const cols = file.columns || (isF1 ? F1_COMPONENTS : COMPONENTS);
-  const rows = file.rows.map((r) => Object.fromEntries(cols.map((c, i) => [c, r[i]])));
+  const rows = file.rows.map((r) => {
+    const o = Object.fromEntries(cols.map((c, i) => [c, r[i]]));
+    if (!isF1 && o.quality == null) o.quality = 0.5;
+    return o;
+  });
   const scales = { ...defaults };
   for (const k of isF1 ? F1_SCALED : SCALED) {
     const v = quantile(rows.map((r) => r[k]).filter(Number.isFinite).sort(asc), 0.95);

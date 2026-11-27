@@ -1,0 +1,58 @@
+slug,league,date,team1,team2,score1,score2,espn_id,band,note
+nfl-2022-bills-chiefs-divisional,nfl,2022-01-23,Chiefs,Bills,42,36,,G95,AFC Divisional OT
+nfl-2023-super-bowl-lvii,nfl,2023-02-12,Chiefs,Eagles,38,35,,G,Super Bowl LVII
+nfl-2024-super-bowl-lviii,nfl,2024-02-11,Chiefs,49ers,25,22,,G,Super Bowl LVIII OT
+nfl-2025-afc-championship,nfl,2025-01-26,Chiefs,Bills,32,29,,G,AFC Championship
+nfl-2025-bills-ravens-divisional,nfl,2025-01-19,Bills,Ravens,27,25,,G,AFC Divisional
+nfl-2024-bengals-ravens,nfl,2024-11-07,Ravens,Bengals,35,34,,G,TNF
+nfl-2024-ravens-bengals-ot,nfl,2024-10-06,Ravens,Bengals,41,38,,G,OT
+nfl-2025-ravens-bills,nfl,2025-09-07,Bills,Ravens,41,40,,G,SNF
+nfl-2023-giants-jets-ot,nfl,2023-10-29,Jets,Giants,13,10,,GOOD,edge: low-quality OT game should be Good not Great
+nfl-2025-super-bowl-lix,nfl,2025-02-09,Eagles,Chiefs,40,22,,D,Super Bowl LIX blowout
+nfl-2026-super-bowl-lx,nfl,2026-02-08,Seahawks,Patriots,29,13,,DOK,Super Bowl LX
+cfb-2023-cotton-bowl,cfb,2023-01-02,Tulane,USC,46,45,,G,Cotton Bowl
+cfb-2022-usc-ucla,cfb,2022-11-19,USC,UCLA,48,45,,G,Rivalry
+cfb-2024-psu-usc-ot,cfb,2024-10-12,Penn State,USC,33,30,,G,OT
+cfb-2022-peach-bowl,cfb,2022-12-31,Georgia,Ohio State,42,41,,G,CFP semifinal
+cfb-2023-cfp-championship,cfb,2023-01-09,Georgia,TCU,65,7,,D,CFP title blowout
+cfb-2022-pac12-championship,cfb,2022-12-02,Utah,USC,47,24,,D,Pac-12 title game
+cfb-2023-usc-notre-dame,cfb,2023-10-14,Notre Dame,USC,48,20,,D,
+nba-2025-ecf-g1,nba,2025-05-21,Pacers,Knicks,138,135,401772989,G,OT
+nba-2025-r2-g2-ind-cle,nba,2025-05-06,Pacers,Cavaliers,120,119,401769740,G,
+nba-2025-r1-g5-mil-ind,nba,2025-04-29,Pacers,Bucks,119,118,401768050,G,OT
+nba-2025-finals-g7,nba,2025-06-22,Thunder,Pacers,103,91,401766128,GOOD,edge: Game 7 but decided late
+nba-2021-okc-mem-blowout,nba,2021-12-02,Grizzlies,Thunder,152,79,401360154,D,floor
+nba-2025-r1-g1-mem-okc,nba,2025-04-20,Thunder,Grizzlies,131,80,401767818,D,
+nba-2025-finals-g6,nba,2025-06-19,Pacers,Thunder,108,91,401766127,D,
+mcbb-2023-final-four-sdsu-fau,mcbb,2023-04-01,San Diego State,Florida Atlantic,72,71,,G,buzzer-beater
+mcbb-2023-fdu-purdue,mcbb,2023-03-17,Fairleigh Dickinson,Purdue,63,58,,G,16 over 1
+mcbb-2022-saint-peters-kentucky,mcbb,2022-03-17,Saint Peter's,Kentucky,85,79,,G,OT upset
+mcbb-2025-championship,mcbb,2025-04-07,Florida,Houston,65,63,,G,title game
+mcbb-2023-championship,mcbb,2023-04-03,UConn,San Diego State,76,59,,D,
+wcbb-2025-ucla-usc,wcbb,2025-02-13,USC,UCLA,71,60,,G,rivalry
+wcbb-2024-usc-uconn,wcbb,2024-12-21,USC,UConn,72,70,401703051,G,
+mlb-2025-ws-g7,mlb,2025-11-01,Dodgers,Blue Jays,5,4,,G95,11 innings
+mlb-2025-ws-g3,mlb,2025-10-27,Dodgers,Blue Jays,6,5,,G,18 innings
+mlb-2024-ws-g1,mlb,2024-10-25,Dodgers,Yankees,6,3,,G,10 innings walk-off grand slam
+nhl-2024-scf-g7,nhl,2024-06-24,Panthers,Oilers,2,1,401675111,G,
+nhl-2025-r1-g7-wpg-stl,nhl,2025-05-04,Jets,Blues,4,3,401768160,G,2OT
+nhl-2025-r1-g7-dal-col,nhl,2025-05-03,Stars,Avalanche,4,2,401768166,G,
+nhl-2025-r2-g7-fla-tor,nhl,2025-05-18,Panthers,Maple Leafs,6,1,401769949,D,
+nhl-2025-r2-g5-fla-tor,nhl,2025-05-14,Panthers,Maple Leafs,6,1,401769946,D,
+epl-2023-chelsea-city,epl,2023-11-12,Chelsea,Manchester City,4,4,,G,
+epl-2024-bournemouth-luton,epl,2024-03-13,Bournemouth,Luton,4,3,,G,
+epl-2023-sheffield-newcastle,epl,2023-09-24,Newcastle,Sheffield,8,0,,DOK,edge: high-scoring blowout
+ucl-2025-inter-barcelona,ucl,2025-05-06,Internazionale,Barcelona,4,3,,G95,aet
+ucl-2022-madrid-city,ucl,2022-05-04,Real Madrid,Manchester City,3,1,,G,aet
+ucl-2025-final,ucl,2025-05-31,Paris Saint-Germain,Internazionale,5,0,,D,
+uel-2025-final,uel,2025-05-21,Tottenham,Manchester United,1,0,,D,
+mls-2022-mls-cup,mls,2022-11-05,LAFC,Philadelphia,3,3,655997,G95,LAFC on penalties
+nwsl-2025-championship,nwsl,2025-11-22,Gotham,Washington,1,0,,GOOD,edge: tension without goals
+wsl-2024-manutd-chelsea,wsl,2024-05-18,Chelsea,Manchester United,6,0,,OKMAX,edge: must not exceed 64
+f1-2024-sao-paulo,f1,2024-11-03,Sao Paulo,,,,,G,
+f1-2024-canada,f1,2024-06-09,Montr,,,,,G,
+f1-2025-australia,f1,2025-03-16,Melbourne,,,,,G,
+f1-2021-belgium,f1,2021-08-29,Spa,,,,,D,floor (no OpenF1 data before 2023)
+f1-2024-monaco,f1,2024-05-26,Monaco,,,,,D,
+f1-2025-monaco,f1,2025-05-25,Monaco,,,,,D,
+f1-2025-abu-dhabi,f1,2025-12-07,Yas,,,,,OK,edge: stakes no racing

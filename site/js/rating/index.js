@@ -80,17 +80,36 @@ export function measure(detail) {
     marginNow: lastScore.hs - lastScore.as,
     scores: scoresNow.length,
   };
-  m.raw = {
-    swing: m.swing.raw,
-    closeness: m.closeness.raw,
-    leadChanges: m.leadChanges.raw,
-    comeback: m.comeback.raw,
-    novelty: m.novelty.raw,
-    pace: m.pace.raw,
-    stakes: m.stakes,
+  // Compact measurements: everything the components are derived from (cached by the backfill).
+  m.base = {
+    sw: m.swing.raw, cl: m.closeness.raw, lc: m.leadChanges.raw,
+    cb: m.comeback.raw, cbT: m.timeline.final ? m.comeback.t : 1,
+    nv: m.novelty.raw, pc: m.pace.raw,
+    st: ctx.stakes, riv: ctx.rivalry, rk: ctx.ranked, q: ctx.quality,
   };
+  m.raw = componentsFrom(m.base);
   m.priorRaw = priorRaw(ctx, game);
   return m;
+}
+
+/**
+ * Raw component values from base measurements (see config/rating.js for the knobs):
+ *   comeback  weighted by how late the winner's deepest hole came
+ *   stakes    playoffs + rivalry + ranked matchup (scaled by competitiveness in normalize())
+ *   quality   team quality from records / AP ranks (0.5 = average)
+ */
+export function componentsFrom(b) {
+  const lateW = RATING.comebackLateness ?? 0.65;
+  return {
+    swing: b.sw,
+    closeness: b.cl,
+    leadChanges: b.lc,
+    comeback: b.cb * (1 - lateW + lateW * Math.min(1, Math.max(0, b.cbT ?? 1))),
+    novelty: b.nv,
+    pace: b.pc,
+    stakes: Math.min(1, (b.st || 0) + 0.3 * (b.riv || 0) + 0.3 * (b.rk || 0)),
+    quality: b.q ?? 0.5,
+  };
 }
 
 /**

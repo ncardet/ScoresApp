@@ -21,6 +21,7 @@ export function parseTeam(c = {}) {
   return {
     id: String(t.id ?? c.id ?? ''),
     abbr: t.abbreviation || '',
+    conferenceId: t.conferenceId != null ? String(t.conferenceId) : null,
     name: t.displayName || t.name || '',
     short: t.shortDisplayName || t.nickname || t.name || t.abbreviation || '',
     location: t.location || '',

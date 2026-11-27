@@ -143,13 +143,14 @@ export function comeback(points, scores, progress, final, result) {
     const d = last.hs - last.as;
     sides = d > 0 ? ['home'] : d < 0 ? ['away'] : ['home', 'away'];
   }
-  let best = { raw: 0, minWp: 0.5, side: null, deficit: 0 };
+  let best = { raw: 0, minWp: 0.5, side: null, deficit: 0, t: 0 };
   for (const side of sides) {
     let minWp = 1;
+    let tMin = 0;
     for (const p of points) {
       if (p.t > progress + 1e-9) break;
       const v = side === 'home' ? p.wp : 1 - p.wp;
-      if (v < minWp) minWp = v;
+      if (v < minWp) { minWp = v; tMin = p.t; }
     }
     let deficit = 0;
     for (const s of scores) {
@@ -158,7 +159,8 @@ export function comeback(points, scores, progress, final, result) {
       if (d > deficit) deficit = d;
     }
     const raw = clamp01((0.5 - minWp) / 0.45);
-    if (raw > best.raw || (raw === best.raw && deficit > best.deficit)) best = { raw, minWp, side, deficit };
+    // t = when the winner (leader) was in the deepest hole: late comebacks matter more.
+    if (raw > best.raw || (raw === best.raw && deficit > best.deficit)) best = { raw, minWp, side, deficit, t: tMin };
   }
   return best;
 }

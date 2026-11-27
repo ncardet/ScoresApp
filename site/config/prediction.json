@@ -1,0 +1,162 @@
+{
+  "_doc": "Pre-game prediction settings. All point values, thresholds, base rates and k live here. Starting values from the spec; scripts/backtest.mjs rewrites the `fitted` block and the base rates / ranges after each backtest (see DECISIONS.md).",
+  "version": 1,
+  "k": 0.8,
+  "clip": [5, 98],
+
+  "base": {
+    "nfl": { "regular": 55, "playoff": 58 },
+    "cfb": { "regular": 45, "playoff": 55 },
+    "nba": { "regular": 45, "playoff": 55 },
+    "mcbb": { "regular": 48, "playoff": 55 },
+    "wcbb": { "regular": 48, "playoff": 55 },
+    "mlb": { "regular": 48, "playoff": 56 },
+    "nhl": { "regular": 52, "playoff": 58 },
+    "epl": { "regular": 48, "playoff": 54 },
+    "mls": { "regular": 48, "playoff": 54 },
+    "nwsl": { "regular": 48, "playoff": 54 },
+    "wsl": { "regular": 48, "playoff": 54 },
+    "ucl": { "regular": 48, "playoff": 54 },
+    "uel": { "regular": 48, "playoff": 54 },
+    "f1": { "regular": 50, "playoff": 50 }
+  },
+
+  "range": {
+    "_doc": "Half-width of the likely (25th-75th percentile) range before the backtest: with market odds / Elo only. Replaced per league by backtest residual quantiles in `fitted`.",
+    "withOdds": 10,
+    "eloOnly": 14,
+    "horizonMultiplier": { "prediction": 1.0, "forecast": 1.2, "early": 1.5 }
+  },
+
+  "horizons": [
+    { "key": "prediction", "label": "Prediction", "maxDays": 2 },
+    { "key": "forecast", "label": "Forecast", "maxDays": 7 },
+    { "key": "early", "label": "Early look", "maxDays": 14, "roundTo": 5 }
+  ],
+
+  "great": 85,
+  "dull": 40,
+
+  "quality": { "max": 6, "bottomQuartileBoth": -2 },
+  "importance": { "max": 10, "deadRubber": -5, "scale": 25 },
+  "narrative": { "cap": 5, "rivalry": 4, "nationalTv": 1, "primetime": 1, "divisionGame": 2 },
+  "availability": { "min": -6, "lineDiscount": 0.5 },
+  "blowoutGuard": { "closenessAtOrBelow": -7, "stakesNarrativeCap": 4 },
+
+  "priority": { "favorite": 5, "starMax": 4 },
+
+  "sports": {
+    "nfl": {
+      "spread": [[3, 8], [6.5, 3], [9.5, -2], [13.5, -7], [999, -12]],
+      "total": { "high": 50, "highPts": 3, "low": 38, "lowPts": -3 },
+      "playoffSwing": [[40, 10], [20, 6], [10, 3]],
+      "bothEliminated": -5,
+      "postseason": { "wildcard": 8, "divisional": 10, "conference": 12, "superbowl": 12 },
+      "qbOut": -4,
+      "division": 2,
+      "primetime": 1,
+      "weather": { "windMph": 20, "snow": true, "points": -2 }
+    },
+    "cfb": {
+      "spread": [[3, 8], [7, 4], [14, -2], [21, -7], [999, -12]],
+      "rankedBoth": 5,
+      "rankedTop10": 8,
+      "stakes": { "cfp": 8, "conferenceTitle": 6 },
+      "rivalry": 4,
+      "total": { "high": 60, "highPts": 2 }
+    },
+    "nba": {
+      "spread": [[3, 8], [6.5, 4], [9.5, 0], [12.5, -6], [999, -12]],
+      "starOut": [-3, -6],
+      "styleRange": [-2, 3],
+      "seedingLeverage": 8,
+      "playoffs": { "tied": 5, "elimination": 8, "game7": 12 },
+      "total": { "high": 235, "highPts": 2 }
+    },
+    "mcbb": {
+      "spread": [[3, 8], [6.5, 4], [11.5, -2], [17.5, -7], [999, -12]],
+      "rankedBoth": 4,
+      "rankedTop10": 7,
+      "tournament": { "first": 6, "second": 8, "sweet16": 10, "elite8": 12 },
+      "closeSeeds": [[8, 9], [7, 10], [5, 12]],
+      "raceStakes": [3, 6]
+    },
+    "wcbb": {
+      "spread": [[3, 8], [6.5, 4], [11.5, -2], [17.5, -7], [999, -12]],
+      "rankedBoth": 4,
+      "rankedTop10": 7,
+      "tournament": { "first": 6, "second": 8, "sweet16": 10, "elite8": 12 },
+      "closeSeeds": [[8, 9], [7, 10], [5, 12]],
+      "raceStakes": [3, 6]
+    },
+    "mlb": {
+      "moneyline": [[0.55, 5], [0.62, 1], [0.68, -2], [1, -5]],
+      "aces": 4,
+      "aceEra": 3.25,
+      "bullpenGame": -1,
+      "totalMax": 1,
+      "raceSwing": 8,
+      "postseason": { "elimination": 10, "winnerTakeAll": 12 }
+    },
+    "nhl": {
+      "moneyline": [[0.55, 4], [0.62, 1], [0.68, -2], [1, -5]],
+      "goalie": 2,
+      "raceSwing": 8,
+      "playoffs": { "elimination": 8, "game7": 12 },
+      "rivalry": 2
+    },
+    "soccer": {
+      "gap": [[0.15, 8], [0.35, 3], [0.55, -3], [1, -10]],
+      "boringDraw": { "pDraw": 0.3, "total": 2.25, "points": -3 },
+      "goalsLine": { "high": 3.0, "highPts": 3, "low": 2.25, "lowPts": -2 },
+      "secondLeg": { "level": 10, "twoGoals": 2, "threePlus": -8 },
+      "tableLeverage": 10,
+      "knockout": { "min": 6, "final": 12 },
+      "derby": 4,
+      "starsPriorityOnly": [2, 5]
+    },
+    "f1": {
+      "circuitAverageDefault": 6.5,
+      "circuitScale": 4,
+      "circuitClip": 6,
+      "circuitOverride": { "Monaco": -6, "Suzuka": -6 },
+      "rain": [[0.6, 8], [0.3, 4]],
+      "streetCircuit": 2,
+      "streetCircuits": ["Baku", "Jeddah", "Singapore", "Marina Bay", "Las Vegas"],
+      "qualiGapTight": { "seconds": 0.1, "points": 3 },
+      "contenderBack": { "position": 6, "points": 4 },
+      "poleMargin": { "seconds": 0.4, "points": -4 },
+      "titleFight": [4, 6]
+    }
+  },
+
+  "f1Circuits": {
+    "_doc": "RaceFans fan-rating average per circuit (unlisted = 6.5). Matched by substring against ESPN circuit / OpenF1 location.",
+    "Interlagos": 7.54, "Silverstone": 7.52, "Americas": 7.27, "Austin": 7.27, "Red Bull Ring": 7.16, "Spielberg": 7.16,
+    "Bahrain": 7.06, "Sakhir": 7.06, "Montreal": 7.05, "Gilles Villeneuve": 7.05, "Hungaroring": 7.03, "Budapest": 7.03,
+    "Monza": 7.0, "Albert Park": 6.91, "Melbourne": 6.91, "Shanghai": 6.84, "Zandvoort": 6.76, "Imola": 6.62,
+    "Spa": 6.44, "Baku": 6.4, "Catalunya": 6.19, "Barcelona": 6.19, "Mexico": 6.19, "Hermanos Rodriguez": 6.19,
+    "Suzuka": 6.19, "Singapore": 6.18, "Marina Bay": 6.18, "Las Vegas": 6.17, "Miami": 6.1, "Yas Marina": 5.87,
+    "Abu Dhabi": 5.87, "Monaco": 5.85, "Jeddah": 5.79, "Losail": 5.46, "Lusail": 5.46, "Qatar": 5.46
+  },
+
+  "elo": {
+    "_doc": "FiveThirtyEight-style Elo. carry = share of a rating kept at each new season (rest regresses to the mean). mov = margin-of-victory multiplier family.",
+    "nfl": { "k": 20, "hfa": 48, "mean": 1505, "carry": 0.667, "mov": "football", "pointsPerSpread": 25 },
+    "cfb": { "k": 25, "hfa": 55, "mean": 1500, "carry": 0.6, "mov": "football", "newTeam": 1250, "pointsPerSpread": 25 },
+    "nba": { "k": 20, "hfa": 100, "mean": 1505, "carry": 0.75, "mov": "basketball", "pointsPerSpread": 28 },
+    "mcbb": { "k": 22, "hfa": 90, "mean": 1500, "carry": 0.6, "mov": "basketball", "newTeam": 1350, "pointsPerSpread": 30 },
+    "wcbb": { "k": 22, "hfa": 90, "mean": 1500, "carry": 0.6, "mov": "basketball", "newTeam": 1350, "pointsPerSpread": 30 },
+    "mlb": { "k": 4, "hfa": 24, "mean": 1500, "carry": 0.67, "mov": "baseball" },
+    "nhl": { "k": 6, "hfa": 50, "mean": 1500, "carry": 0.7, "mov": "hockey" },
+    "epl": { "k": 20, "hfa": 65, "mean": 1500, "carry": 0.8, "mov": "soccer", "newTeam": 1400 },
+    "mls": { "k": 20, "hfa": 70, "mean": 1500, "carry": 0.8, "mov": "soccer" },
+    "nwsl": { "k": 20, "hfa": 60, "mean": 1500, "carry": 0.8, "mov": "soccer" },
+    "wsl": { "k": 20, "hfa": 60, "mean": 1500, "carry": 0.8, "mov": "soccer", "newTeam": 1400 },
+    "ucl": { "k": 20, "hfa": 60, "mean": 1500, "carry": 0.85, "mov": "soccer", "pool": "uefa" },
+    "uel": { "k": 20, "hfa": 60, "mean": 1500, "carry": 0.85, "mov": "soccer", "pool": "uefa" },
+    "draw": { "_doc": "Soccer draw probability = d0 * exp(-(dElo / width)^2); refit by the backtest.", "d0": 0.28, "width": 330 }
+  },
+
+  "fitted": {}
+}

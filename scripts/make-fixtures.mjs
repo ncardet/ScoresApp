@@ -45,7 +45,7 @@ function trimPlay(p) {
   };
 }
 
-function trimSummary(j) {
+export function trimSummary(j) {
   const out = {};
   if (j.header) {
     const c = j.header.competitions?.[0] || {};
@@ -146,4 +146,4 @@ async function main() {
   }
 }
 
-main();
+if (import.meta.url === `file://${process.argv[1]}`) main();

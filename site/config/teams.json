@@ -1,0 +1,257 @@
+{
+ "_doc": "Star power / marquee appeal per team (0-4; soccer up to 5). Adds to Watch Priority only, never to Predicted Excitement. Keyed by league then ESPN team id. Edit freely.",
+ "stars": {
+  "nba": {
+   "2": {
+    "star": 3,
+    "name": "Boston Celtics"
+   },
+   "5": {
+    "star": 2,
+    "name": "Cleveland Cavaliers"
+   },
+   "6": {
+    "star": 2,
+    "name": "Dallas Mavericks"
+   },
+   "7": {
+    "star": 3,
+    "name": "Denver Nuggets"
+   },
+   "9": {
+    "star": 3,
+    "name": "Golden State Warriors"
+   },
+   "10": {
+    "star": 2,
+    "name": "Houston Rockets"
+   },
+   "13": {
+    "star": 4,
+    "name": "Los Angeles Lakers"
+   },
+   "15": {
+    "star": 3,
+    "name": "Milwaukee Bucks"
+   },
+   "16": {
+    "star": 3,
+    "name": "Minnesota Timberwolves"
+   },
+   "18": {
+    "star": 3,
+    "name": "New York Knicks"
+   },
+   "20": {
+    "star": 2,
+    "name": "Philadelphia 76ers"
+   },
+   "21": {
+    "star": 2,
+    "name": "Phoenix Suns"
+   },
+   "24": {
+    "star": 3,
+    "name": "San Antonio Spurs"
+   },
+   "25": {
+    "star": 3,
+    "name": "Oklahoma City Thunder"
+   }
+  },
+  "nfl": {
+   "2": {
+    "star": 3,
+    "name": "Buffalo Bills"
+   },
+   "4": {
+    "star": 2,
+    "name": "Cincinnati Bengals"
+   },
+   "6": {
+    "star": 2,
+    "name": "Dallas Cowboys"
+   },
+   "8": {
+    "star": 2,
+    "name": "Detroit Lions"
+   },
+   "9": {
+    "star": 2,
+    "name": "Green Bay Packers"
+   },
+   "12": {
+    "star": 4,
+    "name": "Kansas City Chiefs"
+   },
+   "14": {
+    "star": 2,
+    "name": "Los Angeles Rams"
+   },
+   "21": {
+    "star": 3,
+    "name": "Philadelphia Eagles"
+   },
+   "25": {
+    "star": 2,
+    "name": "San Francisco 49ers"
+   },
+   "33": {
+    "star": 3,
+    "name": "Baltimore Ravens"
+   }
+  },
+  "mlb": {
+   "10": {
+    "star": 3,
+    "name": "New York Yankees"
+   },
+   "14": {
+    "star": 2,
+    "name": "Toronto Blue Jays"
+   },
+   "15": {
+    "star": 2,
+    "name": "Atlanta Braves"
+   },
+   "19": {
+    "star": 4,
+    "name": "Los Angeles Dodgers"
+   },
+   "21": {
+    "star": 2,
+    "name": "New York Mets"
+   },
+   "22": {
+    "star": 2,
+    "name": "Philadelphia Phillies"
+   }
+  },
+  "nhl": {
+   "6": {
+    "star": 3,
+    "name": "Edmonton Oilers"
+   },
+   "13": {
+    "star": 2,
+    "name": "New York Rangers"
+   },
+   "16": {
+    "star": 2,
+    "name": "Pittsburgh Penguins"
+   },
+   "17": {
+    "star": 2,
+    "name": "Colorado Avalanche"
+   },
+   "21": {
+    "star": 2,
+    "name": "Toronto Maple Leafs"
+   },
+   "26": {
+    "star": 2,
+    "name": "Florida Panthers"
+   }
+  },
+  "epl": {
+   "359": {
+    "star": 4,
+    "name": "Arsenal"
+   },
+   "360": {
+    "star": 3,
+    "name": "Manchester United"
+   },
+   "363": {
+    "star": 3,
+    "name": "Chelsea"
+   },
+   "364": {
+    "star": 4,
+    "name": "Liverpool"
+   },
+   "367": {
+    "star": 2,
+    "name": "Tottenham Hotspur"
+   },
+   "382": {
+    "star": 4,
+    "name": "Manchester City"
+   }
+  },
+  "mls": {
+   "187": {
+    "star": 2,
+    "name": "LA Galaxy"
+   },
+   "18966": {
+    "star": 2,
+    "name": "LAFC"
+   },
+   "20232": {
+    "star": 4,
+    "name": "Inter Miami CF"
+   }
+  },
+  "ucl": {
+   "83": {
+    "star": 4,
+    "name": "Barcelona"
+   },
+   "86": {
+    "star": 5,
+    "name": "Real Madrid"
+   },
+   "110": {
+    "star": 3,
+    "name": "Internazionale"
+   },
+   "160": {
+    "star": 4,
+    "name": "Paris Saint-Germain"
+   },
+   "359": {
+    "star": 4,
+    "name": "Arsenal"
+   },
+   "364": {
+    "star": 4,
+    "name": "Liverpool"
+   },
+   "382": {
+    "star": 4,
+    "name": "Manchester City"
+   }
+  },
+  "uel": {
+   "83": {
+    "star": 4,
+    "name": "Barcelona"
+   },
+   "86": {
+    "star": 5,
+    "name": "Real Madrid"
+   },
+   "110": {
+    "star": 3,
+    "name": "Internazionale"
+   },
+   "160": {
+    "star": 4,
+    "name": "Paris Saint-Germain"
+   },
+   "359": {
+    "star": 4,
+    "name": "Arsenal"
+   },
+   "364": {
+    "star": 4,
+    "name": "Liverpool"
+   },
+   "382": {
+    "star": 4,
+    "name": "Manchester City"
+   }
+  }
+ }
+}

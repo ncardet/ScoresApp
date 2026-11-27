@@ -31,7 +31,9 @@ export default {
     novelty: 0.16,      // overtime, walk-offs, no-hitters, hat tricks, 40-point games, red cards...
     pace: 0.04,         // scoring / shots vs league norm
     stakes: 0.10,       // playoffs, elimination, rivalry, ranked matchup
+    quality: 0.06,      // team quality (records / AP ranks): two good teams beat two bad ones
   },
+  comebackLateness: 0.65,     // comeback counts (1 - x) + x * t, t = when the winner's deepest hole came
 
   swingResample: 0.005,       // sample win probability every 0.5% of regulation (0 = every play)
   swingLateBoost: 2,          // a swing at time t (0..1) counts 1 + boost * t^2 (0 = textbook GEI)
