@@ -22,15 +22,17 @@ export const PAIRS = [
   ['--on-wasabi', '--wasabi', 4.5, 'header, selected chip, active tab, primary button'],
   ['--wasabi-ink', '--bg', 4.5, 'links on page'],
   ['--wasabi-ink', '--surface', 4.5, 'links, favorite star on cards'],
-  ['--on-accent', '--accent', 4.5, 'text on a salmon chip'],
-  ['--accent', '--surface', 3, 'live dot, circle icon'],
+  ['--on-strip', '--strip', 4.5, 'title strip capitals (the ink band under the header)'],
+  ['--nori', '--paper', 4.5, 'VS pill and Grand Prix label on posters'],
+  ['--on-accent', '--accent', 4.5, 'Live ribbon, Circle this one badge'],
+  ['--accent', '--surface', 4.5, 'LIVE status text on cards'],
   ['--accent', '--bg', 3, 'live dot on page'],
   ['--focus', '--bg', 3, 'focus ring on page'],
   ['--focus', '--surface', 3, 'focus ring on cards'],
   ['--dull-ink', '--dull', 3, 'Dull badge number (large, bold)'],
   ['--ok-ink', '--ok', 3, 'OK badge number (large, bold)'],
   ['--good-ink', '--good', 3, 'Good badge number (large, bold)'],
-  ['--great-ink', '--great', 3, 'Great badge number (large, bold)'],
+  ['--great-ink', '--great', 4.5, 'Great badge number, Great game ribbon (small capitals)'],
 ];
 
 /** { light: {name: value}, dark: {...} } with var() references resolved. */

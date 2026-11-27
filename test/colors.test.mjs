@@ -29,6 +29,21 @@ test('every spec token is defined in both light and dark', () => {
   assert.equal(t.light['--bg'], '#F5F2E8');
 });
 
+test('the Ball layout tokens exist: ink strip, logo backing and fixed poster colours', () => {
+  const t = readTokens();
+  for (const mode of ['light', 'dark']) {
+    for (const k of ['--strip', '--on-strip', '--logo-bg', '--nori', '--rice', '--paper', '--on-team', '--shade']) {
+      assert.match(t[mode][k] || '', /^#[0-9a-f]{6}$/i, `${mode} ${k}`);
+    }
+  }
+  // The strip is the inverse of the page in each mode.
+  assert.equal(t.light['--strip'], t.light['--text']);
+  assert.equal(t.dark['--strip'], t.dark['--text']);
+  assert.equal(t.light['--on-strip'], t.light['--bg']);
+  // Fixed colours sit on team colours, so they don't change with the theme.
+  for (const k of ['--nori', '--rice', '--paper', '--on-team', '--shade']) assert.equal(t.light[k], t.dark[k], k);
+});
+
 test('excitement band colours match the spec in both modes', () => {
   const t = readTokens();
   const bands = { '--dull': '#7F918B', '--dull-ink': '#14201D', '--ok': '#E3C75A', '--ok-ink': '#3A2F07', '--good': '#F2A65A', '--good-ink': '#3D2205', '--great': '#EE5D45', '--great-ink': '#2E0A04' };

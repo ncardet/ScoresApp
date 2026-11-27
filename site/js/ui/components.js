@@ -8,42 +8,43 @@ import { LEAGUE_BY_KEY } from '../core/leagues.js';
 
 const STATE_LABEL = { predicted: 'Predicted', live: 'Live', final: 'Final' };
 
-/** The round "S" mark in the header bar (also the app icon); drawn in the current text colour. */
+/** The round "S" badge in the brand bar (also the app icon): paper ring, wasabi centre, nori ink. */
 export function brandBadge() {
   return frag(`<span class="brand-badge" aria-hidden="true"><svg viewBox="0 0 48 48">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="3.4"/>
-    <text x="24" y="25.5" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, 'SF Pro Display', Inter, Helvetica, Arial, sans-serif" font-weight="800" font-size="24" fill="currentColor">S</text>
+    <circle cx="24" cy="24" r="22.2" style="fill:var(--paper);stroke:var(--nori)" stroke-width="3"/>
+    <circle cx="24" cy="24" r="15.6" style="fill:var(--wasabi);stroke:var(--nori)" stroke-width="2.6"/>
+    <text x="24" y="25" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, 'SF Pro Display', Inter, Helvetica, Arial, sans-serif" font-weight="900" font-size="19" style="fill:var(--nori)">S</text>
   </svg></span>`);
 }
 
 /**
- * App header: the wasabi bar (logo + title, or a back button, and action buttons), then a plain
- * page row with the page title and an optional timestamp. `meta` may be a string or an element
- * the caller updates in place.
+ * App header: the wasabi brand bar (wordmark or back button, centre badge, action buttons) and
+ * the ink title strip. `meta` may be a string or an element (updated in place by the caller).
  */
 export function appHeader({ title, meta = null, back = null, actions = [] } = {}) {
   return h('header', { class: 'appbar' },
     h('div', { class: 'brandbar' },
-      back ? backButton(back) : h('a', { class: 'wordmark', href: '#/', 'aria-label': 'Sideline: today' }, brandBadge(), 'Sideline'),
+      back ? backButton(back) : h('a', { class: 'wordmark', href: '#/', 'aria-label': 'Sideline: today' }, h('b', null, 'Side'), 'line'),
+      brandBadge(),
       h('div', { class: 'bar-actions' }, actions)),
     h('div', { class: 'strip' }, h('h1', { class: 'strip-title' }, title), meta instanceof Node ? meta : meta ? h('span', { class: 'meta' }, meta) : null));
 }
 
-/** An icon button for the header bar. */
+/** An icon button for the brand bar. */
 export function barButton(name, label, onclick) {
   return h('button', { class: 'bar-btn', type: 'button', 'aria-label': label, onclick }, icon(name));
 }
 
 const HEX = /^#[0-9a-f]{6}$/i;
-/** Team colour from ESPN data (hex), or null. Team colours are the one colour not from tokens. */
-export function teamColor(team) {
+/** Team colour as a usable CSS colour (ESPN sends hex; missing or invalid falls back). */
+export function teamColor(team, fallback = null) {
   const c = team?.color ? (String(team.color).startsWith('#') ? team.color : `#${team.color}`) : null;
-  return c && HEX.test(c) ? c : null;
+  return c && HEX.test(c) ? c : fallback;
 }
 
-/** A small 4px team-colour strip (vertical beside a name, or horizontal under a logo). */
-export function teamStrip(team, { horizontal = false } = {}) {
-  return h('span', { class: `tstrip${horizontal ? ' h' : ''}`, style: { '--tc': teamColor(team) }, 'aria-hidden': 'true' });
+/** Team logo inside a ring of the team's colour (like the avatars on Ball.app). */
+export function teamMark(team, size = '') {
+  return h('span', { class: `tlogo${size ? ` ${size}` : ''}`, style: { '--ring': teamColor(team) } }, logo(teamLogo(team), ''));
 }
 
 /** Rating badge. `rating` may be null (unrated) and `pending` shows a spinner. */
@@ -169,14 +170,13 @@ export function watchInfo(game) {
   return whereToWatch(game.broadcasts, getSettings().services);
 }
 
-export function teamLine(team, game, other, fav) {
+function teamLine(team, game, other, fav) {
   const final = game.state === 'post' && !game.canceled;
   const lost = final && team.score != null && other.score != null && (other.winner || (!team.winner && team.score < other.score));
   const showScore = game.state !== 'pre' && team.score != null;
   const isFav = fav && String(fav.id) === team.id;
   return h('div', { class: `team-line${lost ? ' loser' : ''}` },
-    teamStrip(team),
-    logo(teamLogo(team), ''),
+    teamMark(team),
     h('div', { class: 'team-name' },
       team.rank ? h('span', { class: 'rank' }, team.rank) : null,
       team.short || team.name,
@@ -207,25 +207,25 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
       ? game.drivers.slice(0, 3).map((d, i) => `${i + 1}. ${d.short || d.name}`).join('  ')
       : '';
     return h('a', { class: 'game-row', href: `#/game/${game.league}/${encodeURIComponent(game.id)}?e=${game.eventId}`, onclick: onOpen ? (e) => { e.preventDefault(); onOpen(game); } : null },
+      game.isRace ? badgeWithRange(rating, { pending }) : h('span', { class: 'badge none', title: 'Only the race is rated' }, 'F1'),
       h('div', { class: 'teams' },
         h('div', { class: 'race-title' }, `${game.shortName} · ${game.sessionLabel}`),
         h('div', { class: 'race-sub' }, game.circuit),
         podium ? h('div', { class: 'podium' }, podium) : null),
-      h('div', { class: 'row-side' }, sideBits),
-      game.isRace ? badgeWithRange(rating, { pending }) : h('span', { class: 'badge none', title: 'Only the race is rated' }, 'F1'));
+      h('div', { class: 'row-side' }, sideBits));
   }
-  // Teams on the left, status in the middle, the rating badge top-right.
   return h('a', {
     class: 'game-row',
     href: `#/game/${game.league}/${encodeURIComponent(game.id)}`,
     onclick: onOpen ? (e) => { e.preventDefault(); onOpen(game); } : null,
   },
+    fav ? h('span', { class: 'fav-flag', 'aria-hidden': 'true' }) : null,
+    badgeWithRange(rating, { pending }),
     // Soccer lists the home side first (European convention); US sports list away @ home.
     h('div', { class: 'teams' }, game.sport === 'soccer'
       ? [teamLine(game.home, game, game.away, fav), teamLine(game.away, game, game.home, fav)]
       : [teamLine(game.away, game, game.home, fav), teamLine(game.home, game, game.away, fav)]),
     h('div', { class: 'row-side' }, sideBits),
-    badgeWithRange(rating, { pending }),
   );
 }
 
@@ -257,59 +257,63 @@ function gameHref(game) {
   return `#/game/${game.league}/${encodeURIComponent(game.id)}${game.sport === 'racing' && game.eventId ? `?e=${game.eventId}` : ''}`;
 }
 
-/**
- * Small tags for a featured game: Favorite (wasabi), Live (salmon dot), Circle this one (salmon),
- * and neutral Great game / Top pick.
- */
-export function gameTags(game, rating, { index = -1 } = {}) {
-  const out = [];
-  if (favoriteFor(game)) out.push(h('span', { class: 'tag fav' }, '★ Favorite'));
-  if (game.state === 'in') out.push(h('span', { class: 'tag live' }, 'Live'));
-  if (game.state === 'pre' && rating?.pred?.circle?.flagged) out.push(h('span', { class: 'tag circle', title: rating.pred.circle.reasons.join(', ') }, '◎ Circle this one'));
-  if (game.state === 'post' && rating?.value >= 85) out.push(h('span', { class: 'tag' }, 'Great game'));
-  if (index === 0 && game.state === 'pre') out.push(h('span', { class: 'tag' }, 'Top pick'));
-  return out;
+/** Corner ribbon text for a featured game, or null. */
+export function ribbonFor(game, rating, index) {
+  if (game.state === 'in') return { text: 'Live', cls: 'live' };
+  if (game.state === 'post' && rating?.value >= 85) return { text: 'Great game', cls: 'great' };
+  if (favoriteFor(game)) return { text: '★ Favorite', cls: '' };
+  if (index === 0 && game.state === 'pre') return { text: 'Top pick', cls: '' };
+  if (rating?.pred?.pGreat >= 0.35) return { text: 'Must watch', cls: '' };
+  return null;
 }
 
-/** Where to watch as a button: primary (wasabi) when it's on your services. */
-export function watchButton(game) {
+export function watchPill(game) {
   const w = watchInfo(game);
   if (w.status === 'ok') {
     const o = w.options[0];
     const where = o.services.length === 1 && o.services[0] === o.network ? o.network : `${o.network} · ${o.services.join(', ')}`;
-    return h('span', { class: 'pill primary' }, icon('tv'), `Watch on ${where}`);
+    return h('span', { class: 'pill' }, icon('tv'), `Watch on ${where}`);
   }
-  if (w.status === 'none') return h('span', { class: 'pill' }, icon('tv'), 'Not on your services');
-  return h('span', { class: 'pill' }, 'Open game');
+  if (w.status === 'none') return h('span', { class: 'pill muted-pill' }, icon('tv'), 'Not on your services');
+  return h('span', { class: 'pill muted-pill' }, 'Open game');
 }
 
-/** One featured game: league, tags, rating top-right, big time, teams, why, where to watch. */
+/** One featured game: team-colour poster, big time or score, rating, where to watch. */
 export function pickCard({ game, rating }, { index = 0 } = {}) {
   const lg = LEAGUE_BY_KEY[game.league];
   const st = statusInfo(game);
   const live = game.state === 'in';
   const pre = game.state === 'pre';
   const racing = game.sport === 'racing';
-  const fav = favoriteFor(game);
+  const [L, R] = game.sport === 'soccer' ? [game.home, game.away] : [game.away, game.home];
+  const rib = ribbonFor(game, rating, index);
+  const showScore = !pre && !racing && L?.score != null && R?.score != null;
+  const poster = racing
+    ? h('div', { class: 'poster f1' }, h('div', { class: 'gp' }, game.shortName || game.gpName || 'Grand Prix'))
+    : h('div', { class: 'poster', style: { '--a': teamColor(L, 'var(--team-fallback-home)'), '--b': teamColor(R, 'var(--team-fallback-away)') } },
+      teamMark(L, 'xl'),
+      h('span', { class: `vs${showScore ? ' score' : ''}` }, showScore ? `${L.score}–${R.score}` : 'VS'),
+      teamMark(R, 'xl'));
+  if (game.venue || game.circuit) poster.append(h('div', { class: 'pin' }, icon('pin'), game.venue || game.circuit));
+  if (rib) poster.append(h('div', { class: `ribbon ${rib.cls}`.trim() }, rib.text));
   const note = (game.notes || []).filter(Boolean)[0];
-  const tags = gameTags(game, rating, { index });
   const when = pre ? formatTime(game.start) : live ? st.text : racing ? 'Finished' : 'Final';
+  const matchup = racing ? `${game.gpName || game.shortName} · ${game.sessionLabel || 'Race'}`
+    : game.sport === 'soccer' ? `${game.home.short} vs ${game.away.short}` : `${game.away.short} at ${game.home.short}`;
   const p = rating?.pred;
   const chance = p ? `${Math.round(p.pGreat * 100)}% chance of Great` : rating ? `${rating.band.label}${rating.state === 'live' ? ' so far' : ''}` : '';
-  return h('a', { class: 'card pick', href: `#/game/${game.league}/${encodeURIComponent(game.id)}${racing && game.eventId ? `?e=${game.eventId}` : ''}` },
-    h('div', { class: 'pick-top' },
-      h('div', { class: 'pick-head' },
-        h('div', { class: 'pick-league' }, `${lg?.name || lg?.short || ''}${note ? ` · ${note}` : ''}`),
-        tags.length ? h('div', { class: 'tags' }, tags) : null,
-        h('div', { class: 'pick-when' }, when)),
-      rating ? badgeWithRange(rating, { size: 'lg' }) : null),
-    racing
-      ? h('div', { class: 'pick-match' }, `${game.gpName || game.shortName} · ${game.sessionLabel || 'Race'}`)
-      : h('div', { class: 'teams' }, game.sport === 'soccer'
-        ? [teamLine(game.home, game, game.away, fav), teamLine(game.away, game, game.home, fav)]
-        : [teamLine(game.away, game, game.home, fav), teamLine(game.home, game, game.away, fav)]),
-    rating ? h('div', { class: 'pick-why' }, chance ? h('b', null, chance) : null, rating.explain ? ` · ${rating.explain}` : '') : null,
-    h('div', { class: 'pick-foot' }, watchButton(game)));
+  return h('a', { class: 'card pick', href: gameHref(game) },
+    poster,
+    h('div', { class: 'pick-body' },
+      h('div', { class: 'pick-league' }, h('span', null, `${lg?.name || lg?.short || ''}${note ? ` · ${note}` : ''}`), icon('right')),
+      h('div', { class: `pick-when${live ? ' live' : ''}` }, when),
+      h('div', { class: 'pick-match' }, matchup),
+      rating ? h('div', { class: 'pick-meta' },
+        badgeWithRange(rating, { size: 'lg' }),
+        h('div', null,
+          chance ? h('div', { class: 'chance' }, chance) : null,
+          h('div', { class: 'why' }, rating.explain || ''))) : null),
+    h('div', { class: 'pick-foot' }, watchPill(game)));
 }
 
 /**

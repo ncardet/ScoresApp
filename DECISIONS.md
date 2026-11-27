@@ -260,29 +260,78 @@ Newest at the bottom of each section.
 
 ## Design
 
-The layout came from the Ball.app redesign. Colours, type and badges follow the "Wasabi and Nori"
-theme spec, which replaced the Ball.app colours (cobalt bar, mint strip, team-colour panels).
-Before and after shots of Today, Look Ahead, a game page, Standings and Settings, in light and dark,
-are in `docs/screenshots/theme/` (`npm run screenshots <label>` retakes them).
+The look follows Ball.app: bold, outlined and sporty. The colours are the "Wasabi and Nori" palette.
+The Wasabi and Nori spec also came with a plainer layout (commit `9a50436`: thin borders, small
+tags, no team-colour posters, system font only). That layout was replaced, because the palette was
+wanted, not the plainer style. In `docs/screenshots/theme/`, the `before-*` shots are the first Ball
+version (cobalt and mint) and the `after-*` shots are this one. They cover Today, Look Ahead, a game
+page, Standings and Settings, in light and dark; `npm run screenshots <label>` retakes them.
 
-- **Layout (from the Ball.app redesign):** a solid brand bar with the wordmark, a title row, pill
-  chips, round prev/next buttons, flat cards without shadows, and a swipeable "Top picks" carousel
-  with page dots. The day heading doubles as the date picker: the weekday large, the date under it.
+- **Look:** Ball.app's visual language:
+  - a solid brand bar with the wordmark and a round centre badge, and a title strip in condensed
+    capitals under it
+  - thick ink outlines on flat cards (no shadows), chunky round buttons, outlined pill chips and
+    buttons
+  - diagonal corner ribbons, and team logos inside rings of the team's colour (like Ball.app's
+    avatars)
+  - big run-style cards in a swipeable "Top picks" carousel with page dots
+
+  The rating badge leads each row and comes first on the game page's rating card. The day heading
+  doubles as the date picker: the weekday large, the date under it.
+- **Header:** the brand bar is wasabi with `--on-wasabi` text and icons. The title strip under it
+  is an ink band, the inverse of the page: nori with rice-paper capitals in light mode, rice paper
+  with nori capitals in dark mode (`--strip`, `--on-strip`).
+- **Status bar:** the iOS style is `default`, not the `black-translucent` the first Ball version
+  used. Translucent draws a white clock and battery straight onto the bar, and white on wasabi is
+  2.0:1. With `default`, the clock keeps its own strip above the bar.
+- **Selected items are wasabi**, keeping Ball's ink outline. That covers the selected chip, the
+  segmented control, the active tab, toggles, primary buttons, the watch pill and the default ribbon.
+  Ball filled selected chips with ink; wasabi is the palette's colour for "selected".
+- **Badges:**
+  - Final and live ratings have an ink outer ring, a thin gap ring and a centre filled with the band
+    colour, with the number in the band's own dark ink. Live adds a pulsing ring.
+  - A prediction is a band-colour ring around a `--surface` centre, with the number in `--text`.
+
+  Wasabi is never a rating colour, so a Great game never looks like a selected control.
+- **Ribbons:** Live is salmon (`--accent`) with `--on-accent` text, and Great game uses the Great
+  band with its ink. Favorite, Top pick and Must watch are wasabi. Ribbon edges are always nori.
+  Circle this one stays a small salmon badge on Look Ahead.
+- **Posters** are split diagonally in the two teams' ESPN colours, with faint paper stripes.
+  - The VS (or score) pill and the Grand Prix label are paper with nori ink.
+  - The venue line is white with a shadow.
+  - The F1 poster is a nori and rice-paper checkered flag.
+
+  These fixed colours (`--nori`, `--rice`, `--paper`, `--on-team`, `--shade`) don't change with the
+  theme, because they sit on team colours. Without an ESPN colour, a poster uses
+  `--team-fallback-home` / `--team-fallback-away`.
+- **Favourites:** a 5px flag on the left of the row and a star, both in `--wasabi-ink`. Plain wasabi
+  on white is only 2:1.
+- **Type:** the phone's own heavy grotesk (SF Pro on iPhone) for headings and numbers, and Barlow
+  Condensed for labels, strips, chips and tabs. Barlow Condensed is under the SIL Open Font License
+  and self-hosted in `site/fonts/`, so it works offline and makes no third-party requests.
 - **Top picks:** the first three games by Watch Priority (live games first); on past days the three
   best-rated finals ("Best of the day"). Shown when there are at least two candidates and four games.
   The carousel keeps its scroll position while the list refreshes.
-- **One token file:** every colour is a custom property in `site/css/tokens.css`: light values on
-  `:root` and `[data-theme="light"]`, dark on `[data-theme="dark"]`, and the excitement bands on
-  `:root` (the same in both modes). Components use only `var(--…)` and `color-mix()` of tokens.
-  `test/colors.test.mjs` fails on any hex, `rgb()` or `hsl()` value in `site/` outside that file.
-  Team colours arrive from ESPN at runtime, so they never appear as literals.
-- **Tokens beyond the spec's table,** so no component keeps a colour of its own: `--ok-ring` (see
-  Badges), `--team-fallback-home/-away/-alt` (charts, when ESPN sends no usable team colour),
-  `--series-1…6` (F1 driver lines), `--pitch-*` and `--shirt-ring` (the soccer lineup pitch) and
-  `--knob` (switches).
+- **One token file:** every colour is a custom property in `site/css/tokens.css`:
+  - light values on `:root` and `[data-theme="light"]`, dark on `[data-theme="dark"]`
+  - the excitement bands, the strip and the fixed colours on `:root` (the same in both modes)
+
+  Components use only `var(--…)` and `color-mix()` of tokens. `app.css` keeps only sizes and fonts.
+  `test/colors.test.mjs` fails on any hex, `rgb()` or `hsl()` value in `site/` outside
+  `tokens.css`. Team colours arrive from ESPN at runtime, so they never appear as literals.
+- **Tokens beyond the spec's table,** so no component keeps a colour of its own:
+  - `--strip` / `--on-strip`, and the fixed poster colours above
+  - `--logo-bg`, behind logos in their rings. In dark mode it is a step lighter than cards, so dark
+    logos still read.
+  - `--team-fallback-home/-away/-alt` (posters and charts, when ESPN sends no usable team colour)
+  - `--series-1…6` (F1 driver lines)
+  - `--pitch-*` and `--shirt-ring` (the soccer lineup pitch)
+  - `--knob` (switches)
 - **Contrast:** `npm run check:contrast` checks body text at 4.5:1 and large text, icons and focus
-  rings at 3:1, in both modes, and `npm test` runs the same check. Four spec values fell short. Each
-  was nudged in OKLCH lightness only, so it keeps its hue (`--suggest` prints the smallest nudge):
+  rings at 3:1, in both modes, and `npm test` runs the same check. Small capitals on fills are held
+  to 4.5:1: the strip, the VS pill, the Live and Great ribbons, and salmon LIVE text. Four spec values
+  fell short. Each was nudged in OKLCH lightness only, so it keeps its hue (`--suggest` prints the
+  smallest nudge):
 
   | Token | Spec | Now | Contrast, spec → now |
   |---|---|---|---|
@@ -291,46 +340,35 @@ are in `docs/screenshots/theme/` (`npm run screenshots <label>` retakes them).
   | light `--accent` | #D9694A | #C25536 | white text on it 3.46:1 → 4.52:1 |
   | dark `--text-3` | #6F857E | #80978F | 3.57:1 on `--surface` → 4.51:1 |
 
-- **Badges:** live and final ratings are filled with the band colour, with the number in the band's
-  dark ink. A prediction is a 2px band-colour ring around a number in `--text`. In light mode the
-  OK badge also gets a 1px `--border` ring, because its yellow is only 1.5:1 against the cream
-  background. Wasabi is never a rating colour, so a Great game never looks like a selected control.
-  The badge sits top-right on every row and card.
-- **Tags instead of ribbons:** Favorite is a small wasabi chip (plus a `--wasabi-ink` star next to
-  the team), Live is a salmon dot and the word, Circle this one is a salmon chip, and Great game and
-  Top pick are neutral chips.
-- **Cards** are `--surface` with a 1px `--border` and a 12px radius. Team colours appear only in
-  logos and a 4px strip beside each team; the team-colour poster panels and logo rings are gone.
-- **Header and status bar:** the brand bar is wasabi with `--on-wasabi` text and icons; the title
-  row under it is plain `--bg`. The iOS status bar style is `default`, not `black-translucent`,
-  because translucent draws a white clock and battery straight onto the bar and white on wasabi is
-  2.0:1.
-- **Type:** the phone's own font (SF Pro on iPhone), in sentence case. Barlow Condensed and
-  `site/fonts/` are gone: the calmer theme doesn't need a second face, and the app no longer
-  downloads a font.
-- **Charts and lists:** the excitement line is `--wasabi-ink` over a 15% wasabi area, with dashed
-  `--border` lines at the band thresholds and the "Watch from here" marker in `--accent`. Standings
-  use zebra rows (`--surface` / `--surface-2`) and a 2px `--border` line at each playoff cut. Sheets
-  sit on `--surface` over a 60% `--bg` backdrop.
-- **Remove buttons** in Settings are neutral rather than red: red belongs to the Great band, and a
-  removed favourite takes one tap to add back.
+- **Charts and lists:** the excitement line is `--wasabi-ink` over a light wasabi area, with dashed
+  `--border` lines at the band thresholds. Standings mark each playoff cut with Ball's dashed line.
+  Sheets are `--surface` with an ink outline over a 60% `--bg` backdrop.
+- **Remove buttons** in Settings are neutral outlined pills, not red: red belongs to the Great band,
+  and a removed favourite takes one tap to add back.
 - **Look Ahead** lists the home team first for soccer, like Today and the game page. It used to list
   the away team first for every sport.
 - **Theme setting:** Settings → Appearance offers System (the default), Light and Dark, saved in
-  `localStorage` as `sideline.theme`. Reads and writes are wrapped in try/catch, so blocked storage
-  just means System. The choice becomes `data-theme` on `<html>`, set by a small inline script in
-  `<head>` before anything paints, so a Dark choice never flashes light at launch. On System the app
-  follows `prefers-color-scheme` live (iOS switching to dark at sunset, say) and re-renders the
-  current screen in place, for logos with dark variants and chart colours. `test/theme.test.mjs`
-  covers this with unit tests and a browser test (Playwright; skipped in CI, which has no browser).
-- **Browser and home screen:** `<meta name="theme-color" content="#A3C14A">` is the one colour
-  literal outside `tokens.css`, because the browser reads it before any CSS loads;
-  `js/core/theme.js` then keeps it in step with `--wasabi`. `<meta name="color-scheme"
-  content="light dark">` and a `color-scheme` per mode on `:root` keep form controls and scrollbars
-  in the right mode. The manifest is JSON and can't read CSS, so it repeats the values:
-  `theme_color` #A3C14A and `background_color` #0F1F1C (nori). `npm run icons` redraws the icons
-  (the mark in `--on-wasabi` on wasabi) and nine iPhone launch screens (a wasabi mark on nori) from
-  `tokens.css`.
+  `localStorage` as `sideline.theme`.
+  - Reads and writes are wrapped in try/catch, so blocked storage just means System.
+  - The choice becomes `data-theme` on `<html>`, set by a small inline script in `<head>` before
+    anything paints, so a Dark choice never flashes light at launch.
+  - On System the app follows `prefers-color-scheme` live (iOS switching to dark at sunset, say).
+    It re-renders the current screen in place, for logos with dark variants and chart colours.
+  - The control is Ball's segmented pill, on its own line under the label.
+
+  `test/theme.test.mjs` covers this with unit tests and a browser test (Playwright; skipped in CI,
+  which has no browser).
+- **Browser and home screen:**
+  - `<meta name="theme-color" content="#A3C14A">` is the one colour literal outside `tokens.css`,
+    because the browser reads it before any CSS loads; `js/core/theme.js` then keeps it in step with
+    `--wasabi`.
+  - `<meta name="color-scheme" content="light dark">` and a `color-scheme` per mode on `:root` keep
+    form controls and scrollbars in the right mode.
+  - The manifest is JSON and can't read CSS, so it repeats the values: `theme_color` #A3C14A and
+    `background_color` #0F1F1C (nori).
+  - `npm run icons` redraws everything from `tokens.css`: the icons (the brand badge on wasabi with
+    faint stripes) and nine iPhone launch screens (the badge on nori). The launch screens are left
+    out of the offline precache; iOS reads them itself when the app is added to the Home Screen.
 - **Screenshots** are taken by Playwright, with ESPN and OpenF1 requests fetched by Node because
   ESPN's CDN refuses headless Chrome. Team logos need `a.espncdn.com` to be reachable from wherever
   the script runs.

@@ -26,7 +26,7 @@
   --focus: #5E7A1C;
 
   /* Beyond the spec table: needed so no component carries its own colour. */
-  --ok-ring: var(--border);   /* light mode: 1px ring so the yellow badge doesn't fade into a white card */
+  --logo-bg: var(--surface);  /* inside the team-colour ring around each logo */
   --team-fallback-home: #5E7A1C;   /* when ESPN sends no usable team colour */
   --team-fallback-away: #C25536;
   --team-fallback-alt: #5C6E68;
@@ -65,7 +65,7 @@
   --focus: #C9DD7E;
 
   /* Beyond the spec table */
-  --ok-ring: transparent;
+  --logo-bg: var(--surface-2);   /* a step up from cards, so dark logos still read */
   --team-fallback-home: #A3C14A;
   --team-fallback-away: #F28C6B;
   --team-fallback-alt: #9FB5AE;
@@ -90,4 +90,21 @@
   --ok: #E3C75A;    --ok-ink: #3A2F07;
   --good: #F2A65A;  --good-ink: #3D2205;
   --great: #EE5D45; --great-ink: #2E0A04;
+}
+
+/* The title strip under the header is an ink band, the inverse of the page: nori with rice-paper
+   capitals in light mode, rice paper with nori capitals in dark mode. */
+:root {
+  --strip: var(--text);
+  --on-strip: var(--bg);
+}
+
+/* Fixed colours, the same in both modes: drawn over team colours (poster VS pill, venue line,
+   ribbon edges), in the brand badge, and the F1 checkered flag. */
+:root {
+  --nori: #0F1F1C;
+  --rice: #F5F2E8;
+  --paper: #FFFFFF;
+  --on-team: #FFFFFF;     /* venue text on a team-colour poster, with a --shade text shadow */
+  --shade: #000000;       /* shadows only, always mixed down (color-mix) */
 }

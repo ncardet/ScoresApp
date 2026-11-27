@@ -17,8 +17,9 @@ morning-brief feed, and free data sources (ESPN's public site API, plus OpenF1 f
   brackets, March Madness and UCL/UEL knockouts when active; F1 drivers and constructors.
 - **Morning brief:** `data/brief.json` + `data/brief.md`, refreshed daily before 6:45 am PT. See
   [BRIEF_FEED.md](BRIEF_FEED.md).
-- **Appearance:** the "Wasabi and Nori" theme in light and dark. **Settings → Appearance** picks
-  System (follows the phone, switching live), Light or Dark.
+- **Appearance:** a bold, outlined, Ball.app-inspired look in the "Wasabi and Nori" palette, in
+  light and dark. **Settings → Appearance** picks System (follows the phone, switching live), Light
+  or Dark.
 
 Ratings: **0–39 Dull · 40–64 OK · 65–84 Good · 85–100 Great.** An outlined badge is a prediction
 (with its likely range underneath); a filled badge is live (pulsing) or final (frozen). 50 is a
@@ -200,7 +201,7 @@ or its `errors` list isn't empty, check the Actions tab.
 
 ```
 site/                 published to GitHub Pages
-  index.html, sw.js, manifest.webmanifest, icons/
+  index.html, sw.js, manifest.webmanifest, icons/, fonts/ (Barlow Condensed)
   css/                tokens.css (every colour), app.css
   js/core/theme.js    System / Light / Dark setting
   config/             favorites, services, rating weights, prediction model, star teams
