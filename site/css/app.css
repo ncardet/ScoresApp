@@ -500,6 +500,10 @@ input[type="search"], select.input {
 .circle-row { padding: 13px 16px; display: grid; gap: 5px; }
 .circle-row .when { font: 800 13px/1 var(--font-cond); color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
 .circle-row .flags { font-size: 13px; color: var(--text-2); }
+.cover-row { padding: 12px 16px; display: grid; gap: 3px; }
+.cover-name { font-weight: 600; }
+.cover-on { font-size: 13px; color: var(--text-2); }
+.cover-miss { font-size: 13px; color: var(--text-3); }
 .off-row { padding: 13px 16px; font: 800 15px/1.2 var(--font-cond); color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; }
 .circle-badge {
   display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;

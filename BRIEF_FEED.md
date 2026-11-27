@@ -69,7 +69,7 @@ and the `sleeper`, `skip` and `coming_up` sections. Every version 1 field keeps 
 | `reasons` | `["Coin-flip line (LAL −1.5)", "Rivalry"]` | the same, as a list (up to 3) |
 | `favorite` | `true` | involves one of your favorite teams; `favorite_team` names it (`"Lakers"`) |
 | `watch` | `["ESPN (YouTube TV)"]` | only broadcasters reachable on your services (config/services.js) |
-| `watch_summary` | `"ESPN (YouTube TV)"` | first option, or `"Not on your services"` / `"No TV listing"` |
+| `watch_summary` | `"ESPN (YouTube TV)"` | first option (a free stream reads `"Free on YouTube"` and comes first), or `"Not on your services"`, `"Not on your services (local TV)"` / `"No TV listing"` |
 | `final_score` | `"Lakers 112, Celtics 110 (OT)"` | finished games only |
 | `url` | `"https://…/#/game/nba/401810123"` | deep link into the app |
 
@@ -105,5 +105,12 @@ sports feed is stale."*
 
 - `/data/predictions.json`: the nightly predictions behind the Look Ahead tab (every game in the next
   14 days with its prediction, range, chance of Great and inputs, plus circled games up to 60 days out).
+  Optional leagues are listed schedule-only (`pred: null`). `offSeason` has one entry per league with
+  nothing in the next 14 days: `{ "returns": "YYYY-MM-DD" | null, "preseason"?, "event"?, "inSeason"? }`.
+- `/data/unmapped-networks.json`: broadcaster names ESPN listed that `config/services.js` doesn't map
+  (days seen, leagues, markets, `youtubeLike`), written by the morning brief.
+- The brief covers the core leagues. Optional leagues (Serie A, NASCAR, tennis, ...) are included only
+  when `brief.includeOptional` is true in `config/prediction.json`, and then only those in
+  `brief.optionalLeagues`, with the same 2-per-league cap. The WNBA is a core league.
 - `/data/ratings/<YYYY-MM-DD>.json`: final ratings for every game of that day (last 14 days). The app
   uses these as a head start, so it doesn't refetch every finished game.

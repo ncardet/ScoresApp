@@ -1,6 +1,6 @@
 // Where to watch: map a game's broadcasters to the services you have (config/services.js).
 
-import { NETWORKS, ALIASES, SERVICE_SHORT, FREE_YOUTUBE, PREFERENCE, LEAGUE_NETWORKS } from '../../config/services.js';
+import { NETWORKS, ALIASES, SERVICE_SHORT, FREE_YOUTUBE, PREFERENCE, LEAGUE_NETWORKS, LEAGUE_CARRIERS, KNOWN_GAPS } from '../../config/services.js';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9+]/g, '');
 
@@ -83,4 +83,26 @@ export function whereToWatch(broadcasts, myServices, league = '') {
   const net = NETWORK_SHORT[first.network] || first.network;
   const short = sameName ? svc(first.network) : `${net} · ${first.services.map(svc).join('/')}`;
   return { status: 'ok', options, label, short };
+}
+
+/**
+ * Settings → What my services cover, for one league: which of your services carry its usual
+ * networks, and what's missing (networks none of them carry, plus the known gaps in the config).
+ * @returns {{on: string[], missing: string[]}}
+ */
+export function coverage(league, myServices) {
+  const on = new Set();
+  const missing = [];
+  for (const network of LEAGUE_CARRIERS[league] || []) {
+    const mine = (carriers(network, league) || []).filter((s) => myServices.includes(s));
+    if (mine.length) mine.forEach((s) => on.add(s));
+    else missing.push(network);
+  }
+  const order = [FREE_YOUTUBE, ...myServices];
+  const gaps = KNOWN_GAPS[league] || [];
+  const noted = (n) => gaps.some((g) => g.toLowerCase().includes(n.toLowerCase()));
+  return {
+    on: [...on].sort((a, b) => order.indexOf(a) - order.indexOf(b)),
+    missing: [...gaps, ...missing.filter((n) => !noted(n))],
+  };
 }

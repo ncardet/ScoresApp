@@ -13,6 +13,17 @@ morning-brief feed, and free data sources (ESPN's public site API, plus OpenF1 f
 - **Look Ahead:** the next 14 days of predictions grouped by day and ordered by Watch Priority, each
   with its horizon label (Prediction, Forecast, Early look), number, likely range and chance of a
   Great game; league and favorites filters; a "Circle this one" list of flagged games further out.
+  Leagues with nothing in the next 14 days get one line instead ("WNBA: off-season", "MLB returns
+  Feb 19, 2027 (preseason)").
+- **Leagues:** NFL, college football, NBA, WNBA, both college basketball leagues, MLB, NHL, Premier
+  League, Champions League, Europa League, MLS, NWSL, WSL and F1. **Optional leagues**, off until
+  switched on in Settings: Serie A, the Conference League and the Women's Champions League
+  (soccer model), NASCAR Cup (schedule and results), tennis Grand Slam singles (basic rating) and
+  UFC (schedule only).
+- **Where to watch:** each game shows the first of your services that carries it. A free YouTube
+  stream comes first ("Free on YouTube"). Games only on local channels say "Not on your services
+  (local TV)". **Settings → What my services cover** lists, per league, which of your services
+  carry it and what's missing.
 - **Standings:** every league; NFL/NBA/NHL/MLB playoff pictures with the cut line; postseason
   brackets, March Madness and UCL/UEL knockouts when active; F1 drivers and constructors.
 - **Morning brief:** `data/brief.json` + `data/brief.md`, refreshed daily before 6:45 am PT. See
@@ -97,7 +108,7 @@ Everything you're likely to edit lives in `site/config/`:
 | File | What |
 |---|---|
 | `favorites.js` | Your teams (ESPN team id plus leagues). Pinned on Today, starred, and used by the brief. |
-| `services.js` | Your services (`MY_SERVICES`) and which networks each carries (`NETWORKS`, `ALIASES`). |
+| `services.js` | Your services (`MY_SERVICES`, including free YouTube), which networks each carries (`NETWORKS`, `ALIASES`), Paramount+ plan (`PARAMOUNT_PREMIUM`), preference order, each league's usual networks and your known gaps (for Settings → What my services cover). |
 | `rating.js` | Post-game component weights and amplifiers, bands, calibration curve, novelty bonuses, rivalries. |
 | `../css/tokens.css` | Every colour, light and dark: surfaces, text, wasabi, salmon accent and the excitement bands. The only file with colour values; run `npm run check:contrast` after editing. |
 | `prediction.json` | Pre-game model: base rates, k, per-sport term tables, Elo settings, horizons, ranges, brief settings, and the backtest's fitted values (`fitted`). |
@@ -106,8 +117,12 @@ Everything you're likely to edit lives in `site/config/`:
 - **Find an ESPN team id:** easiest is **Settings → Add a team** in the app. Otherwise, soccer and
   college team pages show it in the URL (`espn.com/soccer/club/_/id/364/liverpool` → `364`), and
   `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams` lists ids for any league.
-- **Settings in the app** (favorites, services, leagues) are stored on the phone. Use **Copy favorites
-  as config** to paste them into `favorites.js` so the morning brief matches.
+- **Settings in the app** (favorites, services, leagues, optional leagues) are stored on the phone.
+  Use **Copy favorites as config** to paste them into `favorites.js` so the morning brief matches, and
+  **Copy brief setting as config** for `brief.includeOptional` / `brief.optionalLeagues` in
+  `prediction.json` (optional leagues stay out of the brief unless they're listed there).
+- **New broadcasters:** the morning brief logs any broadcaster name `services.js` doesn't map to
+  `site/data/unmapped-networks.json`, so new local channels and YouTube channels can be mapped.
 - **Weights** can be changed freely: calibration files store raw component values, so percentiles are
   recomputed with the new weights on load. Run `npm test` afterwards to check the classics still rate
   Great. Bump `version` in `rating.js` when you change the maths, so cached final ratings are recomputed.

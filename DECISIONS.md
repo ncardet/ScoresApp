@@ -235,6 +235,16 @@ Newest at the bottom of each section.
   2025 Chiefs-Chargers Brazil game is listed as "YouTube").
 - **New services start on.** A phone that saved its service toggles before YouTube (free) existed
   gets it switched on; a service switched off afterwards stays off (`servicesKnown`).
+- **What my services cover** (Settings, read-only) is generated from `config/services.js`:
+  - `LEAGUE_CARRIERS` lists the networks each league's games usually air on (2026 rights).
+  - The panel maps them to your services. Networks none of your services carry are listed as missing
+    (Apple TV for MLS and F1), together with `KNOWN_GAPS`.
+  - `KNOWN_GAPS` holds your seven gaps: Lakers, Dodgers and Kings local games, MLB Network, NHL
+    Network, NFL RedZone, and NFL Sunday Ticket for Raiders games that don't air in LA. It also notes
+    Sparks local games.
+  - It covers every core league plus the optional leagues switched on.
+- **MLB Network, NHL Network and NFL RedZone are no longer mapped to YouTube TV** (they're among your
+  gaps), so games only on them say "Not on your services".
 - **Unmapped names are logged.** The morning brief writes `site/data/unmapped-networks.json`: every
   broadcaster name ESPN listed that `config/services.js` doesn't map, with the days seen, leagues,
   markets, and a `youtubeLike` flag. It's how new local channels and YouTube channels get noticed.

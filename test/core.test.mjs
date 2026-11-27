@@ -208,3 +208,23 @@ test('off-season: next game day from ESPN calendars or the cached season; Look A
   assert.equal(returnsLabel('2026-12-05', '2026-11-27'), 'Dec 5');
   assert.deepEqual(offSeasonLines({}, leagues, '2026-11-27'), [], 'leagues with games in the next 14 days get no line');
 });
+
+test('What my services cover: services per league from the config, with the known gaps', async () => {
+  const { coverage } = await import('../site/js/core/watch.js');
+  const nba = coverage('nba', MY_SERVICES);
+  assert.deepEqual(nba.on, ['YouTube TV', 'Prime Video', 'Peacock']);
+  assert.deepEqual(nba.missing, ['Lakers local games on Spectrum SportsNet']);
+  const mlb = coverage('mlb', MY_SERVICES);
+  assert.ok(mlb.missing.includes('Dodgers local games on SportsNet LA'));
+  assert.equal(mlb.missing.filter((m) => m === 'MLB Network').length, 1, 'noted once');
+  assert.ok(coverage('nhl', MY_SERVICES).missing.includes('Kings local games on ABTV / DAZN'));
+  assert.ok(coverage('nfl', MY_SERVICES).missing.includes('NFL RedZone'));
+  assert.ok(coverage('nfl', MY_SERVICES).missing.some((m) => /Sunday Ticket/.test(m)));
+  assert.deepEqual(coverage('f1', MY_SERVICES), { on: [], missing: ['Apple TV'] });
+  // A service switched off on the phone moves its networks to "missing".
+  assert.ok(coverage('epl', MY_SERVICES.filter((s) => s !== 'Peacock')).missing.includes('Peacock'));
+  // Every league has an entry.
+  const { LEAGUES } = await import('../site/js/core/leagues.js');
+  const { LEAGUE_CARRIERS } = await import('../site/config/services.js');
+  for (const l of LEAGUES) assert.ok(LEAGUE_CARRIERS[l.key]?.length, l.key);
+});

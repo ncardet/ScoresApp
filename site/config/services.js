@@ -88,12 +88,10 @@ export const NETWORKS = {
   truTV: ['YouTube TV', 'HBO Max'],
   'HBO Max': ['HBO Max'],
 
-  // League networks (YouTube TV base + Sports Plus add-on)
+  // League networks on YouTube TV. MLB Network, NHL Network and NFL RedZone are not on your plan
+  // (see KNOWN_GAPS), so they're left out.
   'NFL Network': ['YouTube TV'],
-  'NFL RedZone': ['YouTube TV'],
   'NBA TV': ['YouTube TV'],
-  'MLB Network': ['YouTube TV'],
-  'NHL Network': ['YouTube TV'],
 
   // Streamers
   'Prime Video': ['Prime Video'],
@@ -142,4 +140,42 @@ export const ALIASES = {
   'NBC Sports on YouTube': 'YouTube',
   'WSL YouTube': 'YouTube',
   'YouTube (free)': 'YouTube',
+};
+
+/**
+ * Settings → What my services cover: the networks each league's games are usually on (national
+ * TV and streaming, 2026). The panel maps them through NETWORKS to your services; any that map to
+ * none of them are listed as missing, together with KNOWN_GAPS.
+ */
+export const LEAGUE_CARRIERS = {
+  nfl: ['CBS', 'FOX', 'NBC', 'ESPN', 'ABC', 'Prime Video', 'NFL Network', 'Netflix', 'Peacock', 'YouTube'],
+  cfb: ['ABC', 'ESPN', 'ESPN2', 'ESPNU', 'ESPN+', 'FOX', 'FS1', 'CBS', 'NBC', 'Peacock', 'Big Ten Network', 'SEC Network', 'ACC Network', 'The CW'],
+  nba: ['ABC', 'ESPN', 'NBC', 'Peacock', 'Prime Video', 'NBA TV'],
+  wnba: ['ABC', 'ESPN', 'ESPN+', 'ION', 'CBS', 'CBS Sports Network', 'NBC', 'USA Network', 'Peacock', 'Prime Video', 'NBA TV'],
+  mcbb: ['CBS', 'TNT', 'TBS', 'truTV', 'ESPN', 'ESPN2', 'ESPN+', 'FOX', 'FS1', 'NBC', 'Peacock', 'Big Ten Network', 'CBS Sports Network'],
+  wcbb: ['ABC', 'ESPN', 'ESPN2', 'ESPN+', 'FOX', 'FS1', 'NBC', 'Peacock', 'Big Ten Network'],
+  mlb: ['FOX', 'FS1', 'ESPN', 'NBC', 'Peacock', 'TBS', 'Netflix', 'MLB Network'],
+  nhl: ['ESPN', 'ABC', 'ESPN+', 'TNT', 'truTV', 'HBO Max', 'NHL Network'],
+  epl: ['NBC', 'USA Network', 'Peacock'],
+  ucl: ['CBS', 'Paramount+', 'CBS Sports Golazo Network'],
+  uel: ['Paramount+', 'CBS Sports Network'],
+  mls: ['Apple TV', 'FOX', 'FS1'],
+  nwsl: ['CBS', 'Paramount+', 'ABC', 'ESPN', 'Prime Video', 'ION'],
+  wsl: ['Paramount+', 'CBS Sports Network'],
+  f1: ['Apple TV'],
+  seriea: ['Paramount+', 'CBS Sports Network'],
+  uecl: ['Paramount+'],
+  uwcl: ['Paramount+', 'ESPN+'],
+  nascar: ['FOX', 'FS1', 'NBC', 'USA Network', 'TNT', 'truTV', 'HBO Max', 'Prime Video'],
+  tennis: ['ESPN', 'ESPN2', 'ABC', 'ESPN+', 'TNT', 'truTV', 'HBO Max'],
+  ufc: ['Paramount+', 'CBS'],
+};
+
+/** What your services don't carry, by league (local and add-on coverage ESPN can't tell us about). */
+export const KNOWN_GAPS = {
+  nfl: ['NFL RedZone', "NFL Sunday Ticket (Raiders games that don't air in LA)"],
+  nba: ['Lakers local games on Spectrum SportsNet'],
+  wnba: ['Sparks local games on Spectrum SportsNet'],
+  mlb: ['Dodgers local games on SportsNet LA', 'MLB Network'],
+  nhl: ['Kings local games on ABTV / DAZN', 'NHL Network'],
 };

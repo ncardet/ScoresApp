@@ -5,6 +5,7 @@
 import { h, clear, fill, logo, sportIcon } from './dom.js';
 import { getSettings, saveSettings, resetSettings } from '../core/settings.js';
 import { MY_SERVICES } from '../../config/services.js';
+import { coverage } from '../core/watch.js';
 import { appHeader } from './components.js';
 import { THEMES, readTheme, setTheme } from '../core/theme.js';
 import { CORE_LEAGUES, OPTIONAL_LEAGUES, LEAGUE_BY_KEY } from '../core/leagues.js';
@@ -66,6 +67,17 @@ export function settingsView(root) {
         saveSettings({ services: ALL_SERVICES.filter((x) => set.has(x)) });
       }, svc)))));
     parts.push(h('p', { class: 'tiny', style: { margin: '6px 4px' } }, 'Which networks each service carries lives in config/services.js.'));
+
+    // What my services cover (read-only): each core league and each optional league switched on.
+    const covered = [...CORE_LEAGUES, ...OPTIONAL_LEAGUES.filter((l) => st.optionalLeagues.includes(l.key))];
+    parts.push(h('div', { class: 'section-h' }, h('h2', null, 'What my services cover'), h('span', { class: 'meta' }, 'from config/services.js')));
+    parts.push(h('div', { class: 'card list' }, covered.map((l) => {
+      const c = coverage(l.key, st.services);
+      return h('div', { class: 'cover-row' },
+        h('div', { class: 'cover-name' }, sportIcon(l.sport), l.name),
+        h('div', { class: 'cover-on' }, c.on.length ? `On ${c.on.join(', ')}` : 'Not on your services'),
+        c.missing.length ? h('div', { class: 'cover-miss' }, `Missing: ${c.missing.join(' · ')}`) : null);
+    })));
 
     // Leagues
     parts.push(h('div', { class: 'section-h' }, h('h2', null, 'Leagues')));
