@@ -21,6 +21,12 @@ export const FORMATS = {
     { key: 'playin', label: 'play-in', weight: 0.5, kind: 'confRank', n: 10 },
     { key: 'seed1', label: 'No. 1 seed', weight: 0.3, kind: 'confRank', n: 1 },
   ] },
+  // WNBA: the top 8 overall make the playoffs (no conferences); the top 4 host the first round.
+  wnba: { points: 'winpct', outcomes: [
+    { key: 'playoffs', label: 'playoff', weight: 1, kind: 'allRank', n: 8 },
+    { key: 'top4', label: 'home-court', weight: 0.4, kind: 'allRank', n: 4 },
+    { key: 'seed1', label: 'No. 1 seed', weight: 0.3, kind: 'allRank', n: 1 },
+  ] },
   nhl: { points: 'nhl', outcomes: [
     { key: 'playoffs', label: 'playoff', weight: 1, kind: 'nhlPlayoff' },
   ] },
@@ -58,6 +64,11 @@ export const FORMATS = {
 
 const NHL_OT_RATE = 0.23;
 
+/** False for games that don't count in the table: the WNBA Commissioner's Cup final. */
+export function countsInStandings(g, league) {
+  return !(league === 'wnba' && (g.notes || []).some((n) => /commissioner'?s cup/i.test(String(n))));
+}
+
 /** Standings from completed games: Map teamId -> {w, l, t, otl, pts, gp, gf, ga}. */
 export function standingsFrom(games, league) {
   const tab = new Map();
@@ -67,6 +78,7 @@ export function standingsFrom(games, league) {
   };
   for (const g of games) {
     if (!g.done || g.x || g.h.s == null || g.a.s == null) continue;
+    if (!countsInStandings(g, league)) continue;
     const h = get(g.h.id);
     const a = get(g.a.id);
     h.gp++; a.gp++;

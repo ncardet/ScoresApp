@@ -21,7 +21,8 @@ import { mapLimit } from '../site/js/adapters/espn/client.js';
 import { LEAGUES, LEAGUE_BY_KEY } from '../site/js/core/leagues.js';
 import { todayKey, addDays, ptParts, ptTime, formatTime, longDayLabel, TZ } from '../site/js/core/time.js';
 import { whereToWatch } from '../site/js/core/watch.js';
-import { MY_SERVICES } from '../site/config/services.js';
+import { mergeUnmapped } from './lib/unmapped.mjs';
+import { MY_SERVICES, FREE_YOUTUBE } from '../site/config/services.js';
 import FAVORITES from '../site/config/favorites.js';
 import CFG from '../site/config/prediction.json' with { type: 'json' };
 import { getCalibration, predict, rate, ENGINE_VERSION } from '../site/js/rating/index.js';
@@ -72,12 +73,13 @@ function finalScore(g) {
 }
 
 function watch(g) {
-  const w = whereToWatch(g.broadcasts, MY_SERVICES);
+  const w = whereToWatch(g.broadcasts, MY_SERVICES, g.league);
   if (w.status === 'ok') {
-    const opts = w.options.map((o) => (o.services.length === 1 && o.services[0] === o.network ? o.network : `${o.network} (${o.services.join(', ')})`));
+    const opts = w.options.map((o) => (o.services.includes(FREE_YOUTUBE) ? 'Free on YouTube'
+      : o.services.length === 1 && o.services[0] === o.network ? o.network : `${o.network} (${o.services.join(', ')})`));
     return { watch: opts, watch_summary: opts[0] };
   }
-  if (w.status === 'none') return { watch: [], watch_summary: 'Not on your services' };
+  if (w.status === 'none') return { watch: [], watch_summary: w.label };
   return { watch: [], watch_summary: 'No TV listing' };
 }
 
@@ -383,6 +385,10 @@ async function main() {
   const ratings = Object.fromEntries(yRated.map(({ g, r }) => [g.key, { ...r, curve: undefined, wp: undefined, scores: undefined }]));
   await writeFile(`${OUT}/ratings/${yesterday}.json`, JSON.stringify({ date: yesterday, engine: ENGINE_VERSION, ratings }));
   await pruneRatings(`${OUT}/ratings`);
+  // Broadcasters the services config doesn't map yet (new local channels, YouTube channels).
+  let unmappedPrev = null;
+  try { unmappedPrev = JSON.parse(await readFile(`${OUT}/unmapped-networks.json`, 'utf8')); } catch { /* first run */ }
+  await writeFile(`${OUT}/unmapped-networks.json`, `${JSON.stringify(mergeUnmapped(unmappedPrev, [...d0, ...d1, ...yGames], today), null, 2)}\n`);
   console.log(`Brief for ${today}: ${brief.top_games.length} top games, ${favorites.length} favorite games, sleeper ${brief.sleeper ? 'yes' : 'no'}, skip ${brief.skip ? 'yes' : 'no'}, ${replay.length} replays (${yRated.length}/${finals.length} rated yesterday), ${brief.coming_up.length} coming up. ${errors.length} errors.`);
   if (errors.length) console.log(errors.slice(0, 10).join('\n'));
   setOutput('generated', 'true');

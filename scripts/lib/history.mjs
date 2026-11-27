@@ -26,6 +26,7 @@ export const SEASONS = {
   nfl: { kind: 'week', seasons: range(2021, 2026), eval: [2024, 2025] },
   cfb: { kind: 'week', seasons: range(2021, 2026), eval: [2023, 2024, 2025], params: '&groups=80&limit=300' },
   nba: { kind: 'day', seasons: range(2022, 2027), eval: [2025, 2026], window: (y) => [`${y - 1}-10-01`, `${y}-06-30`] },
+  wnba: { kind: 'day', seasons: range(2024, 2027), eval: [2025, 2026], window: (y) => [`${y}-05-01`, `${y}-11-10`] },
   nhl: { kind: 'day', seasons: range(2023, 2027), eval: [2025, 2026], window: (y) => [`${y - 1}-10-01`, `${y}-06-30`] },
   mlb: { kind: 'day', seasons: range(2024, 2026), eval: [2025, 2026], window: (y) => [`${y}-03-15`, `${y}-11-10`], noCalendar: true },
   mcbb: { kind: 'day', seasons: range(2022, 2027), eval: [2024, 2025, 2026], window: (y) => [`${y - 1}-11-01`, `${y}-04-10`], params: '&groups=50&limit=500' },
@@ -38,7 +39,7 @@ export const SEASONS = {
   nwsl: { kind: 'year', seasons: range(2022, 2026), eval: [2024, 2025, 2026], window: (y) => [`${y}-02-01`, `${y}-12-20`] },
 };
 
-const US_PRESEASON = new Set(['nfl', 'cfb', 'nba', 'nhl', 'mlb', 'mcbb', 'wcbb']);
+const US_PRESEASON = new Set(['nfl', 'cfb', 'nba', 'wnba', 'nhl', 'mlb', 'mcbb', 'wcbb']);
 
 /** Compact, JSON-friendly game record (what Elo, standings and the backtest need). */
 export function compact(g, season) {

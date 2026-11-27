@@ -18,6 +18,11 @@ export const LEAGUES = [
     periods: 4, periodMinutes: 12, otMinutes: 5, periodLabel: 'Q', oneScore: 3,
   },
   {
+    // May to October. 40-minute games (4 x 10), 5-minute overtime.
+    key: 'wnba', name: 'WNBA', short: 'WNBA', sport: 'basketball', espn: 'basketball/wnba',
+    periods: 4, periodMinutes: 10, otMinutes: 5, periodLabel: 'Q', oneScore: 3,
+  },
+  {
     key: 'mcbb', name: "Men's College Basketball", short: 'MCBB', sport: 'basketball',
     espn: 'basketball/mens-college-basketball',
     periods: 2, periodMinutes: 20, otMinutes: 5, periodLabel: 'H', oneScore: 3, college: true,

@@ -25,6 +25,34 @@ for (const name of FIXTURE_NAMES) {
   });
 }
 
+test('WNBA-only flags: late comeback, 20/20 and triple-double (not in the NBA)', async () => {
+  const { novelty } = await import('../site/js/rating/components.js');
+  const box = [{ groups: [{ keys: ['minutes', 'points', 'rebounds', 'assists', 'steals', 'blocks'], rows: [
+    { name: 'A. Wilson', stats: ['36', '24', '21', '3', '1', '2'] },
+    { name: 'C. Clark', stats: ['35', '18', '10', '13', '2', '0'] },
+  ] }] }];
+  // Home trails by 8 entering the final minute of a 40-minute game (t >= 0.975) and wins.
+  const tl = { final: true, scores: [
+    { t: 0, hs: 0, as: 0 }, { t: 0.96, hs: 70, as: 78 }, { t: 0.985, hs: 76, as: 78 }, { t: 0.999, hs: 79, as: 78 },
+  ] };
+  const keys = (league) => novelty(tl, { game: { league, period: 4 }, plays: [], box }, 1).flags.map((f) => f.key);
+  const wnba = keys('wnba');
+  for (const k of ['lateComeback', 'twentyTwenty', 'tripleDouble']) assert.ok(wnba.includes(k), `wnba: ${k} in ${wnba}`);
+  const nba = keys('nba');
+  for (const k of ['lateComeback', 'twentyTwenty', 'tripleDouble']) assert.ok(!nba.includes(k), `nba: no ${k}`);
+  // A 6-point deficit in the final minute is not enough (threshold 7).
+  const tl6 = { final: true, scores: [{ t: 0, hs: 0, as: 0 }, { t: 0.96, hs: 72, as: 78 }, { t: 0.999, hs: 79, as: 78 }] };
+  assert.ok(!novelty(tl6, { game: { league: 'wnba', period: 4 }, plays: [], box: [] }, 1).flags.some((f) => f.key === 'lateComeback'));
+});
+
+test("WNBA Commissioner's Cup final: moderate stakes, kept out of the standings table", async () => {
+  const { countsInStandings } = await import('../site/js/predict/simulate.js');
+  const cup = { notes: ["WNBA Commissioner's Cup Championship"] };
+  assert.equal(countsInStandings(cup, 'wnba'), false);
+  assert.equal(countsInStandings({ notes: [] }, 'wnba'), true);
+  assert.equal(stakesFactor({ notes: cup.notes, seasonType: 2 }).value, 0.5);
+});
+
 test('explanations name the drama', async () => {
   const sb = rate((await loadFixture('nfl-super-bowl-lviii')).detail, await getCalibration('nfl'));
   assert.match(sb.explain, /Overtime/);

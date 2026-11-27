@@ -61,6 +61,8 @@ function seriesBefore(game) {
 /** Stakes 0..1 with a label. */
 export function stakesFactor(game) {
   const notes = (game.notes || []).join(' · ');
+  // An in-season cup final: real stakes, but not a playoff game.
+  if (/commissioner'?s cup/i.test(notes)) return { value: 0.5, label: "Commissioner's Cup Championship" };
   const knockoutSoccer = game.sport === 'soccer' && KO_SLUG.test(game.seasonSlug || '');
   const post = game.seasonType === 3 || game.tournament || knockoutSoccer || (KO.test(notes) && !/regular season|group|league phase/i.test(notes));
   if (!post) return { value: 0, label: '' };

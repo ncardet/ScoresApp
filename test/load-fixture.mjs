@@ -33,4 +33,5 @@ export const FIXTURE_NAMES = [
   'ucl-inter-barcelona-sf', 'ucl-final-psg-inter',
   'nhl-ot-thriller', 'nhl-blowout',
   'f1-las-vegas-2026',
+  'wnba-finals-2024-g5', 'wnba-semis-2025-g5', 'wnba-blowout',
 ];

@@ -123,3 +123,69 @@ test('every league has a sport icon, drawn only in the text colour', async () =>
     assert.doesNotMatch(svg, /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i, sport);
   }
 });
+
+test('WNBA networks map to your services; Paramount+ Essential keeps only NFL on CBS', () => {
+  const w = (name, league = 'wnba', market = 'national') => whereToWatch([{ name, market }], MY_SERVICES, league).options[0]?.services;
+  assert.deepEqual(w('Prime Video'), ['Prime Video']);
+  assert.deepEqual(w('Peacock'), ['Peacock']);
+  assert.deepEqual(w('ION'), ['YouTube TV']);
+  assert.deepEqual(w('NBA TV'), ['YouTube TV']);
+  assert.deepEqual(w('ESPN+'), ['YouTube TV']);
+  assert.deepEqual(w('ESPN Unlimited'), ['YouTube TV']);
+  assert.deepEqual(w('NBC'), ['YouTube TV', 'Peacock']);
+  assert.deepEqual(w('CBS'), ['YouTube TV'], 'Essential has no live local CBS');
+  assert.deepEqual(w('CBS', 'nfl'), ['YouTube TV', 'Paramount+'], 'Essential includes NFL on CBS');
+  // Local Sparks broadcasts: only home/away-market channels, none on your services.
+  const local = whereToWatch([{ name: 'Spectrum Sports Net', market: 'home' }, { name: 'WNBA League Pass', market: 'away' }], MY_SERVICES, 'wnba');
+  assert.equal(local.status, 'none');
+  assert.equal(local.label, 'Not on your services (local TV)');
+  assert.equal(whereToWatch([{ name: 'Apple TV', market: 'national' }], MY_SERVICES, 'mls').label, 'Not on your services');
+});
+
+test('free YouTube: mapped, ahead of YouTube TV, labeled as available (WSL: Paramount+ first)', () => {
+  const yt = whereToWatch([{ name: 'YouTube', market: 'national' }], MY_SERVICES, 'nfl');
+  assert.equal(yt.status, 'ok');
+  assert.equal(yt.label, 'Free on YouTube');
+  assert.ok(yt.free);
+  for (const name of ['NFL on YouTube', 'NBC Sports YouTube', 'WSL YouTube']) assert.equal(canonicalNetwork(name), 'YouTube', name);
+  const both = whereToWatch([{ name: 'NBC', market: 'national' }, { name: 'NBC Sports YouTube', market: 'national' }], MY_SERVICES, 'nfl');
+  assert.equal(both.options[0].network, 'YouTube');
+  assert.equal(both.short, 'Free on YouTube');
+  // An unlisted YouTube-like name still counts as free YouTube; YouTube TV never does.
+  assert.equal(whereToWatch([{ name: 'WNBA on YouTube' }], MY_SERVICES, 'wnba').label, 'Free on YouTube');
+  assert.notEqual(whereToWatch([{ name: 'YouTube TV' }], MY_SERVICES, 'nba').label, 'Free on YouTube');
+  // WSL: Paramount+ carries every match, so it comes first.
+  const wsl = whereToWatch([{ name: 'WSL YouTube', market: 'national' }, { name: 'Paramount+', market: 'national' }], MY_SERVICES, 'wsl');
+  assert.equal(wsl.options[0].network, 'Paramount+');
+  // Switched off in Settings: not offered.
+  assert.equal(whereToWatch([{ name: 'YouTube' }], MY_SERVICES.filter((s) => s !== 'YouTube (free)'), 'nfl').status, 'none');
+});
+
+test('unmapped broadcasters are logged per day, with leagues, markets and YouTube-like names', async () => {
+  const { mergeUnmapped } = await import('../scripts/lib/unmapped.mjs');
+  const games = [
+    { league: 'wnba', broadcasts: [{ name: 'Spectrum Sports Net', market: 'home' }, { name: 'ION', market: 'national' }] },
+    { league: 'nfl', broadcasts: [{ name: 'NFL Brazil on YouTube', market: 'national' }] },
+  ];
+  const day1 = mergeUnmapped(null, games, '2026-11-27');
+  assert.deepEqual(Object.keys(day1.names).sort(), ['NFL Brazil on YouTube', 'Spectrum Sports Net']);
+  assert.deepEqual(day1.names['Spectrum Sports Net'].markets, ['home']);
+  assert.deepEqual(day1.names['Spectrum Sports Net'].leagues, ['wnba']);
+  assert.equal(day1.names['NFL Brazil on YouTube'].youtubeLike, true);
+  assert.equal(mergeUnmapped(day1, games, '2026-11-27').names['Spectrum Sports Net'].days, 1, 'the same day counts once');
+  assert.equal(mergeUnmapped(day1, games, '2026-11-28').names['Spectrum Sports Net'].days, 2);
+});
+
+test('a service added to the config starts on for a phone that saved its toggles earlier', async () => {
+  const store = { 'sideline.settings.v1': JSON.stringify({ services: ['YouTube TV', 'Peacock'] }) };
+  globalThis.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = v; } };
+  try {
+    const { getSettings, saveSettings } = await import('../site/js/core/settings.js');
+    saveSettings({}); // drop any cached copy
+    assert.deepEqual(getSettings().services, ['YouTube (free)', 'YouTube TV', 'Peacock']);
+    saveSettings({ services: ['YouTube TV'] }); // switched YouTube (free) off on purpose
+    assert.deepEqual(getSettings().services, ['YouTube TV']);
+  } finally {
+    delete globalThis.localStorage;
+  }
+});

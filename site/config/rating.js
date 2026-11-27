@@ -66,8 +66,15 @@ export default {
     lateWinner: 0.4,         // go-ahead score in the final ~1% of regulation or in OT
     redCard: 0.18,           // per red card, max 2 counted
     bigComeback: 0.5,        // 15+ (basketball) or 17+ (football) point comeback
+    // League-only flags (see leagueNovelty): rare in the WNBA, routine in the NBA.
+    lateComeback: 0.55,      // overturned a deficit of lateComebackPoints+ in the final minute
+    tripleDouble: 0.3,
+    twentyTwenty: 0.3,       // 20 points and 20 rebounds
   },
-  bigComebackPoints: { basketball: 15, football: 17 },
+  // Points down for a "big comeback": per league first, then per sport (WNBA: 12+, NBA: 15+).
+  bigComebackPoints: { basketball: 15, football: 17, wnba: 12 },
+  lateComebackPoints: { wnba: 7 },
+  leagueNovelty: { wnba: ['lateComeback', 'tripleDouble', 'twentyTwenty'] },
 
   // Live: rating = (1 - a) * predicted + a * in-game, a = progress ^ gamma (progress 0..1).
   // gamma 1.2: in-game evidence weighs ~18% a quarter of the way in, ~43% at half, ~77% at 80%.
@@ -98,6 +105,7 @@ export default {
     nfl: { sigma: 13.5, totalNorm: 45, scales: { swing: 4.6, leadChanges: 9, pace: 1.6 } },
     cfb: { sigma: 16, totalNorm: 55, scales: { swing: 4.6, leadChanges: 9, pace: 1.6 } },
     nba: { sigma: 13, totalNorm: 228, scales: { swing: 6.5, leadChanges: 30, pace: 1.18 } },
+    wnba: { sigma: 11, totalNorm: 164, scales: { swing: 6.5, leadChanges: 24, pace: 1.2 } },
     mcbb: { sigma: 11, totalNorm: 145, scales: { swing: 5.5, leadChanges: 22, pace: 1.3 } },
     wcbb: { sigma: 11.5, totalNorm: 135, scales: { swing: 5.5, leadChanges: 22, pace: 1.3 } },
     mlb: { runsPerTeam: 4.4, totalNorm: 8.8, scales: { swing: 3.6, leadChanges: 6, pace: 2.0 } },

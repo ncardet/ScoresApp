@@ -14,6 +14,7 @@ import { kvGet, kvSet } from '../../core/kv.js';
 // Month-day windows of each postseason (inclusive).
 export const WINDOWS = {
   nba: ['04-12', '06-25'],
+  wnba: ['09-10', '11-05'],
   nhl: ['04-15', '06-28'],
   mlb: ['09-28', '11-08'],
   nfl: ['01-07', '02-16'],

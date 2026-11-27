@@ -18,7 +18,7 @@ import RATING from '../site/config/rating.js';
 import { leagueHistory, SEASONS } from './lib/history.mjs';
 import { walk } from './lib/elo-walk.mjs';
 import { leagueStructure } from './lib/structure.mjs';
-import { simulateSeason, standingsFrom, FORMATS, seededRng } from '../site/js/predict/simulate.js';
+import { simulateSeason, standingsFrom, countsInStandings, FORMATS, seededRng } from '../site/js/predict/simulate.js';
 import { predictGame, FEATURES, isPlayoff } from '../site/js/predict/index.js';
 import { circuitAverage } from '../site/js/predict/terms.js';
 import { championshipStakes } from '../site/js/rating/f1.js';
@@ -103,7 +103,7 @@ async function teamLeagueRows(league) {
   if (FORMATS[league]) {
     for (const s of cfg.eval) {
       const games = histories.find((h) => h.season === s)?.games || [];
-      const reg = games.filter((g) => !isPlayoff(toGame(g)) && !(pool && !/league/i.test(g.slug)));
+      const reg = games.filter((g) => !isPlayoff(toGame(g)) && !(pool && !/league/i.test(g.slug)) && countsInStandings(g, league));
       if (reg.length < 50) continue;
       const first = reg[0].day;
       const last = reg[reg.length - 1].day;
@@ -390,6 +390,51 @@ function verdict(ev) {
   return { key: 'ties', text: 'roughly ties spread-only', m };
 }
 
+/**
+ * A partial run (--leagues) rewrites only those leagues: their summary rows and sections replace
+ * the previous report's, every other league keeps what the last full run wrote.
+ */
+function mergeReport(fresh, previous) {
+  if (!previous) return fresh;
+  const order = [...Object.keys(SEASONS), 'f1'].map((k) => k.toUpperCase());
+  const parse = (lines) => {
+    const rows = new Map();
+    const sections = new Map();
+    let cur = null;
+    for (const line of lines) {
+      const head = line.match(/^## ([A-Z0-9]+)$/);
+      if (head && order.includes(head[1])) { cur = head[1]; sections.set(cur, []); }
+      else if (/^## /.test(line)) cur = null;
+      if (cur) { sections.get(cur).push(line); continue; }
+      const row = line.match(/^\| ([A-Z0-9]+) \|/);
+      if (row && order.includes(row[1])) rows.set(row[1], line);
+    }
+    return { rows, sections };
+  };
+  const a = parse(previous.split('\n'));
+  const b = parse(fresh);
+  const pick = (map, k) => b[map].get(k) ?? a[map].get(k);
+  const out = [];
+  let inSummary = false;
+  for (const line of fresh) {
+    if (/^## Summary/.test(line)) inSummary = true;
+    const row = line.match(/^\| ([A-Z0-9]+) \|/);
+    if (inSummary && row && order.includes(row[1])) continue;
+    if (inSummary && line === '' && out.at(-1)?.startsWith('|---')) {
+      for (const k of order) if (pick('rows', k)) out.push(pick('rows', k));
+      inSummary = false;
+    }
+    if (/^## ([A-Z0-9]+)$/.test(line) && order.includes(line.slice(3))) break;
+    out.push(line);
+  }
+  for (const k of order) {
+    const sec = pick('sections', k);
+    if (sec) out.push(...(sec.at(-1) === '' ? sec : [...sec, '']));
+  }
+  while (out.at(-1) === '') out.pop();
+  return out;
+}
+
 function reportLeague(league, data, ev) {
   const L = [`## ${league.toUpperCase()}`, ''];
   if (!ev) { L.push(`_${data.note || 'No data'}_`, ''); return L; }
@@ -471,7 +516,8 @@ async function main() {
   for (const league of LEAGUE_KEYS) L.push(...reportLeague(league, results[league].data, results[league].ev));
   if (WRITE) {
     await mkdir('reports', { recursive: true });
-    await writeFile('reports/backtest.md', `${L.join('\n')}\n`);
+    const report = args.leagues ? mergeReport(L, await readFile('reports/backtest.md', 'utf8').catch(() => '')) : L;
+    await writeFile('reports/backtest.md', `${report.join('\n')}\n`);
     cfgOut.version = (cfgOut.version || 1) + (args['bump'] ? 1 : 0);
     await writeFile('site/config/prediction.json', `${JSON.stringify(cfgOut, null, 2)}\n`);
     console.log('Wrote reports/backtest.md and site/config/prediction.json');

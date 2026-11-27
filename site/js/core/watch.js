@@ -1,6 +1,6 @@
 // Where to watch: map a game's broadcasters to the services you have (config/services.js).
 
-import { NETWORKS, ALIASES, SERVICE_SHORT } from '../../config/services.js';
+import { NETWORKS, ALIASES, SERVICE_SHORT, FREE_YOUTUBE, PREFERENCE, LEAGUE_NETWORKS } from '../../config/services.js';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9+]/g, '');
 
@@ -13,6 +13,13 @@ const NETWORK_SHORT = {
 const aliasMap = new Map(Object.entries(ALIASES).map(([k, v]) => [norm(k), v]));
 const netMap = new Map(Object.entries(NETWORKS).map(([k, v]) => [norm(k), { name: k, services: v }]));
 
+// A free YouTube stream under a name not listed yet ("WNBA on YouTube"), but never YouTube TV.
+const YOUTUBE_LIKE = /you\s*tube/i;
+const YOUTUBE_TV = /you\s*tube\s*tv|\byttv\b/i;
+
+export const FREE_LABEL = 'Free on YouTube';
+export const LOCAL_LABEL = 'Not on your services (local TV)';
+
 export function canonicalNetwork(name) {
   const n = norm(name);
   const alias = aliasMap.get(n);
@@ -20,33 +27,56 @@ export function canonicalNetwork(name) {
   return netMap.get(n)?.name || String(name || '').trim();
 }
 
+/** Services that carry a network in this league, or null when the network isn't in the map. */
+function carriers(network, league) {
+  const base = netMap.get(norm(network))?.services;
+  const extra = LEAGUE_NETWORKS[league]?.[network];
+  if (!base && !extra) return null;
+  return [...new Set([...(base || []), ...(extra || [])])];
+}
+
+/** Broadcaster names that aren't in config/services.js (the brief logs them for review). */
+export function unmappedNetworks(broadcasts) {
+  return [...new Set((broadcasts || []).map((b) => b?.name).filter((n) => n && !carriers(canonicalNetwork(n), '')))];
+}
+
 /**
  * @param {{name: string, market?: string}[]} broadcasts
  * @param {string[]} myServices services currently enabled
- * @returns {{status: 'ok'|'none'|'unknown', options: {network: string, services: string[], market: string}[], label: string, short: string}}
+ * @param {string} [league] league key, for league-specific carriage and preference
+ * @returns {{status: 'ok'|'none'|'unknown', options: {network: string, services: string[], market: string}[], label: string, short: string, free?: boolean}}
  */
-export function whereToWatch(broadcasts, myServices) {
+export function whereToWatch(broadcasts, myServices, league = '') {
   const list = (broadcasts || []).filter((b) => b?.name);
   if (!list.length) return { status: 'unknown', options: [], label: '', short: '' };
   const options = [];
   for (const b of list) {
-    const network = canonicalNetwork(b.name);
-    const entry = netMap.get(norm(network));
-    const services = (entry?.services || []).filter((s) => myServices.includes(s));
-    if (services.length) options.push({ network, services, market: b.market || 'national' });
+    let network = canonicalNetwork(b.name);
+    let services = carriers(network, league);
+    if (!services && YOUTUBE_LIKE.test(b.name) && !YOUTUBE_TV.test(b.name)) {
+      network = 'YouTube';
+      services = carriers(network, league);
+    }
+    const mine = (services || []).filter((s) => myServices.includes(s));
+    if (mine.length) options.push({ network, services: mine, market: b.market || 'national' });
   }
   if (!options.length) {
-    return {
-      status: 'none',
-      options: [],
-      networks: list.map((b) => b.name),
-      label: 'Not on your services',
-      short: 'Not on your services',
-    };
+    // Every listed broadcaster is a local channel (home or away market): say so.
+    const local = list.every((b) => b.market && b.market !== 'national');
+    const label = local ? LOCAL_LABEL : 'Not on your services';
+    return { status: 'none', options: [], networks: list.map((b) => b.name), label, short: label };
   }
-  // National feeds first; then networks reachable through the most services.
-  options.sort((a, b) => (a.market === 'national' ? 0 : 1) - (b.market === 'national' ? 0 : 1) || b.services.length - a.services.length);
+  // Preferred services first (a free YouTube stream; per-league overrides), then national feeds,
+  // then networks reachable through the most services.
+  const prefer = PREFERENCE[league] || PREFERENCE.default;
+  const rank = (o) => {
+    const i = prefer.findIndex((p) => o.services.includes(p));
+    return i < 0 ? prefer.length : i;
+  };
+  const local = (o) => (o.market === 'national' ? 0 : 1);
+  options.sort((a, b) => rank(a) - rank(b) || local(a) - local(b) || b.services.length - a.services.length);
   const first = options[0];
+  if (first.services.includes(FREE_YOUTUBE)) return { status: 'ok', options, label: FREE_LABEL, short: FREE_LABEL, free: true };
   const svc = (s) => SERVICE_SHORT[s] || s;
   const sameName = first.services.length === 1 && norm(first.services[0]) === norm(first.network);
   const label = sameName ? first.network : `${first.network} · ${first.services.join(' / ')}`;

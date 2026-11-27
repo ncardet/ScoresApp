@@ -10,6 +10,7 @@ import { spreadInfo } from './odds.js';
 import { probabilities, spreadFromElo } from './elo.js';
 
 const S = CFG.sports;
+const COMMISSIONERS_CUP = /commissioner'?s cup/i;
 const fmt = (x) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
 const pct = (x) => `${Math.round(x * 100)}%`;
 
@@ -182,7 +183,7 @@ function importanceTerm(game, ctx) {
   let pts;
   if (fam === 'nfl') pts = step(S.nfl.playoffSwing.map(([lim, p]) => [-lim, p]).concat([[Infinity, 0]]), -swing);
   else {
-    const cap = fam === 'nba' ? S.nba.seedingLeverage : fam === 'mlb' ? S.mlb.raceSwing : fam === 'nhl' ? S.nhl.raceSwing : fam === 'soccer' ? S.soccer.tableLeverage : CFG.importance.max;
+    const cap = fam === 'nba' || fam === 'wnba' ? S[fam].seedingLeverage : fam === 'mlb' ? S.mlb.raceSwing : fam === 'nhl' ? S.nhl.raceSwing : fam === 'soccer' ? S.soccer.tableLeverage : CFG.importance.max;
     pts = swing >= 40 ? cap : swing >= 20 ? 0.6 * cap : swing >= 10 ? 0.3 * cap : 0;
   }
   pts = Math.round(pts * 10) / 10;
@@ -208,12 +209,14 @@ function stakesTerms(game, ctx) {
     else if (/divisional/i.test(notes)) add(pc.divisional, 'Divisional round');
     else add(pc.wildcard, 'Wild Card round');
   }
-  if (fam === 'nba' && sb) {
+  if ((fam === 'nba' || fam === 'wnba') && sb) {
     const need = sb.toWin - 1;
-    if (sb.h === need && sb.a === need) add(S.nba.playoffs.game7, `Game ${sb.h + sb.a + 1}: winner takes the series`);
-    else if (sb.h === need || sb.a === need) add(S.nba.playoffs.elimination, 'Elimination game');
-    else if (sb.h === sb.a) add(S.nba.playoffs.tied, `Series tied ${sb.h}-${sb.a}`);
+    const po = S[fam].playoffs;
+    if (sb.h === need && sb.a === need) add(po.game7, `Game ${sb.h + sb.a + 1}: winner takes the series`);
+    else if (sb.h === need || sb.a === need) add(po.elimination, 'Elimination game');
+    else if (sb.h === sb.a) add(po.tied, `Series tied ${sb.h}-${sb.a}`);
   }
+  if (fam === 'wnba' && COMMISSIONERS_CUP.test(notes)) add(S.wnba.commissionersCup, "Commissioner's Cup Championship");
   if (fam === 'nhl' && sb) {
     const need = sb.toWin - 1;
     if (sb.h === need && sb.a === need) add(S.nhl.playoffs.game7, 'Game 7');
@@ -284,7 +287,7 @@ function narrativeTerms(game, ctx) {
     const hd = ctx.structure?.home?.div;
     if (hd && hd === ctx.structure?.away?.div) out.push({ key: 'division', group: 'narrative', points: S.nfl.division, text: 'Division game' });
     if (game.start && etHour(game.start) >= 19) out.push({ key: 'primetime', group: 'narrative', points: S.nfl.primetime, text: 'Primetime' });
-  } else if (['nba', 'nhl', 'mlb'].includes(fam) && nationalTv(game)) {
+  } else if (['nba', 'wnba', 'nhl', 'mlb'].includes(fam) && nationalTv(game)) {
     out.push({ key: 'nationalTv', group: 'narrative', points: N.nationalTv, text: 'National TV' });
   }
   return out;
@@ -371,10 +374,10 @@ function availabilityTerms(game, ctx, hasLine) {
       if (x.qbOut[side]) out.push({ key: 'availability', group: 'availability', points: S.nfl.qbOut * mult, text: `${game[side]?.short} starting QB out${x.qbOut[side] === true ? '' : ` (${x.qbOut[side]})`}` });
     }
   }
-  if (['nba', 'mcbb', 'wcbb'].includes(fam) && x.starOut) {
+  if (['nba', 'wnba', 'mcbb', 'wcbb'].includes(fam) && x.starOut) {
     for (const side of ['home', 'away']) {
       const who = x.starOut[side];
-      if (who) out.push({ key: 'availability', group: 'availability', points: S.nba.starOut[0] * mult, text: `${who} out` });
+      if (who) out.push({ key: 'availability', group: 'availability', points: (S[fam]?.starOut || S.nba.starOut)[0] * mult, text: `${who} out` });
     }
   }
   if (fam === 'mlb') {

@@ -1,6 +1,6 @@
 # Endpoint probe report
 
-Generated 2026-11-26T17:35:34.956Z with Origin `https://example.github.io`. Re-run: `npm run probe`.
+Generated 2026-11-27T21:01:14.805Z with Origin `https://example.github.io`. Re-run: `npm run probe`.
 
 **CORS:** every ESPN endpoint answered with `Access-Control-Allow-Origin: *` — the browser can call ESPN directly.
 
@@ -11,6 +11,7 @@ Generated 2026-11-26T17:35:34.956Z with Origin `https://example.github.io`. Re-r
 | NFL | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | n/a | 180 | 179 (drives) | — | — | 16/16 games | 15/16 | — |
 | College Football | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | 172 | 173 (drives) | — | — | 21/21 games | 21/21 | — |
 | NBA | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | n/a | 479 | 479 (plays) | — | — | 9/11 games | 5/11 | — |
+| WNBA | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | n/a | 374 | 374 (plays) | — | — | 1/1 games | 0/1 | — |
 | Men's College Basketball | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | 404 | 405 (plays) | — | — | 11/11 games | 11/11 | — |
 | Women's College Basketball | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | 439 | 443 (plays) | — | — | 2/2 games | 0/2 | — |
 | MLB | 200 ✓CORS | 200 ✓CORS | 200 ✓CORS | n/a | 92 | 719 (plays) | 2 (no formation) | — | 1/1 games | 0/1 | — |
@@ -63,6 +64,18 @@ Counts are from the most recent finished game (summary) and the current scoreboa
 - Box score players: yes; predictor: no; odds (pickcenter): 1; series: yes; shot map flag: null
 - Standings: 200, 2 groups / 30 rows (Eastern Conference, Western Conference)
 - Standings stats: avgPointsAgainst, avgPointsFor, differential, divisionWinPercent, gamesBehind, leagueWinPercent, losses, playoffSeed, pointDifferential, points, pointsAgainst, pointsFor, streak, winPercent, wins, gamesAhead, overall, Home, Road, vs. Div., vs. Conf., Last Ten Games
+
+### WNBA (`basketball/wnba`)
+
+- Scoreboard now: 1 events {"post":1}, 28 KB, 385 ms
+- Networks seen: USA Net, CNBC
+- Finished game: Atlanta Dream at Golden State Valkyries (401918311, 2026-11-01T00:00Z) — summary 479 KB, 104 ms
+- Summary keys: boxscore, format, gameInfo, leaders, seasonseries, injuries, broadcasts, pickcenter, odds, againstTheSpread, article, videos, news, plays, winprobability, header, wallclockAvailable, meta, standings
+- Win probability points: 374; plays: 374; scoring plays: 0; key events: 0; commentary: 0 (0 shots/goals)
+- Team stats: fieldGoalsMade-fieldGoalsAttempted, fieldGoalPct, threePointFieldGoalsMade-threePointFieldGoalsAttempted, threePointFieldGoalPct, freeThrowsMade-freeThrowsAttempted, freeThrowPct, totalRebounds, offensiveRebounds, defensiveRebounds, assists, steals, blocks, turnovers, teamTurnovers, totalTurnovers, technicalFouls, totalTechnicalFouls, flagrantFouls, turnoverPoints, fastBreakPoints, pointsInPaint, fouls, largestLead, leadChanges, leadPercentage
+- Box score players: yes; predictor: no; odds (pickcenter): 1; series: yes; shot map flag: null
+- Standings: 200, 2 groups / 15 rows (Eastern Conference, Western Conference)
+- Standings stats: avgPointsAgainst, avgPointsFor, clincher, differential, divisionWinPercent, gamesBehind, leagueWinPercent, losses, playoffSeed, pointDifferential, points, pointsAgainst, pointsFor, streak, winPercent, wins, gamesAhead, overall, Home, Road, vs. Div., vs. Conf., Last Ten Games
 
 ### Men's College Basketball (`basketball/mens-college-basketball`)
 

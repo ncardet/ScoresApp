@@ -207,6 +207,7 @@ export function novelty(tl, detail, result) {
   const N = RATING.novelty;
   const flags = [];
   const add = (key, weight, label) => flags.push({ key, weight, label });
+  const leagueFlag = (key) => (RATING.leagueNovelty?.[lg.key] || []).includes(key);
   const plays = detail.plays || [];
   const final = tl.final;
   const maxPeriod = Math.max(game.period || 0, ...plays.map((p) => p.period || 0));
@@ -257,6 +258,25 @@ export function novelty(tl, detail, result) {
     }
     if (top && top.pts >= 50) add('fiftyPoints', N.fiftyPoints, `${top.who}: ${top.pts} points`);
     else if (top && top.pts >= 40) add('fortyPoints', N.fortyPoints, `${top.who}: ${top.pts} points`);
+    // League-only stat lines (WNBA): 20/20 games and triple-doubles.
+    if (leagueFlag('twentyTwenty') || leagueFlag('tripleDouble')) {
+      let twenty = null;
+      let triple = null;
+      for (const team of detail.box) {
+        for (const g of team.groups) {
+          const at = (k) => g.keys.indexOf(k);
+          const cols = ['points', 'rebounds', 'assists', 'steals', 'blocks'].map(at);
+          if (cols[0] < 0 || cols[1] < 0) continue;
+          for (const r of g.rows) {
+            const [pts, reb, ast, stl, blk] = cols.map((i) => (i < 0 ? 0 : parseInt(r.stats[i], 10) || 0));
+            if (!twenty && pts >= 20 && reb >= 20) twenty = `${r.name}: ${pts} points, ${reb} rebounds`;
+            if (!triple && [pts, reb, ast, stl, blk].filter((x) => x >= 10).length >= 3) triple = `Triple-double: ${r.name} (${pts}-${reb}-${ast})`;
+          }
+        }
+      }
+      if (twenty && leagueFlag('twentyTwenty')) add('twentyTwenty', N.twentyTwenty, twenty);
+      if (triple && leagueFlag('tripleDouble')) add('tripleDouble', N.tripleDouble, triple);
+    }
   }
   if (lg.sport === 'baseball') {
     // Hits by batting side, from play results.
@@ -294,8 +314,25 @@ export function novelty(tl, detail, result) {
       add('lateWinner', N.lateWinner, lg.sport === 'soccer' ? `Winner in the ${goAhead.clock || 'final minutes'}` : 'Go-ahead score in the final seconds');
     }
   }
+  // Late comeback (league-only): the winner trailed by lateComebackPoints+ inside the final minute
+  // of regulation, counting the score as the final minute began.
+  const lateNeed = RATING.lateComebackPoints?.[lg.key];
+  if (final && lateNeed && leagueFlag('lateComeback') && result !== 0.5 && lg.periods && lg.periodMinutes) {
+    const winner = result === 1 ? 'home' : 'away';
+    const t0 = 1 - 1 / (lg.periods * lg.periodMinutes);
+    let deficit = 0;
+    let before = 0;
+    for (const s of tl.scores) {
+      const d = winner === 'home' ? s.as - s.hs : s.hs - s.as;
+      if (s.t < t0) { before = d; continue; }
+      if (s.t > 1 + 1e-9) break;
+      deficit = Math.max(deficit, d);
+    }
+    deficit = Math.max(deficit, before);
+    if (deficit >= lateNeed) add('lateComeback', N.lateComeback, `Erased a ${deficit}-point deficit in the final minute`);
+  }
   // Big comeback (points).
-  const need = RATING.bigComebackPoints[lg.sport];
+  const need = RATING.bigComebackPoints[lg.key] ?? RATING.bigComebackPoints[lg.sport];
   if (final && need && result !== 0.5) {
     const winner = result === 1 ? 'home' : 'away';
     let deficit = 0;

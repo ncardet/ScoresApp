@@ -22,6 +22,9 @@ export const FIXTURES = [
   { name: 'nhl-blowout', league: 'nhl', date: '2025-12-06', biggestMargin: true, expect: 'dull' },
   { name: 'nhl-ot-thriller', league: 'nhl', date: '2026-01-10', bestThriller: true, expect: 'great' },
   { name: 'f1-las-vegas-2026', league: 'f1', date: '2026-11-21', race: true, expect: 'great', note: 'Won by 0.639s' },
+  { name: 'wnba-finals-2024-g5', league: 'wnba', date: '2024-10-20', match: ['NY', 'MIN'], expect: 'great', note: 'Liberty win the title in OT, 67-62' },
+  { name: 'wnba-semis-2025-g5', league: 'wnba', date: '2025-09-30', match: ['LV', 'IND'], expect: 'great', note: 'Aces win Game 5 in OT, 107-98' },
+  { name: 'wnba-blowout', league: 'wnba', date: '2026-07-11', match: ['LV', 'PHX'], expect: 'dull', note: 'Aces 106-58 Mercury' },
 ];
 
 function margin(g) {

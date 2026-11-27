@@ -8,6 +8,16 @@ import { LEAGUES } from './leagues.js';
 
 const KEY = 'sideline.settings.v1';
 
+// The services config listed before YouTube (free) was added. A phone that saved its service
+// toggles back then gets any service added since switched on; one it switched off stays off.
+const SERVICES_BEFORE = ['YouTube TV', 'Prime Video', 'Peacock', 'Paramount+', 'HBO Max', 'Netflix'];
+
+function services(saved) {
+  if (!Array.isArray(saved.services)) return [...MY_SERVICES];
+  const known = new Set(Array.isArray(saved.servicesKnown) ? saved.servicesKnown : SERVICES_BEFORE);
+  return MY_SERVICES.filter((s) => saved.services.includes(s) || !known.has(s));
+}
+
 function read() {
   try {
     return JSON.parse(globalThis.localStorage?.getItem(KEY) || '{}') || {};
@@ -29,7 +39,7 @@ export function getSettings() {
   const saved = read();
   cache = {
     favorites: Array.isArray(saved.favorites) ? saved.favorites : FAVORITES.map((f) => ({ ...f })),
-    services: Array.isArray(saved.services) ? saved.services : [...MY_SERVICES],
+    services: services(saved),
     hiddenLeagues: Array.isArray(saved.hiddenLeagues) ? saved.hiddenLeagues : [],
     pinFavorites: saved.pinFavorites !== false,
     customized: !!(saved.favorites || saved.services),
@@ -40,6 +50,7 @@ export function getSettings() {
 export function saveSettings(patch) {
   const saved = read();
   const next = { ...saved, ...patch };
+  if (patch.services) next.servicesKnown = [...MY_SERVICES];
   write(next);
   cache = null;
   return getSettings();

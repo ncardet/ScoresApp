@@ -40,6 +40,7 @@ const LEAGUE_DEFAULTS = {
   uel: { days: 730, scoreboards: 500 },
   wsl: { days: 730, scoreboards: 500 },
   nwsl: { days: 730, scoreboards: 500 },
+  wnba: { days: 940, scoreboards: 600 },   // May-Oct only: three seasons (2024-2026)
 };
 const daysFor = (key) => +args.days || LEAGUE_DEFAULTS[key]?.days || 365;
 const scoreboardsFor = (key) => +args.scoreboards || LEAGUE_DEFAULTS[key]?.scoreboards || 160;

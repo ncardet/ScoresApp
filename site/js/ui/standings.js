@@ -10,7 +10,7 @@ import { favoriteTeamIds, getSettings } from '../core/settings.js';
 import { formatStamp } from '../core/time.js';
 
 const KEY = 'sideline.standingsLeague';
-const CUT = { nfl: 7, nba: 6, nhl: 8, mlb: 6 };
+const CUT = { nfl: 7, nba: 6, nhl: 8, mlb: 6 }; // per conference; the WNBA's top 8 are league-wide
 const PLAYIN = { nba: 10 };
 
 const s = (row, ...keys) => {

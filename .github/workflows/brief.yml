@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add site/data/brief.json site/data/brief.md site/data/ratings
+          git add site/data/brief.json site/data/brief.md site/data/ratings site/data/unmapped-networks.json
           git commit -m "Morning brief $(TZ=America/Los_Angeles date +%F)" || exit 0
           for i in 1 2 3; do git pull --rebase --quiet && git push && break; sleep 5; done
 

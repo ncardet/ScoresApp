@@ -165,7 +165,7 @@ export function statusInfo(game) {
 }
 
 export function watchInfo(game) {
-  return whereToWatch(game.broadcasts, getSettings().services);
+  return whereToWatch(game.broadcasts, getSettings().services, game.league);
 }
 
 function teamLine(team, game, other, fav) {
@@ -268,11 +268,12 @@ export function ribbonFor(game, rating, index) {
 export function watchPill(game) {
   const w = watchInfo(game);
   if (w.status === 'ok') {
+    if (w.free) return h('span', { class: 'pill' }, icon('tv'), 'Watch free on YouTube');
     const o = w.options[0];
     const where = o.services.length === 1 && o.services[0] === o.network ? o.network : `${o.network} · ${o.services.join(', ')}`;
     return h('span', { class: 'pill' }, icon('tv'), `Watch on ${where}`);
   }
-  if (w.status === 'none') return h('span', { class: 'pill muted-pill' }, icon('tv'), 'Not on your services');
+  if (w.status === 'none') return h('span', { class: 'pill muted-pill' }, icon('tv'), w.label);
   return h('span', { class: 'pill muted-pill' }, 'Open game');
 }
 

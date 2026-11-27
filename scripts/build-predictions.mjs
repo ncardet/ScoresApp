@@ -19,7 +19,7 @@ import { parseOdds } from '../site/js/adapters/espn/parse.js';
 import { LEAGUE_BY_KEY } from '../site/js/core/leagues.js';
 import { addDays, todayKey, ptParts, ptDateKey } from '../site/js/core/time.js';
 import { predictGame, PREDICTION_VERSION, isPlayoff } from '../site/js/predict/index.js';
-import { simulateSeason, standingsFrom, FORMATS, seededRng } from '../site/js/predict/simulate.js';
+import { simulateSeason, standingsFrom, countsInStandings, FORMATS, seededRng } from '../site/js/predict/simulate.js';
 import { leagueHistory, SEASONS } from './lib/history.mjs';
 import { walk } from './lib/elo-walk.mjs';
 import { scoringStyle } from '../site/js/predict/style.js';
@@ -54,7 +54,7 @@ const r1 = (x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : x);
 // ---------- availability (injuries + season leaders), next 2 days ----------
 
 async function availability(league, game) {
-  const fam = league === 'nfl' ? 'nfl' : ['nba', 'mcbb', 'wcbb'].includes(league) ? 'bball' : null;
+  const fam = league === 'nfl' ? 'nfl' : ['nba', 'wnba', 'mcbb', 'wcbb'].includes(league) ? 'bball' : null;
   if (!fam) return null;
   const a = ADAPTERS[league];
   const res = await getJson(a.urls.summary(game.id), { retries: 1, timeout: 15000 }).catch(() => null);
@@ -231,7 +231,7 @@ async function leaguePredictions(league, today) {
   let importance = new Map();
   let impPct = new Map();
   if (FORMATS[league]) {
-    const reg = season.filter((g) => !isPlayoff(toGame(g)) && !(pool && !/league/i.test(g.slug)));
+    const reg = season.filter((g) => !isPlayoff(toGame(g)) && !(pool && !/league/i.test(g.slug)) && countsInStandings(g, league));
     const remaining = reg.filter((g) => !g.done && !g.x).map((g) => ({ id: g.id, h: g.h.id, a: g.a.id, neutral: g.neutral }));
     if (remaining.length) {
       const targets = new Set(remaining.filter((g) => upcoming.some((u) => u.id === g.id)).map((g) => g.id));

@@ -9,7 +9,7 @@
 //
 // Writes <out>.md (human summary) and <out>.json (full details).
 
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { LEAGUES } from '../site/js/core/leagues.js';
 
@@ -18,6 +18,7 @@ const ORIGIN = args.origin || 'https://example.github.io';
 const OUT = args.out || 'docs/probe-report';
 const ONLY = args.league ? new Set(String(args.league).split(',')) : null;
 
+const LEAGUE_KEYS = new Set(LEAGUES.map((l) => l.key));
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports';
 const SITE_V2 = 'https://site.api.espn.com/apis/v2/sports';
 
@@ -364,6 +365,16 @@ async function main() {
   let f1 = null;
   if (!ONLY || ONLY.has('f1')) {
     try { f1 = await probeF1Extras(); } catch (e) { f1 = { error: { status: 0, error: String(e) } }; }
+  }
+
+  // A partial run (--league) updates those leagues and keeps the rest of the existing report.
+  if (ONLY) {
+    try {
+      const prev = JSON.parse(await readFile(`${OUT}.json`, 'utf8'));
+      for (const r of prev.results || []) if (!ONLY.has(r.league) && LEAGUE_KEYS.has(r.league)) results.push(r);
+      results.sort((a, b) => LEAGUES.findIndex((l) => l.key === a.league) - LEAGUES.findIndex((l) => l.key === b.league));
+      if (!ONLY.has('f1')) f1 = prev.f1 ?? null;
+    } catch { /* no previous report */ }
   }
 
   await mkdir(dirname(OUT), { recursive: true });

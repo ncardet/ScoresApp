@@ -1,6 +1,6 @@
 # Pre-game prediction backtest
 
-Generated 2026-11-27T02:18Z by `scripts/backtest.mjs`. Walk-forward: every number below is out of sample. Each test season was predicted by a model trained only on earlier seasons, using information available before kickoff (Elo, standings and simulations rebuilt as of the game date; closing lines only in the 0-2 day tier).
+Generated 2026-11-27T21:03Z by `scripts/backtest.mjs`. Walk-forward: every number below is out of sample. Each test season was predicted by a model trained only on earlier seasons, using information available before kickoff (Elo, standings and simulations rebuilt as of the game date; closing lines only in the 0-2 day tier).
 
 Targets are the post-game excitement ratings from our own algorithm. Metrics:
 
@@ -19,6 +19,7 @@ Targets are the post-game excitement ratings from our own algorithm. Metrics:
 | NFL | rules | 0.19 | 0.19 | 31% | 37% | 0.69 | falls short of spread-only |
 | CFB | rules | 0.43 | 0.46 | 62% | 54% | 0.83 | falls short of spread-only |
 | NBA | rules | 0.27 | 0.28 | 44% | 44% | 0.68 | roughly ties spread-only |
+| WNBA | rules | 0.18 | 0.15 | 53% | 49% | 0.71 | roughly ties spread-only |
 | NHL | rules | 0.03 | 0.03 | 49% | 31% | 0.59 | roughly ties spread-only |
 | MLB | rules | 0.00 | 0.02 | 35% | 39% | 0.53 | falls short of spread-only |
 | MCBB | rules | 0.44 | 0.44 | 58% | 62% | 0.84 | roughly ties spread-only |
@@ -208,6 +209,66 @@ Model in use: **rules**. Base rate regular 45.8 (median rating 48.7), playoff 52
 | closeAbs | -8.106 |
 | closeAbs2 | -21.524 |
 | intercept | 50.54 |
+
+</details>
+
+## WNBA
+
+Seasons 2025, 2026 · 663 games backfilled · tested on 2026 (trained only on earlier seasons) · 47 playoff games.
+
+| Horizon | Model | n | Spearman | Within-day ρ | Top-10% ≥65 | Great recall (top 20%) | AUC Great vs Dull | Brier P(Great) | MAE |
+|---|---|---|---|---|---|---|---|---|---|
+| 0-2 days | **Fitted ridge** | 352 | 0.29 | 0.13 | 50% | 42% | 0.72 | 0.105 | 24.1 |
+| 0-2 days | Rules (config) | 352 | 0.29 | 0.18 | 53% | 40% | 0.71 | — | 24.0 |
+| 0-2 days | Spread only | 352 | 0.26 | 0.15 | 49% | 29% | 0.67 | — | 24.3 |
+| 0-2 days | 538-style quality+importance | 352 | 0.13 | -0.04 | 30% | 29% | 0.58 | — | 24.6 |
+| 0-2 days | Constant base rate | 352 | — | — | 35% | 20% | 0.50 | — | 24.7 |
+| 0-2 days, closing line | **Fitted ridge** | 352 | 0.29 | 0.13 | 50% | 42% | 0.72 | 0.105 | 24.1 |
+| 0-2 days, closing line | Rules (config) | 352 | 0.29 | 0.18 | 53% | 40% | 0.71 | — | 24.0 |
+| 0-2 days, closing line | Spread only | 352 | 0.26 | 0.15 | 49% | 29% | 0.67 | — | 24.3 |
+| 3-7 days | **Fitted ridge** | 352 | 0.28 | 0.10 | 42% | 40% | 0.73 | 0.105 | 24.2 |
+| 3-7 days | Rules (config) | 352 | 0.29 | 0.06 | 42% | 40% | 0.73 | — | 24.4 |
+| 3-7 days | Spread only | 352 | 0.26 | 0.15 | 53% | 22% | 0.66 | — | 24.4 |
+| 3-7 days | 538-style quality+importance | 352 | 0.13 | -0.07 | 31% | 29% | 0.58 | — | 24.6 |
+| 3-7 days | Constant base rate | 352 | — | — | 35% | 20% | 0.50 | — | 24.7 |
+| 8-14 days | **Fitted ridge** | 352 | 0.28 | 0.08 | 47% | 40% | 0.73 | 0.105 | 24.2 |
+| 8-14 days | Rules (config) | 352 | 0.28 | 0.07 | 44% | 40% | 0.73 | — | 24.4 |
+| 8-14 days | Spread only | 352 | 0.25 | 0.16 | 47% | 20% | 0.65 | — | 24.4 |
+| 8-14 days | 538-style quality+importance | 352 | 0.14 | 0.05 | 33% | 29% | 0.58 | — | 24.6 |
+| 8-14 days | Constant base rate | 352 | — | — | 35% | 20% | 0.50 | — | 24.7 |
+
+**Verdict (0-2 days, rules model):** roughly ties spread-only on within-day correlation (0.18 vs 0.15) and top-decile precision (53% vs 49%). Closing line available for 100% of test games.
+
+P(Great) calibration (0-2 days, fitted):
+
+| Predicted | n | Mean predicted | Observed |
+|---|---|---|---|
+| 0-5% | 65 | 3% | 6% |
+| 5-10% | 133 | 7% | 9% |
+| 10-15% | 70 | 12% | 13% |
+| 15-20% | 39 | 17% | 18% |
+| 20-30% | 26 | 23% | 23% |
+| 30-100% | 19 | 35% | 37% |
+
+Model in use: **rules**. Base rate regular 41.3 (median rating 48.6), playoff 52.0 (median 67.3); bases are the medians minus the rule terms' average contribution, so typical stakes aren't counted twice. Rules k supported by the data: 1.03.
+
+<details><summary>Fitted coefficients (points per unit)</summary>
+
+| Feature | Coef |
+|---|---|
+| closeness | 0.188 |
+| quality | 0.466 |
+| importance | 0.103 |
+| stakes | 0.389 |
+| style | -0.014 |
+| narrative | 0.627 |
+| availability | 0 |
+| matchup | 0 |
+| weather | 0 |
+| total | -0.28 |
+| closeAbs | -8.225 |
+| closeAbs2 | -22.89 |
+| intercept | 49.7 |
 
 </details>
 
@@ -867,4 +928,3 @@ Model in use: **rules**. Base rate regular 48.8 (median rating 50.0); bases are 
 | intercept | 49.39 |
 
 </details>
-

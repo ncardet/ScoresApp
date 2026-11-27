@@ -19,6 +19,10 @@
       "regular": 46,
       "playoff": 53
     },
+    "wnba": {
+      "regular": 41,
+      "playoff": 52
+    },
     "mcbb": {
       "regular": 44,
       "playoff": 48
@@ -273,6 +277,49 @@
       },
       "total": {
         "high": 235,
+        "highPts": 2
+      }
+    },
+    "wnba": {
+      "spread": [
+        [
+          3,
+          8
+        ],
+        [
+          6.5,
+          4
+        ],
+        [
+          9.5,
+          0
+        ],
+        [
+          12.5,
+          -6
+        ],
+        [
+          999,
+          -12
+        ]
+      ],
+      "starOut": [
+        -3,
+        -6
+      ],
+      "styleRange": [
+        -2,
+        3
+      ],
+      "seedingLeverage": 8,
+      "playoffs": {
+        "tied": 5,
+        "elimination": 8,
+        "game7": 12
+      },
+      "commissionersCup": 6,
+      "total": {
+        "high": 170,
         "highPts": 2
       }
     },
@@ -607,6 +654,15 @@
       "mean": 1505,
       "carry": 0.75,
       "mov": "basketball",
+      "pointsPerSpread": 28
+    },
+    "wnba": {
+      "k": 20,
+      "hfa": 90,
+      "mean": 1500,
+      "carry": 0.75,
+      "mov": "basketball",
+      "newTeam": 1400,
       "pointsPerSpread": 28
     },
     "mcbb": {
@@ -1390,6 +1446,54 @@
         2026
       ],
       "n": 91,
+      "updated": "2026-11-27"
+    },
+    "wnba": {
+      "model": "rules",
+      "k": 1,
+      "tiers": {
+        "prediction": {
+          "iqr": 49.8,
+          "great": [
+            -11.3673,
+            0.1885
+          ],
+          "dull": [
+            6.6862,
+            -0.145
+          ],
+          "n": 663
+        },
+        "forecast": {
+          "iqr": 49.8,
+          "great": [
+            -12.7178,
+            0.2138
+          ],
+          "dull": [
+            6.0028,
+            -0.1298
+          ],
+          "n": 663
+        },
+        "early": {
+          "iqr": 49.8,
+          "great": [
+            -11.7439,
+            0.1947
+          ],
+          "dull": [
+            5.7096,
+            -0.1238
+          ],
+          "n": 663
+        }
+      },
+      "trainedOn": [
+        2025,
+        2026
+      ],
+      "n": 663,
       "updated": "2026-11-27"
     }
   },

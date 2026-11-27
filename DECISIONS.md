@@ -82,6 +82,61 @@ Newest at the bottom of each section.
 - **Final ratings are frozen** and cached per game in IndexedDB, keyed by engine version, so each
   finished game is fetched once.
 
+## WNBA
+
+- **A core league** (`basketball/wnba`). `scripts/probe-endpoints.mjs --league wnba` passes:
+  - scoreboard, summary and standings are readable cross-origin
+  - ESPN has per-play win probability (374 points in the last finished game), play-by-play, odds
+    (`pickcenter`), box scores and playoff series
+- **40-minute games:** regulation is 4 × 10 minutes (2,400 seconds), which the engine already uses
+  to normalise swings and its late window.
+- **Rating:** the NBA approach, tuned for the WNBA.
+  - Calibrated on 663 backfilled games from 2025–2026.
+  - A big comeback needs 12 points (NBA: 15).
+  - WNBA-only flags: a late comeback (7+ points down entering or inside the final minute), a 20/20
+    game and a triple-double. They share the novelty cap with the 40-point game and the late winner
+    (the "buzzer-beater").
+  - Close late and very close games are judged on win probability, like every league, not on fixed
+    point margins.
+  - There's no separate garbage-time rule (the NBA has none either). Blowouts score low because win
+    probability barely moves: the 48-point Aces–Mercury game rates 1.
+- **Predictor** (`config/prediction.json`):
+  - spread table as specified (≤3 +8 · 3.5–6.5 +4 · 7–9.5 0 · 10–12.5 −6 · ≥13 −12)
+  - total ≥170 +2
+  - elimination game +8, winner-take-all +12
+  - seeding swing 0 to +8 from the season simulation (the top 8 overall make the playoffs, the top
+    4 host)
+  - Commissioner's Cup Championship +6
+- **The Commissioner's Cup final** doesn't count in the standings, so it's kept out of the table and
+  the simulation, and its in-game stakes are 0.5.
+- **Base rates:** your 48 / 56 were provisional. The backtest's medians replaced them: 41 regular
+  season, 52 playoffs.
+- **The rule model stays in use:**
+
+  | 0–2 days out | Rule model | Spread only |
+  |---|---|---|
+  | Within-day ρ | 0.18 | 0.15 |
+  | Top-10% ≥65 | 53% | 49% |
+
+  See `reports/backtest.md`.
+- **Elo:** carryover 0.75, K 20, home advantage 90 Elo points. Expansion teams start at **1400**
+  in their first season, below the 1500 mean (`newTeam`): Golden State in 2025, Portland and
+  Toronto in 2026.
+- **Saved games** (`scripts/make-fixtures.mjs`), each checked against ESPN first:
+
+  | Game | Rating |
+  |---|---|
+  | 2024 Finals Game 5, Liberty 67–62 Lynx, OT | 100, Great |
+  | 2025 semifinal Game 5, Aces 107–98 Fever, OT | 98, Great |
+  | July 2026, Aces 106–58 Mercury | 1, Dull |
+
+  The 2025 Finals Game 3 isn't used as a Great example. The Aces won 90–88 on A'ja Wilson's basket
+  with 0.9 s left, but there was only one lead change, and it rates Good (78).
+- **Standings** show ESPN's two conferences. The WNBA seeds its top 8 league-wide, so no
+  per-conference cut line is drawn.
+- **Favorites:** the WNBA is in Settings → Favorites → Add a team, which uses ESPN's team list
+  (including Portland Fire and Toronto Tempo). No WNBA team is preset.
+
 ## Where to watch
 
 - Only broadcasters that map to your services are shown. If ESPN lists broadcasters but none map,
@@ -89,8 +144,30 @@ Newest at the bottom of each section.
   wrongly claiming it isn't on.
 - NFL Sunday games on CBS/FOX are regional: ESPN doesn't say which region gets which game, so a
   CBS game shows "CBS · YouTube TV" even if your local CBS is showing a different one.
-- LA regional networks (Spectrum SportsNet, SportsNet LA, FanDuel Sports Network) and ESPN+, Apple TV
-  (MLS, and F1 from 2026) aren't in the map because your services don't carry them.
+- LA regional networks (Spectrum SportsNet, SportsNet LA, FanDuel Sports Network), league passes and
+  Apple TV (MLS, and F1 from 2026) aren't in the map because your services don't carry them.
+- **Local TV:** when every broadcaster ESPN lists is a home- or away-market channel and none is on
+  your services (most Sparks, Lakers and Kings local games), the label is "Not on your services
+  (local TV)".
+- **ESPN+ and ESPN Unlimited** map to YouTube TV, which now includes them. The map is shared by every
+  league, so ESPN+-only college, NHL and soccer games show as watchable too.
+- **Paramount+ is the Essential plan** (`PARAMOUNT_PREMIUM = false` in `config/services.js`): CBS
+  games list YouTube TV only, except NFL on CBS, which Essential includes (`LEAGUE_NETWORKS.nfl`).
+  Set the flag to `true` after upgrading to Premium (live local CBS).
+- **YouTube (free)** is a service of its own, on by default: "YouTube", "NFL on YouTube", "NBC Sports
+  YouTube" and "WSL YouTube" map to it, and so does any other name containing YouTube (never YouTube
+  TV). It ranks first, labeled "Free on YouTube" and styled as available, because a free stream is
+  the simplest option. The WSL is the exception: Paramount+ carries every match, so it comes first
+  there (`PREFERENCE.wsl`). There's no manual schedule; it relies on ESPN's broadcast fields (the
+  2025 Chiefs-Chargers Brazil game is listed as "YouTube").
+- **New services start on.** A phone that saved its service toggles before YouTube (free) existed
+  gets it switched on; a service switched off afterwards stays off (`servicesKnown`).
+- **Unmapped names are logged.** The morning brief writes `site/data/unmapped-networks.json`: every
+  broadcaster name ESPN listed that `config/services.js` doesn't map, with the days seen, leagues,
+  markets, and a `youtubeLike` flag. It's how new local channels and YouTube channels get noticed.
+  Names seen while adding the WNBA and left unmapped on purpose: NBCSN and CNBC (national, not on the
+  spec's list), ESPN3, Disney+, WNBA League Pass, "Prime Video-Seattle" (a Seattle-only Prime
+  stream), and the teams' local channels.
 
 ## Settings
 
