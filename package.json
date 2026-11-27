@@ -15,7 +15,12 @@
     "brief": "node scripts/build-brief.mjs --force",
     "fixtures": "node scripts/make-fixtures.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
-    "icons": "node scripts/make-icons.mjs",
+    "icons": "node scripts/build-icons.mjs",
     "screenshots": "node scripts/screenshots.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "opentype.js": "^2.0.0"
   }
 }

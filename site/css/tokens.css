@@ -107,4 +107,5 @@
   --paper: #FFFFFF;
   --on-team: #FFFFFF;     /* venue text on a team-colour poster, with a --shade text shadow */
   --shade: #000000;       /* shadows only, always mixed down (color-mix) */
+  --board-line: #2A453F;  /* the divider on the scoreboard app icon and header mark */
 }

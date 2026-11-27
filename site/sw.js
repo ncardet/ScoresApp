@@ -7,14 +7,18 @@ const SHELL = `sideline-shell-${BUILD}`;
 const IMAGES = 'sideline-img-v1';
 const MAX_IMAGES = 400;
 
+// The page links its icons and manifest with ?v=2 (cache busting), so cache those exact URLs.
 const CORE = [
   './',
   'index.html',
-  'manifest.webmanifest',
+  'manifest.webmanifest?v=2',
+  'css/tokens.css',
   'css/app.css',
   'js/app.js',
-  'icons/icon-192.png',
-  'icons/apple-touch-icon.png',
+  'icons/icon-192.png?v=2',
+  'icons/apple-touch-icon.png?v=2',
+  'icons/favicon.svg?v=2',
+  'favicon.ico?v=2',
 ];
 
 // Install: the core shell, then everything listed in precache.json (generated at deploy time),

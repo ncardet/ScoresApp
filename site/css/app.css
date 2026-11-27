@@ -61,7 +61,7 @@ img { display: block; }
 .wordmark { justify-self: start; color: var(--on-wasabi); font: 400 26px/1 var(--font-display); letter-spacing: -0.03em; white-space: nowrap; }
 .wordmark b { font-weight: 800; }
 a.wordmark:visited { color: var(--on-wasabi); }
-.brand-badge { width: 46px; height: 46px; display: block; }
+.brand-badge { width: 40px; height: 40px; display: block; }
 .brand-badge svg { width: 100%; height: 100%; display: block; }
 .bar-actions { justify-self: end; display: flex; gap: 4px; align-items: center; }
 .bar-btn { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: var(--on-wasabi); flex: none; position: relative; overflow: hidden; }
