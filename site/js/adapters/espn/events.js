@@ -100,7 +100,9 @@ function player(c) {
   const sets = (c.linescores || []).map((l) => ({ g: Number(l.value) || 0, tb: l.tiebreak ?? null, won: !!l.winner }));
   const seed = Number.parseInt(c.seed ?? c.curatedRank?.current ?? '', 10);
   return {
-    id: String(c.id), name: c.athlete?.displayName || c.athlete?.fullName || '', short: c.athlete?.shortName || c.athlete?.displayName || '',
+    // Rows show the last name (the seed sits in front): "D. Shnaider" -> "Shnaider".
+    id: String(c.id), name: c.athlete?.displayName || c.athlete?.fullName || '',
+    short: (c.athlete?.shortName || c.athlete?.displayName || '').replace(/^(\p{Lu}\.\s*)+/u, ''),
     abbr: c.athlete?.shortName || '', logo: c.athlete?.flag?.href || '', logoDark: '', color: null, altColor: null,
     rank: Number.isFinite(seed) && seed > 0 ? seed : null, seed: Number.isFinite(seed) && seed > 0 ? seed : null,
     winner: !!c.winner, sets, score: sets.length ? sets.filter((s) => s.won).length : null,

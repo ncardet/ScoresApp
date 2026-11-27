@@ -173,8 +173,10 @@ function teamLine(team, game, other, fav) {
   const lost = final && team.score != null && other.score != null && (other.winner || (!team.winner && team.score < other.score));
   const showScore = game.state !== 'pre' && team.score != null;
   const isFav = fav && String(fav.id) === team.id;
-  return h('div', { class: `team-line${lost ? ' loser' : ''}` },
-    teamMark(team),
+  // Tennis players: no badge circle (it would only hold a flag), so the seed and name fit.
+  const player = game.sport === 'tennis';
+  return h('div', { class: `team-line${lost ? ' loser' : ''}${player ? ' no-mark' : ''}` },
+    player ? null : teamMark(team),
     h('div', { class: 'team-name' },
       team.rank ? h('span', { class: 'rank' }, team.rank) : null,
       team.short || team.name,

@@ -187,6 +187,7 @@ a.game-row:visited { color: var(--text); }
 .game-row.static:active { background: none; }
 .teams { display: grid; gap: 7px; min-width: 0; }
 .team-line { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 10px; min-width: 0; }
+.team-line.no-mark { grid-template-columns: 1fr auto; }
 .team-line > img, .team-line > .logo-ph { width: 26px; height: 26px; object-fit: contain; justify-self: center; }
 .team-name { font: 700 16.5px/1.15 var(--font-display); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .team-name .rank { color: var(--text-3); font: 800 14px var(--font-cond); margin-right: 4px; }
