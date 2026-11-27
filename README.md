@@ -88,6 +88,7 @@ Everything you're likely to edit lives in `site/config/`:
 | `favorites.js` | Your teams (ESPN team id plus leagues). Pinned on Today, starred, and used by the brief. |
 | `services.js` | Your services (`MY_SERVICES`) and which networks each carries (`NETWORKS`, `ALIASES`). |
 | `rating.js` | Post-game component weights and amplifiers, bands, calibration curve, novelty bonuses, rivalries. |
+| `../css/app.css` (top) | Colours: brand bar, strip, surfaces and the excitement bands, for light and dark. |
 | `prediction.json` | Pre-game model: base rates, k, per-sport term tables, Elo settings, horizons, ranges, brief settings, and the backtest's fitted values (`fitted`). |
 | `teams.json` | Star power (0–4) per team, for Watch Priority. |
 

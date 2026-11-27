@@ -3,7 +3,7 @@
 // and auto-refresh every ~45 s while a game is live and the app is visible.
 
 import { h, clear, fill, icon } from './dom.js';
-import { gameRow, sectionHeader, skeletonList } from './components.js';
+import { gameRow, sectionHeader, skeletonList, appHeader, barButton, picksCarousel } from './components.js';
 import {
   loadDay, getDay, subscribe, displayRating, rankScore, refreshLive, hasLive, dataStatus, prefetchPublishedRatings,
 } from '../app/store.js';
@@ -30,7 +30,8 @@ export function homeView(root, params = {}) {
   const listEl = h('div', { class: 'home-list' });
   const chipsEl = h('div', { class: 'chips', role: 'toolbar', 'aria-label': 'Leagues' });
   const bannerEl = h('div');
-  const subEl = h('div', { class: 'subtitle' });
+  const subEl = h('span', { class: 'meta' });
+  const picksKeep = { left: 0 };
   const ptr = h('div', { class: 'ptr', 'aria-hidden': 'true' }, icon('refresh'));
 
   const go = (k) => { location.hash = k === todayKey() ? '#/' : `#/day/${k}`; };
@@ -38,19 +39,25 @@ export function homeView(root, params = {}) {
     type: 'date', class: 'date-input', value: dateKey, 'aria-label': 'Pick a date',
     onchange: (e) => { if (isValidKey(e.target.value)) go(e.target.value); },
   });
-  const refreshBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Refresh', onclick: () => refresh(true) }, icon('refresh'));
+  const refreshBtn = barButton('refresh', 'Refresh', () => refresh(true));
+  const today = todayKey();
+  const stripTitle = dateKey === today ? "Today's games" : dateKey < today ? 'Results' : 'Schedule';
 
-  const top = h('header', { class: 'topbar' },
-    h('div', { class: 'title-row' },
-      h('h1', { class: 'title' }, dayLabel(dateKey)),
-      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Previous day', onclick: () => go(addDays(dateKey, -1)) }, icon('left')),
-      h('span', { class: 'icon-btn date-btn' }, icon('calendar'), dateInput),
-      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Next day', onclick: () => go(addDays(dateKey, 1)) }, icon('right')),
-      refreshBtn),
-    subEl,
-    chipsEl);
+  const top = appHeader({ title: stripTitle, meta: subEl, actions: [refreshBtn] });
+  // Big day heading ("Today" / "Saturday"); tapping it opens the date picker.
+  const rel = dayLabel(dateKey);
+  const long = longDayLabel(dateKey);
+  const relative = /^(Today|Tomorrow|Yesterday)$/.test(rel);
+  const [weekday, ...rest] = long.split(', ');
+  const dayhead = h('div', { class: 'dayhead' },
+    h('label', { class: 'grow date-btn', title: 'Pick a date' },
+      h('h2', { class: 'big' }, relative ? rel : weekday),
+      h('div', { class: 'sub' }, relative ? long : rest.join(', '), icon('chevdown')),
+      dateInput),
+    h('button', { class: 'round-btn', type: 'button', 'aria-label': 'Previous day', onclick: () => go(addDays(dateKey, -1)) }, icon('left')),
+    h('button', { class: 'round-btn', type: 'button', 'aria-label': 'Next day', onclick: () => go(addDays(dateKey, 1)) }, icon('right')));
 
-  fill(root, h('div', { class: 'view' }, top, ptr, bannerEl, listEl));
+  fill(root, h('div', { class: 'view' }, top, ptr, dayhead, chipsEl, bannerEl, listEl));
 
   function entries() {
     const out = [];
@@ -93,7 +100,7 @@ export function homeView(root, params = {}) {
       bannerEl.append(h('div', { class: 'banner', role: 'status' },
         `Couldn't reach ESPN; showing data from ${formatClock(st.at)}.`));
     }
-    subEl.textContent = `${longDayLabel(dateKey)}${updating ? ' · Updating…' : st.fetchedAt ? ` · Updated ${formatClock(st.fetchedAt)}` : ''}`;
+    subEl.textContent = updating ? 'Updating…' : st.fetchedAt ? `Updated ${formatClock(st.fetchedAt)}` : '';
   }
 
   function render() {
@@ -115,6 +122,14 @@ export function homeView(root, params = {}) {
       return;
     }
     const showLeague = filter === 'all';
+    // Top picks: the best few games still to come (live first), or the day's best finals.
+    const past = dateKey < todayKey();
+    const pool = shown.filter((e) => e.rating && !e.game.canceled && (e.game.sport !== 'racing' || e.game.isRace) && (past ? e.game.state === 'post' : e.game.state !== 'post'));
+    pool.sort((a, b) => (b.game.state === 'in') - (a.game.state === 'in') || (past ? b.rating.value - a.rating.value : rankScore(day, b.game) - rankScore(day, a.game)));
+    const picks = pool.slice(0, 3);
+    if (picks.length >= 2 && shown.length >= 4) {
+      listEl.append(sectionHeader(past ? 'Best of the day' : 'Top picks', `${picks.length} games · swipe`), picksCarousel(picks, { keep: picksKeep }));
+    }
     const favs = pin ? shown.filter((e) => e.fav) : [];
     const rest = shown.filter((e) => !pin || !e.fav);
     const live = rest.filter((e) => e.game.state === 'in');
@@ -132,8 +147,8 @@ export function homeView(root, params = {}) {
     }
     if (others.length) {
       others.sort((a, b) => rankScore(day, b.game) - rankScore(day, a.game) || new Date(a.game.start) - new Date(b.game.start));
-      const past = dateKey < todayKey();
-      const title = past ? 'Results' : dateKey > todayKey() ? 'Schedule' : live.length || favs.length ? 'All games' : 'Games';
+      // The strip already says Results / Schedule, so the list heading doesn't repeat it.
+      const title = past ? 'All results' : live.length || favs.length || picks.length >= 2 ? 'All games' : 'Games';
       listEl.append(sectionHeader(title, 'by watch priority'),
         h('div', { class: 'card list' }, others.map((e) => gameRow(e, { showLeague }))));
     }

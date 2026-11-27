@@ -1,12 +1,51 @@
 // Shared UI pieces: rating badge, explanation sheet, game rows, section headers.
 
-import { h, icon, logo, teamLogo } from './dom.js';
+import { h, icon, logo, teamLogo, frag } from './dom.js';
 import { formatTime } from '../core/time.js';
 import { whereToWatch } from '../core/watch.js';
 import { getSettings, favoriteFor } from '../core/settings.js';
 import { LEAGUE_BY_KEY } from '../core/leagues.js';
 
 const STATE_LABEL = { predicted: 'Predicted', live: 'Live', final: 'Final' };
+
+/** The round "S" badge in the brand bar (also the app icon). */
+export function brandBadge() {
+  return frag(`<span class="brand-badge" aria-hidden="true"><svg viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="22.2" fill="#ffffff" stroke="#111214" stroke-width="3"/>
+    <circle cx="24" cy="24" r="15.6" style="fill:var(--accent)" stroke="#111214" stroke-width="2.6"/>
+    <text x="24" y="25" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, 'SF Pro Display', Inter, Helvetica, Arial, sans-serif" font-weight="900" font-size="19" fill="#111214">S</text>
+  </svg></span>`);
+}
+
+/**
+ * App header: cobalt brand bar (wordmark or back button, centre badge, action buttons) and the
+ * mint title strip. `meta` may be a string or an element (updated in place by the caller).
+ */
+export function appHeader({ title, meta = null, back = null, actions = [] } = {}) {
+  return h('header', { class: 'appbar' },
+    h('div', { class: 'brandbar' },
+      back ? backButton(back) : h('a', { class: 'wordmark', href: '#/', 'aria-label': 'Sideline: today' }, h('b', null, 'Side'), 'line'),
+      brandBadge(),
+      h('div', { class: 'bar-actions' }, actions)),
+    h('div', { class: 'strip' }, h('h1', { class: 'strip-title' }, title), meta instanceof Node ? meta : meta ? h('span', { class: 'meta' }, meta) : null));
+}
+
+/** A white icon button for the brand bar. */
+export function barButton(name, label, onclick) {
+  return h('button', { class: 'bar-btn', type: 'button', 'aria-label': label, onclick }, icon(name));
+}
+
+const HEX = /^#[0-9a-f]{6}$/i;
+/** Team colour as a usable CSS colour (ESPN sends hex; missing or invalid falls back). */
+export function teamColor(team, fallback = null) {
+  const c = team?.color ? (String(team.color).startsWith('#') ? team.color : `#${team.color}`) : null;
+  return c && HEX.test(c) ? c : fallback;
+}
+
+/** Team logo inside a ring of the team's colour (like the avatars on Ball.app). */
+export function teamMark(team, size = '') {
+  return h('span', { class: `tlogo${size ? ` ${size}` : ''}`, style: { '--ring': teamColor(team) } }, logo(teamLogo(team), ''));
+}
 
 /** Rating badge. `rating` may be null (unrated) and `pending` shows a spinner. */
 export function badge(rating, { size = '', pending = false, onTap } = {}) {
@@ -137,7 +176,7 @@ function teamLine(team, game, other, fav) {
   const showScore = game.state !== 'pre' && team.score != null;
   const isFav = fav && String(fav.id) === team.id;
   return h('div', { class: `team-line${lost ? ' loser' : ''}` },
-    logo(teamLogo(team), ''),
+    teamMark(team),
     h('div', { class: 'team-name' },
       team.rank ? h('span', { class: 'rank' }, team.rank) : null,
       team.short || team.name,
@@ -210,4 +249,87 @@ export function backButton(label = 'Back') {
     if (history.length > 1) history.back(); else location.hash = '#/';
   });
   return b;
+}
+
+// ---------- top picks: big run-style cards in a swipeable carousel ----------
+
+function gameHref(game) {
+  return `#/game/${game.league}/${encodeURIComponent(game.id)}${game.sport === 'racing' && game.eventId ? `?e=${game.eventId}` : ''}`;
+}
+
+/** Corner ribbon text for a featured game, or null. */
+export function ribbonFor(game, rating, index) {
+  if (game.state === 'in') return { text: 'Live', cls: 'live' };
+  if (game.state === 'post' && rating?.value >= 85) return { text: 'Great game', cls: 'great' };
+  if (favoriteFor(game)) return { text: '★ Favorite', cls: '' };
+  if (index === 0 && game.state === 'pre') return { text: 'Top pick', cls: '' };
+  if (rating?.pred?.pGreat >= 0.35) return { text: 'Must watch', cls: '' };
+  return null;
+}
+
+export function watchPill(game) {
+  const w = watchInfo(game);
+  if (w.status === 'ok') {
+    const o = w.options[0];
+    const where = o.services.length === 1 && o.services[0] === o.network ? o.network : `${o.network} · ${o.services.join(', ')}`;
+    return h('span', { class: 'pill' }, icon('tv'), `Watch on ${where}`);
+  }
+  if (w.status === 'none') return h('span', { class: 'pill muted-pill' }, icon('tv'), 'Not on your services');
+  return h('span', { class: 'pill muted-pill' }, 'Open game');
+}
+
+/** One featured game: team-colour poster, big time or score, rating, where to watch. */
+export function pickCard({ game, rating }, { index = 0 } = {}) {
+  const lg = LEAGUE_BY_KEY[game.league];
+  const st = statusInfo(game);
+  const live = game.state === 'in';
+  const pre = game.state === 'pre';
+  const racing = game.sport === 'racing';
+  const [L, R] = game.sport === 'soccer' ? [game.home, game.away] : [game.away, game.home];
+  const rib = ribbonFor(game, rating, index);
+  const showScore = !pre && !racing && L?.score != null && R?.score != null;
+  const poster = racing
+    ? h('div', { class: 'poster f1' }, h('div', { class: 'gp' }, game.shortName || game.gpName || 'Grand Prix'))
+    : h('div', { class: 'poster', style: { '--a': teamColor(L, '#2747e6'), '--b': teamColor(R, '#46dfb1') } },
+      teamMark(L, 'xl'),
+      h('span', { class: `vs${showScore ? ' score' : ''}` }, showScore ? `${L.score}–${R.score}` : 'VS'),
+      teamMark(R, 'xl'));
+  if (game.venue || game.circuit) poster.append(h('div', { class: 'pin' }, icon('pin'), game.venue || game.circuit));
+  if (rib) poster.append(h('div', { class: `ribbon ${rib.cls}`.trim() }, rib.text));
+  const note = (game.notes || []).filter(Boolean)[0];
+  const when = pre ? formatTime(game.start) : live ? st.text : racing ? 'Finished' : 'Final';
+  const matchup = racing ? `${game.gpName || game.shortName} · ${game.sessionLabel || 'Race'}`
+    : game.sport === 'soccer' ? `${game.home.short} vs ${game.away.short}` : `${game.away.short} at ${game.home.short}`;
+  const p = rating?.pred;
+  const chance = p ? `${Math.round(p.pGreat * 100)}% chance of Great` : rating ? `${rating.band.label}${rating.state === 'live' ? ' so far' : ''}` : '';
+  return h('a', { class: 'card pick', href: gameHref(game) },
+    poster,
+    h('div', { class: 'pick-body' },
+      h('div', { class: 'pick-league' }, h('span', null, `${lg?.name || lg?.short || ''}${note ? ` · ${note}` : ''}`), icon('right')),
+      h('div', { class: `pick-when${live ? ' live' : ''}` }, when),
+      h('div', { class: 'pick-match' }, matchup),
+      rating ? h('div', { class: 'pick-meta' },
+        badgeWithRange(rating, { size: 'lg' }),
+        h('div', null,
+          chance ? h('div', { class: 'chance' }, chance) : null,
+          h('div', { class: 'why' }, rating.explain || ''))) : null),
+    h('div', { class: 'pick-foot' }, watchPill(game)));
+}
+
+/**
+ * Swipeable row of pick cards with page dots. `keep` carries the scroll position across
+ * re-renders (the Today list redraws as ratings arrive).
+ */
+export function picksCarousel(entries, { keep } = {}) {
+  const track = h('div', { class: 'picks-track' }, entries.map((e, i) => pickCard(e, { index: i })));
+  const dots = h('div', { class: 'dots', 'aria-hidden': 'true' }, entries.map((_, i) => h('i', { class: i === 0 ? 'on' : null })));
+  const sync = () => {
+    const w = track.firstElementChild?.offsetWidth || 1;
+    const i = Math.round(track.scrollLeft / (w + 12));
+    [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
+    if (keep) keep.left = track.scrollLeft;
+  };
+  track.addEventListener('scroll', sync, { passive: true });
+  if (keep?.left) requestAnimationFrame(() => { track.scrollLeft = keep.left; sync(); });
+  return h('div', { class: 'picks' }, track, entries.length > 1 ? dots : null);
 }

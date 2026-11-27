@@ -7,8 +7,8 @@ import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../site/', import.meta.url));
-const INCLUDE = /\.(html|js|css|json|webmanifest|png|svg)$/;
-const EXCLUDE = /^(sw\.js|precache\.json|data\/brief\.|data\/ratings\/)/;
+const INCLUDE = /\.(html|js|css|json|webmanifest|png|svg|woff2)$/;
+const EXCLUDE = /^(sw\.js|precache\.json|data\/brief\.|data\/ratings\/|data\/elo\/)/;
 
 async function walk(dir) {
   const out = [];

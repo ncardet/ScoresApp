@@ -1,6 +1,7 @@
 // Standings & brackets: tables for every league, playoff pictures (NFL/NBA/NHL/MLB sorted by
 // seed with the cut line), postseason brackets, March Madness, UCL/UEL knockouts, F1 standings.
 
+import { appHeader } from './components.js';
 import { h, clear, fill, logo, teamLogo } from './dom.js';
 import { LEAGUES, LEAGUE_BY_KEY } from '../core/leagues.js';
 import { ADAPTERS } from '../adapters/index.js';
@@ -204,7 +205,7 @@ export function standingsView(root, params = {}) {
   const chips = h('div', { class: 'chips', role: 'toolbar', 'aria-label': 'Leagues' });
   const body = h('div');
   const view = h('div', { class: 'view' },
-    h('header', { class: 'topbar' }, h('div', { class: 'title-row' }, h('h1', { class: 'title' }, 'Standings')), chips),
+    appHeader({ title: 'Standings' }), chips,
     body);
   fill(root, view);
   let alive = true;

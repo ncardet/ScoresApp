@@ -257,3 +257,26 @@ Newest at the bottom of each section.
   conditions, and the rating only sees the P1–P2 gap, not the cars behind. The backfill and the F1
   fixtures now keep the lap table and raw race-control messages, so the F1 maths can change without
   refetching OpenF1.
+
+## Design (after Ball.app)
+
+- **Look:** Ball.app's visual language with our own colours: a solid brand bar with the wordmark
+  and a round centre badge, a title strip in condensed capitals, thick ink outlines on flat cards
+  (no shadows), chunky round buttons, outlined pill chips and buttons, diagonal corner ribbons, team
+  logos inside rings of the team's colour (like Ball.app's avatars) and big run-style cards in a
+  swipeable "Top picks" carousel with page dots.
+- **Colours:** cobalt brand bar (#2747E6) and a mint strip (#46DFB1), not Ball.app's purple and gold.
+  Yellow, orange and red stay reserved for the excitement bands, so the chrome never competes with
+  a rating. Light mode is ink on warm off-white; dark mode is cream outlines on charcoal. Every
+  colour is a CSS token at the top of `site/css/app.css` (light and dark), so the palette is easy
+  to change.
+- **Badges** echo Ball.app's round buttons: an ink outer ring, a thin gap ring and a filled centre
+  (final/live), or a band-coloured ring around a white centre (predicted).
+- **Type:** the phone's own heavy grotesk (SF Pro on iPhone) for headings and numbers, and Barlow
+  Condensed (SIL Open Font License, self-hosted in `site/fonts/` so it works offline and makes no
+  third-party requests) for labels, strips, chips and tabs.
+- **Top picks:** the first three games by Watch Priority (live games first); on past days the three
+  best-rated finals ("Best of the day"). Shown when there are at least two candidates and four games.
+  The carousel keeps its scroll position while the list refreshes.
+- **Status bar:** the standalone app draws under the iOS status bar (`black-translucent`) so the
+  cobalt bar runs to the top of the screen, as in Ball.app.

@@ -2,8 +2,8 @@
 // detail (linescore, scoring, box score, play-by-play; soccer lineups / xG / momentum; F1 race).
 // Sections with no data are not rendered.
 
-import { h, clear, fill, logo, teamLogo } from './dom.js';
-import { badge, openRatingSheet, statusInfo, watchInfo, backButton } from './components.js';
+import { h, clear, fill, icon } from './dom.js';
+import { badge, openRatingSheet, statusInfo, watchInfo, appHeader, teamMark, ribbonFor, watchPill } from './components.js';
 import { excitementChart, wpChart, momentumBuckets, momentumChart, periodTicks } from './chart.js';
 import { findGame, loadDetail, ratingForGame, getDay } from '../app/store.js';
 import { LEAGUE_BY_KEY } from '../core/leagues.js';
@@ -88,15 +88,14 @@ function table(labels, rows, { first = '' } = {}) {
 
 // ---------- hero ----------
 
-function hero(game, colors) {
+function hero(game, colors, rating) {
   const lg = LEAGUE_BY_KEY[game.league];
   const st = statusInfo(game);
-  const w = watchInfo(game);
   const notes = (game.notes || []).filter(Boolean)[0];
   const showScore = game.state !== 'pre';
+  const fav = favoriteFor(game);
   const teamCol = (t) => h('div', { class: 'hero-team' },
-    logo(teamLogo(t), t.name),
-    h('div', { class: 'nm' }, t.rank ? `${t.rank} ` : '', t.short || t.name, favoriteFor(game) && String(favoriteFor(game).id) === t.id ? ' ★' : ''),
+    h('div', { class: 'nm' }, t.rank ? `${t.rank} ` : '', t.short || t.name, fav && String(fav.id) === t.id ? ' ★' : ''),
     t.record ? h('div', { class: 'rec' }, t.record) : null);
   const final = game.state === 'post';
   const [L, R] = game.sport === 'soccer' ? [game.home, game.away] : [game.away, game.home];
@@ -104,8 +103,14 @@ function hero(game, colors) {
   const awayWon = final && (game.away.winner || game.away.score > game.home.score);
   const lc = L === game.home ? colors.home : colors.away;
   const rc = R === game.home ? colors.home : colors.away;
-  return h('div', { class: 'card hero', style: { '--home-c': rc, '--away-c': lc } },
-    h('div', { class: 'hero-league' }, `${lg.short}${notes ? ` · ${notes}` : ''}`),
+  const poster = h('div', { class: 'poster', style: { '--a': lc, '--b': rc } },
+    teamMark(L, 'xl'), h('span', { class: 'vs' }, 'VS'), teamMark(R, 'xl'));
+  if (game.venue) poster.append(h('div', { class: 'pin' }, icon('pin'), game.venue));
+  const rib = ribbonFor(game, rating, 1);
+  if (rib) poster.append(h('div', { class: `ribbon ${rib.cls}`.trim() }, rib.text));
+  return h('div', { class: 'card hero' },
+    poster,
+    notes ? h('div', { class: 'hero-league' }, notes) : null,
     h('div', { class: 'hero-main' },
       teamCol(L),
       showScore ? h('div', { class: 'hero-score' },
@@ -116,10 +121,7 @@ function hero(game, colors) {
     h('div', { class: `hero-status ${st.cls}` }, game.state === 'pre' ? `${longDayLabel(ptDateKey(new Date(game.start)))} · ${formatTime(game.start)} PT` : st.text),
     game.live?.text || game.live?.lastPlay ? h('div', { class: 'hero-sub' }, game.live.text || game.live.lastPlay) : null,
     game.series?.summary ? h('div', { class: 'hero-sub' }, game.series.summary) : null,
-    game.venue ? h('div', { class: 'hero-sub' }, game.venue) : null,
-    w.status !== 'unknown' ? h('div', { class: 'hero-watch' }, w.status === 'ok'
-      ? `Watch: ${w.options.slice(0, 2).map((o) => (o.services.length === 1 && o.services[0] === o.network ? o.network : `${o.network} (${o.services.join(', ')})`)).join(' · ')}`
-      : 'Not on your services') : null,
+    watchInfo(game).status !== 'unknown' ? h('div', { class: 'hero-watch' }, watchPill(game)) : null,
   );
 }
 
@@ -420,7 +422,8 @@ export function gameView(root, params) {
   let alive = true;
   let timer = null;
 
-  const header = h('header', { class: 'topbar' }, h('div', { class: 'title-row' }, backButton('Today')));
+  const header = appHeader({ title: lg?.name || 'Game', back: 'Back' });
+  const stripTitle = header.querySelector('.strip-title');
   const body = h('div');
   view.append(header, body);
   if (!lg) {
@@ -465,22 +468,26 @@ export function gameView(root, params) {
   function render(game, detail, rating, predicted) {
     const lgx = LEAGUE_BY_KEY[game.league];
     const sections = [];
+    const stx = statusInfo(game);
+    stripTitle.textContent = `${lgx.short} · ${game.state === 'pre' ? formatTime(game.start) : stx.text}`;
     if (game.sport === 'racing') {
       const st = statusInfo(game);
       const w = watchInfo(game);
+      const poster = h('div', { class: 'poster f1' }, h('div', { class: 'gp' }, game.gpName || 'Grand Prix'));
+      if (game.circuit) poster.append(h('div', { class: 'pin' }, icon('pin'), game.circuit));
+      const rib = game.isRace ? ribbonFor(game, rating, 1) : null;
+      if (rib) poster.append(h('div', { class: `ribbon ${rib.cls}`.trim() }, rib.text));
       sections.push(h('div', { class: 'card hero' },
-        h('div', { class: 'hero-league' }, 'Formula 1'),
-        h('div', { style: { textAlign: 'center', marginTop: '10px' } },
-          h('div', { style: { font: '800 26px var(--font-display)' } }, game.gpName),
-          h('div', { class: 'muted' }, `${game.sessionLabel} · ${game.circuit}`)),
+        poster,
+        h('div', { class: 'hero-league' }, `Formula 1 · ${game.sessionLabel}`),
         h('div', { class: `hero-status ${st.cls}` }, game.state === 'pre' ? `${longDayLabel(ptDateKey(new Date(game.start)))} · ${formatTime(game.start)} PT` : st.text),
-        w.status !== 'unknown' ? h('div', { class: 'hero-watch' }, w.status === 'ok' ? `Watch: ${w.label}` : 'Not on your services') : null));
+        w.status !== 'unknown' ? h('div', { class: 'hero-watch' }, watchPill(game)) : null));
       if (game.isRace) sections.push(h('div', { class: 'block' }, ratingCard(rating, predicted, game)));
       else sections.push(h('p', { class: 'muted', style: { margin: '12px 4px' } }, 'Only the race is rated.'));
       sections.push(...f1Sections(detail || {}, game));
     } else {
       const colors = teamColors(game.home, game.away);
-      sections.push(hero(game, colors));
+      sections.push(hero(game, colors, rating));
       sections.push(h('div', { class: 'block' }, ratingCard(rating, predicted, game)));
       const end = Math.max(1, rating?.progress || 0);
       const ticks = periodTicks(game.league, lgx.sport, lgx.periods, end);

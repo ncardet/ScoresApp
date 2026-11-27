@@ -5,6 +5,7 @@
 import { h, clear, fill, logo } from './dom.js';
 import { getSettings, saveSettings, resetSettings } from '../core/settings.js';
 import { MY_SERVICES } from '../../config/services.js';
+import { appHeader } from './components.js';
 import { LEAGUES, LEAGUE_BY_KEY } from '../core/leagues.js';
 import { ADAPTERS } from '../adapters/index.js';
 import { lastUpdate, clearCaches } from '../app/store.js';
@@ -25,7 +26,7 @@ function toggle(checked, onchange, label) {
 export function settingsView(root) {
   const body = h('div');
   fill(root, h('div', { class: 'view' },
-    h('header', { class: 'topbar' }, h('div', { class: 'title-row' }, h('h1', { class: 'title' }, 'Settings'))),
+    appHeader({ title: 'Settings' }),
     body));
   let picker = null;
 

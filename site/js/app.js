@@ -36,7 +36,7 @@ function parse(hash) {
 const VIEWS = { home: homeView, game: gameView, ahead: aheadView, standings: standingsView, settings: settingsView };
 
 function tabbar(active) {
-  const tab = (name, href, label, ic) => h('a', { class: 'tab', href, 'aria-current': active === name ? 'page' : null }, icon(ic), label);
+  const tab = (name, href, label, ic) => h('a', { class: 'tab', href, 'aria-current': active === name ? 'page' : null }, h('span', { class: 'ic' }, icon(ic)), label);
   return h('nav', { class: 'tabbar', 'aria-label': 'Main' },
     tab('home', '#/', 'Today', 'today'),
     tab('ahead', '#/ahead', 'Look Ahead', 'calendar'),

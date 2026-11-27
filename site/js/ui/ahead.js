@@ -3,8 +3,8 @@
 // Data: data/predictions.json (nightly). Games 0-2 days out are re-predicted with the latest
 // odds from the scoreboard when that day is loaded.
 
-import { h, fill, logo, teamLogo } from './dom.js';
-import { badgeWithRange, sectionHeader, skeletonList, watchInfo } from './components.js';
+import { h, fill } from './dom.js';
+import { badgeWithRange, sectionHeader, skeletonList, watchInfo, appHeader, teamMark } from './components.js';
 import { loadPredictions, getDay, loadDay } from '../app/store.js';
 import { predict } from '../rating/index.js';
 import { LEAGUE_BY_KEY, LEAGUES } from '../core/leagues.js';
@@ -33,7 +33,7 @@ function aheadRow(e, game, rating) {
   const teams = game.sport === 'racing'
     ? h('div', { class: 'teams' }, h('div', { class: 'race-title' }, `${e.gpName || 'Grand Prix'} · Race`), h('div', { class: 'race-sub' }, e.circuit || ''))
     : h('div', { class: 'teams' }, [game.away, game.home].map((t) => h('div', { class: 'team-line' },
-      logo(teamLogo(t), ''),
+      teamMark(t),
       h('div', { class: 'team-name' }, t.rank ? h('span', { class: 'rank' }, t.rank) : null, t.short, fav && String(fav.id) === t.id ? h('span', { class: 'star' }, '★') : null),
       h('span'))));
   return h('a', { class: 'game-row', href },
@@ -55,8 +55,11 @@ export function aheadView(root) {
   const chips = h('div', { class: 'chips', role: 'toolbar', 'aria-label': 'Filter' });
   const body = h('div');
   fill(root, h('div', { class: 'view' },
-    h('header', { class: 'topbar' }, h('div', { class: 'title-row' }, h('h1', { class: 'title' }, 'Look Ahead')),
-      h('div', { class: 'subtitle' }, 'Next 14 days, ranked by what is worth watching'), chips),
+    appHeader({ title: 'Look ahead', meta: 'Next 14 days' }),
+    h('div', { class: 'dayhead' }, h('div', { class: 'grow' },
+      h('h2', { class: 'big' }, 'Coming up'),
+      h('div', { class: 'sub' }, 'Ranked by what is worth watching'))),
+    chips,
     body));
   let alive = true;
   let data = null;
