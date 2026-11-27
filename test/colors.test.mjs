@@ -32,7 +32,7 @@ test('every spec token is defined in both light and dark', () => {
 test('the Ball layout tokens exist: ink strip, logo backing and fixed poster colours', () => {
   const t = readTokens();
   for (const mode of ['light', 'dark']) {
-    for (const k of ['--strip', '--on-strip', '--logo-bg', '--nori', '--rice', '--paper', '--on-team', '--shade', '--board-line']) {
+    for (const k of ['--strip', '--on-strip', '--logo-bg', '--nori', '--rice', '--paper', '--on-team', '--shade']) {
       assert.match(t[mode][k] || '', /^#[0-9a-f]{6}$/i, `${mode} ${k}`);
     }
   }
@@ -41,7 +41,7 @@ test('the Ball layout tokens exist: ink strip, logo backing and fixed poster col
   assert.equal(t.dark['--strip'], t.dark['--text']);
   assert.equal(t.light['--on-strip'], t.light['--bg']);
   // Fixed colours sit on team colours, so they don't change with the theme.
-  for (const k of ['--nori', '--rice', '--paper', '--on-team', '--shade', '--board-line']) assert.equal(t.light[k], t.dark[k], k);
+  for (const k of ['--nori', '--rice', '--paper', '--on-team', '--shade']) assert.equal(t.light[k], t.dark[k], k);
 });
 
 test('excitement band colours match the spec in both modes', () => {

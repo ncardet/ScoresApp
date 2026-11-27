@@ -268,7 +268,7 @@ version (cobalt and mint) and the `after-*` shots are this one. They cover Today
 page, Standings and Settings, in light and dark; `npm run screenshots <label>` retakes them.
 
 - **Look:** Ball.app's visual language:
-  - a solid brand bar with the wordmark and a centred mark (the scoreboard; see App icon), and a
+  - a solid brand bar with the wordmark and a centred mark (the Sideline S; see App icon), and a
     title strip in condensed capitals under it
   - thick ink outlines on flat cards (no shadows), chunky round buttons, outlined pill chips and
     buttons
@@ -366,41 +366,44 @@ page, Standings and Settings, in light and dark; `npm run screenshots <label>` r
     form controls and scrollbars in the right mode.
   - The manifest is JSON and can't read CSS, so it repeats the values: `theme_color` #A3C14A and
     `background_color` #0F1F1C (nori).
-  - The icons, favicon and launch screens are the scoreboard; see App icon.
+  - The icons, favicon and launch screens are the Sideline S; see App icon.
 - **Screenshots** are taken by Playwright, with ESPN and OpenF1 requests fetched by Node because
   ESPN's CDN refuses headless Chrome. Team logos need `a.espncdn.com` to be reachable from wherever
   the script runs.
 
 ## App icon
 
-The "Scoreboard" icon spec (a dark scoreboard on wasabi reading HOME 23 / AWAY 9) replaced the
-round "S" badge as the app icon, favicon, launch screen and header mark. As with the theme, the
-colours are the spec's Wasabi and Nori, and the styling is Ball.app's.
+The icon is concept #5 from the icon concept sheet, "Sideline S": a bold nori S between two cream
+chalk sidelines on wasabi. It is the app icon, favicon, launch screen and header mark. It replaced
+the "Scoreboard" icon (HOME 23 / AWAY 9), which shipped briefly in a Ball-style framed version
+(commit `a1f484e`) and didn't look good; that replaced the round "S" badge before it.
 
-- **Ball styling:** the nori board sits in a white frame with a thick nori outline, like the old
-  badge's double ring and the poster cards. The wasabi background has the posters' faint diagonal
-  stripes. HOME / AWAY and the scores are Barlow Condensed 800, the app's condensed capitals,
-  instead of the spec's Space Grotesk.
+- **Design:** drawn as in the concept, flat with no frame or stripes:
+  - wasabi background
+  - cream (`--rice`) sidelines at 18% and 82% of the width, each with five short yard ticks
+    pointing inward
+  - the S in Space Grotesk Bold (the concept's typeface), nori, centred on its ink box
 - **Sources:** `assets/icon/` (not published).
-  - `icon-master.svg` is the editable source of truth, with real `<text>`. It is square and
+  - `icon-master.svg` is the editable source of truth, with a real `<text>` S. It is square and
     full-bleed with no rounded corners, since iOS and Android apply their own masks.
-  - `icon-small.svg` is used for every output 48px and under. It drops the labels and stripes,
-    centres the scores vertically, and makes the frame and divider heavier.
-  - `icon-maskable.svg` is generated from the master's board group, scaled to 72%. A circle or
-    squircle mask never touches the board; the contact sheet shows both masks and the 80% safe zone.
+  - `icon-small.svg` is used for every output 48px and under, and for the header mark. It drops
+    the ticks, and has heavier lines and a larger S.
+  - `icon-maskable.svg` is generated from the master's `art` group, scaled to 72%. A circle or
+    squircle mask never touches the lines or the S; the contact sheet shows both masks and the 80%
+    safe zone.
   - The `*-outlined.svg` files are generated and committed. Their text is converted to paths, so
     no renderer needs the font.
 - **Build:** `npm run icons` (`scripts/build-icons.mjs`) regenerates everything in one command,
   and the output is byte-for-byte reproducible.
-  - It outlines the text with opentype.js, using the same Barlow Condensed (OFL) the app ships,
-    from `@fontsource/barlow-condensed`. opentype.js 2's own path serialiser can emit `NaN` for
-    valid glyphs, so the script serialises the path commands itself and fails on any bad number.
-  - It checks that every colour is a token, adding `--board-line` (#2A453F) for the divider.
-  - It renders with resvg, as the spec suggested.
-  - These three are dev dependencies only (`npm install`). The app, tests and CI need no install,
-    and CI never runs one.
-- **Outputs** go in `site/icons/` (the spec said `public/icons/`, but `site/` is the published
-  folder):
+  - It outlines the text with opentype.js. Fonts come from `@fontsource` packages (OFL), looked up
+    by family and weight from the SVG. opentype.js 2's own path serialiser can emit `NaN` for valid
+    glyphs, so the script serialises the path commands itself and fails on any bad number.
+  - It checks that every colour is a token.
+  - It renders with resvg.
+  - These are dev dependencies only (`npm install`). The app, tests and CI need no install, and CI
+    never runs one.
+- **Outputs** go in `site/icons/` (the original spec said `public/icons/`, but `site/` is the
+  published folder):
   - from the master: `icon-1024` (archive, not precached), `icon-512`, `icon-192` and
     `apple-touch-icon` (180)
   - from the maskable source: `maskable-512` and `maskable-192`
@@ -412,27 +415,29 @@ colours are the spec's Wasabi and Nori, and the styling is Ball.app's.
   entries, written by a few lines of code rather than another dependency.
 - **Launch screens:** the master icon, with home-screen corner rounding, centred on nori #0F1F1C,
   for nine iPhone sizes.
+- **Header mark:** the small icon's S and sidelines drawn straight on the wasabi bar, generated as
+  `site/js/ui/brand-mark.js` with token colours.
+  - There is no tile or outline. The Scoreboard version sat on an outlined tile, which looked too
+    busy; here the bar itself is the field.
+  - It sits centred in the bar on every screen (game pages too), at 40px. Centred is the Ball
+    layout, and it keeps the mark on screens where Back replaces the wordmark.
 - **Wiring:**
   - The manifest (`manifest.webmanifest`, not the spec's `manifest.json`) lists the two "any" and
     two "maskable" PNGs.
   - `<head>` links the SVG favicon, the ICO, the touch icon and the manifest. All paths are
     relative, so they work under the `/ScoresApp/` project path.
-  - The ICO link says `sizes="32x32"` rather than the spec's `"any"`. With `"any"`, Chrome prefers
-    the ICO over the SVG, and modern browsers would never use the SVG.
-- **Cache busting:** the icon and manifest URLs carry `?v=2`, and the service worker's core list
-  caches those exact URLs (plus `tokens.css`, which it was missing). Every deploy also stamps a new
-  service-worker cache. iOS keeps the icon from when the app was added, so the app must be removed
-  from the Home Screen and added again to show the new one.
-- **Header mark:** the small variant on a wasabi tile with an `--on-wasabi` outline, so it reads on
-  the wasabi bar. It is generated as `site/js/ui/scoreboard-mark.js` with token colours. It sits in
-  the S badge's old place, centred in the bar on every screen (game pages too), at 40px. The spec
-  said 32px beside the wordmark; centred is the Ball layout, and it keeps the mark on screens where
-  Back replaces the wordmark.
+  - The ICO link says `sizes="32x32"` rather than `"any"`. With `"any"`, Chrome prefers the ICO
+    over the SVG, and modern browsers would never use the SVG.
+- **Cache busting:** the icon and manifest URLs carry a version query (`?v=3` since the switch to
+  the S), and the service worker's core list caches those exact URLs, plus `tokens.css`, which it
+  was missing. Every deploy also stamps a new service-worker cache. iOS keeps the icon from when the
+  app was added, so the app must be removed from the Home Screen and added again to show a new one.
 - **Checks:**
   - `test/icons.test.mjs` runs in CI and checks:
     - no `<text>` in any shipped SVG, and every colour a token
     - the manifest icons' sizes and purposes match their files
     - the touch icon is 180×180 RGB, and the ICO holds 16, 32 and 48
     - the `<head>` links are relative and exist
-  - Chrome reported no installability errors for the manifest. Lighthouse 12 dropped its PWA audit;
+    - the header mark has no tile or outline
+  - Chrome reports no installability errors for the manifest. Lighthouse 12 dropped its PWA audit;
     Chrome's own check over the DevTools protocol is what that audit reported.
