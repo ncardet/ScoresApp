@@ -386,8 +386,10 @@ the "Scoreboard" icon (HOME 23 / AWAY 9), which shipped briefly in a Ball-style 
 - **Sources:** `assets/icon/` (not published).
   - `icon-master.svg` is the editable source of truth, with a real `<text>` S. It is square and
     full-bleed with no rounded corners, since iOS and Android apply their own masks.
-  - `icon-small.svg` is used for every output 48px and under, and for the header mark. It drops
-    the ticks, and has heavier lines and a larger S.
+  - `icon-small.svg` is used for every output 48px and under. It drops the ticks, and has heavier
+    lines and a larger S.
+  - `icon-mark.svg` is the header mark: the S and sidelines with yard ticks, weighted for about
+    40px.
   - `icon-maskable.svg` is generated from the master's `art` group, scaled to 72%. A circle or
     squircle mask never touches the lines or the S; the contact sheet shows both masks and the 80%
     safe zone.
@@ -415,8 +417,11 @@ the "Scoreboard" icon (HOME 23 / AWAY 9), which shipped briefly in a Ball-style 
   entries, written by a few lines of code rather than another dependency.
 - **Launch screens:** the master icon, with home-screen corner rounding, centred on nori #0F1F1C,
   for nine iPhone sizes.
-- **Header mark:** the small icon's S and sidelines drawn straight on the wasabi bar, generated as
+- **Header mark:** the S between its sidelines, with the yard ticks, drawn straight on the wasabi
+  bar. It comes from its own source, `assets/icon/icon-mark.svg`, and is generated as
   `site/js/ui/brand-mark.js` with token colours.
+  - The ticks make the lines read as an actual sideline. The lines and ticks are heavier than the
+    master's so they hold up at 40px; the favicons stay tick-free, because ticks are noise at 16px.
   - There is no tile or outline. The Scoreboard version sat on an outlined tile, which looked too
     busy; here the bar itself is the field.
   - It sits centred in the bar on every screen (game pages too), at 40px. Centred is the Ball
@@ -438,6 +443,6 @@ the "Scoreboard" icon (HOME 23 / AWAY 9), which shipped briefly in a Ball-style 
     - the manifest icons' sizes and purposes match their files
     - the touch icon is 180×180 RGB, and the ICO holds 16, 32 and 48
     - the `<head>` links are relative and exist
-    - the header mark has no tile or outline
+    - the header mark has its sidelines and ten yard ticks, and no tile or outline
   - Chrome reports no installability errors for the manifest. Lighthouse 12 dropped its PWA audit;
     Chrome's own check over the DevTools protocol is what that audit reported.

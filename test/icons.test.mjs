@@ -22,7 +22,7 @@ const OUTLINED = [
 ];
 
 test('shipped icon SVGs are outlined: no <text>, so no font is needed to draw them', () => {
-  assert.equal(OUTLINED.length, 4, 'favicon.svg and three outlined masters');
+  assert.equal(OUTLINED.length, 5, 'favicon.svg and four outlined sources (master, small, maskable, header mark)');
   for (const f of [...OUTLINED, 'site/js/ui/brand-mark.js']) {
     const s = read(f).toString();
     assert.doesNotMatch(s, /<text\b/, f);
@@ -82,9 +82,10 @@ test('index.html links the SVG and ICO favicons, touch icon and manifest by rela
   assert.match(html, /<link rel="icon" href="icons\/favicon\.svg\?v=\d+" type="image\/svg\+xml">/);
 });
 
-test('the header shows the brand mark: token colours, straight on the bar (no tile or outline)', () => {
+test('the header shows the brand mark: sidelines with yard ticks, token colours, straight on the bar (no tile or outline)', () => {
   assert.match(read('site/js/ui/components.js').toString(), /BRAND_MARK/);
   const mark = read('site/js/ui/brand-mark.js').toString();
+  assert.equal((mark.match(/<rect\b/g) || []).length, 12, 'two sidelines and ten yard ticks');
   assert.match(mark, /var\(--nori\)/);
   assert.match(mark, /var\(--rice\)/);
   assert.doesNotMatch(mark, /--wasabi|--on-wasabi/, 'no tile or outline behind the mark');

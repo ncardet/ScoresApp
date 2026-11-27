@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="40" height="40">
+  <!-- Sideline header mark: the app icon's S between chalk sidelines with yard ticks, drawn at
+       about 40px straight on the wasabi brand bar (no tile). Heavier lines and ticks than the
+       master so they hold up at that size. `npm run icons` outlines the text and generates
+       site/js/ui/brand-mark.js from the "art" group, with token colours. The wasabi rectangle is
+       only the background for viewing this file; the header uses the bar instead. -->
+  <rect width="200" height="200" fill="#A3C14A"/>
+  <g id="art">
+    <rect x="27.5" y="8" width="9" height="184" fill="#F5F2E8"/>
+    <rect x="163.5" y="8" width="9" height="184" fill="#F5F2E8"/>
+    <rect x="36.5" y="40" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="36.5" y="68" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="36.5" y="96" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="36.5" y="124" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="36.5" y="152" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="149.5" y="40" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="149.5" y="68" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="149.5" y="96" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="149.5" y="124" width="14" height="8" fill="#F5F2E8"/>
+    <rect x="149.5" y="152" width="14" height="8" fill="#F5F2E8"/>
+    <text x="100" y="149" text-anchor="middle" font-family="Space Grotesk" font-size="140" font-weight="700" fill="#0F1F1C">S</text>
+  </g>
+</svg>
