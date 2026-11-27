@@ -2,7 +2,7 @@
 // other game ranked by Watch Priority (rating + favorites + star power). League chips, date picker, pull-to-refresh,
 // and auto-refresh every ~45 s while a game is live and the app is visible.
 
-import { h, clear, fill, icon } from './dom.js';
+import { h, clear, fill, icon, sportIcon } from './dom.js';
 import { gameRow, sectionHeader, skeletonList, appHeader, barButton, picksCarousel } from './components.js';
 import {
   loadDay, getDay, subscribe, displayRating, rankScore, refreshLive, hasLive, dataStatus, prefetchPublishedRatings,
@@ -80,7 +80,7 @@ export function homeView(root, params = {}) {
     fill(chipsEl, 
       h('button', { class: 'chip', type: 'button', 'aria-pressed': String(filter === 'all'), onclick: () => setFilter('all') }, 'All', h('span', { class: 'count' }, all.length || '')),
       keys.map((k) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(filter === k), onclick: () => setFilter(k) },
-        LEAGUE_BY_KEY[k].short, h('span', { class: 'count' }, counts[k]))),
+        sportIcon(LEAGUE_BY_KEY[k].sport), LEAGUE_BY_KEY[k].short, h('span', { class: 'count' }, counts[k]))),
     );
   }
 

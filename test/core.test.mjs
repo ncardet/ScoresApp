@@ -113,3 +113,13 @@ test('brief v2: top 5 by Watch Priority, at most 2 per league; skip is never a p
   assert.equal(sleeper.r.value, 50, 'highest P(Great) outside the top 5');
   assert.equal(skipWarning(skip.g, skip.r.pred), `${skip.g.home.short} −14: blowout risk`);
 });
+
+test('every league has a sport icon, drawn only in the text colour', async () => {
+  const { SPORT_ICONS } = await import('../site/js/ui/dom.js');
+  const { LEAGUES } = await import('../site/js/core/leagues.js');
+  for (const l of LEAGUES) assert.ok(Object.hasOwn(SPORT_ICONS, l.sport), `${l.key}: no icon for "${l.sport}"`);
+  for (const [sport, svg] of Object.entries(SPORT_ICONS)) {
+    for (const [, c] of svg.matchAll(/\b(?:fill|stroke)="([^"]*)"/g)) assert.ok(['currentColor', 'none'].includes(c), `${sport}: ${c}`);
+    assert.doesNotMatch(svg, /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i, sport);
+  }
+});

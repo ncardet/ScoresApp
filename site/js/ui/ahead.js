@@ -3,7 +3,7 @@
 // Data: data/predictions.json (nightly). Games 0-2 days out are re-predicted with the latest
 // odds from the scoreboard when that day is loaded.
 
-import { h, fill } from './dom.js';
+import { h, fill, sportIcon } from './dom.js';
 import { badgeWithRange, sectionHeader, skeletonList, watchInfo, appHeader, teamMark } from './components.js';
 import { loadPredictions, getDay, loadDay } from '../app/store.js';
 import { predict } from '../rating/index.js';
@@ -44,7 +44,7 @@ function aheadRow(e, game, rating) {
         `${Math.round(p.pGreat * 100)}% chance of Great`) : null,
       p?.reasons?.[0] ? h('div', { class: 'ahead-reason' }, p.reasons.slice(0, 2).map((r) => r.text).join(' · ')) : null),
     h('div', { class: 'row-side' },
-      h('div', { class: 'league-tag' }, lg?.short || e.league),
+      h('div', { class: 'league-tag' }, sportIcon(lg?.sport), lg?.short || e.league),
       h('div', { class: 'status' }, formatTime(e.start)),
       p ? h('span', { class: 'horizon' }, p.horizon.label) : null,
       w.status === 'ok' ? h('div', { class: 'watch' }, w.short) : null));
@@ -79,7 +79,7 @@ export function aheadView(root) {
     fill(chips,
       h('button', { class: 'chip', type: 'button', 'aria-pressed': String(filter === 'all'), onclick: () => setFilter('all') }, 'All'),
       h('button', { class: 'chip', type: 'button', 'aria-pressed': String(filter === 'fav'), onclick: () => setFilter('fav') }, '★ Favorites'),
-      leagues.map((k) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(filter === k), onclick: () => setFilter(k) }, LEAGUE_BY_KEY[k].short)));
+      leagues.map((k) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(filter === k), onclick: () => setFilter(k) }, sportIcon(LEAGUE_BY_KEY[k].sport), LEAGUE_BY_KEY[k].short)));
     const favs = getSettings().favorites;
     const rows = [];
     for (const e of entries) {
@@ -113,7 +113,7 @@ export function aheadView(root) {
     if (circle.length) {
       parts.push(sectionHeader('Circle this one', 'further out'),
         h('div', { class: 'card list' }, circle.map((c) => h('div', { class: 'circle-row' },
-          h('div', { class: 'when' }, `${LEAGUE_BY_KEY[c.league]?.short || c.league} · ${longDayLabel(c.day)}`),
+          h('div', { class: 'when' }, sportIcon(LEAGUE_BY_KEY[c.league]?.sport), `${LEAGUE_BY_KEY[c.league]?.short || c.league} · ${longDayLabel(c.day)}`),
           h('div', { class: 'team-name' }, h('span', { class: 'circle-badge' }, '◎'), c.away && c.home ? `${c.away.short} at ${c.home.short}` : c.gpName || 'Race'),
           h('div', { class: 'flags' }, c.reasons.join(' · '))))));
     }

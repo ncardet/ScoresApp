@@ -2,7 +2,7 @@
 // seed with the cut line), postseason brackets, March Madness, UCL/UEL knockouts, F1 standings.
 
 import { appHeader } from './components.js';
-import { h, clear, fill, logo, teamLogo } from './dom.js';
+import { h, clear, fill, logo, teamLogo, sportIcon } from './dom.js';
 import { LEAGUES, LEAGUE_BY_KEY } from '../core/leagues.js';
 import { ADAPTERS } from '../adapters/index.js';
 import { postseasonGames, currentWindow } from '../adapters/espn/postseason.js';
@@ -216,7 +216,7 @@ export function standingsView(root, params = {}) {
     fill(chips, LEAGUES.filter((l) => !hidden.has(l.key)).map((l) => h('button', {
       class: 'chip', type: 'button', 'aria-pressed': String(l.key === key),
       onclick: () => { key = l.key; try { localStorage.setItem(KEY, key); } catch { /* ignore */ } drawChips(); load(); },
-    }, l.short)));
+    }, sportIcon(l.sport), l.short)));
   }
 
   async function load() {

@@ -201,6 +201,9 @@ a.game-row:visited { color: var(--text); }
 .watch { font: 700 12.5px/1.2 var(--font-cond); letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-2); }
 .watch.none { color: var(--text-3); }
 .league-tag { font: 800 12px/1 var(--font-cond); letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase; }
+/* Sport icon in front of a league name: inline, sized and coloured by the text it sits in. */
+.sport-ic { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-right: 0.3em; flex: none; }
+.league-tag .sport-ic { width: 14px; height: 14px; vertical-align: -3px; }
 .row-note { grid-column: 2 / -1; font-size: 12px; color: var(--text-3); margin-top: -4px; }
 .fav-flag { position: absolute; left: 0; top: 12px; bottom: 12px; width: 5px; border-radius: 0 4px 4px 0; background: var(--wasabi-ink); }
 
@@ -256,7 +259,7 @@ a.pick:visited { color: var(--text); }
 .pick-body { padding: 14px 16px 6px; }
 .pick-league { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 700 15px/1.2 var(--font-display); color: var(--text); }
 .pick-league span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pick-league svg { width: 22px; height: 22px; flex: none; stroke-width: 2.6; }
+.pick-league > svg { width: 22px; height: 22px; flex: none; stroke-width: 2.6; }
 .pick-when { font: 900 46px/1 var(--font-display); letter-spacing: -0.04em; margin-top: 10px; white-space: nowrap; }
 .pick-when.live { color: var(--accent); }
 .pick-match { font: 800 24px/1.15 var(--font-display); letter-spacing: -0.025em; margin-top: 6px; }

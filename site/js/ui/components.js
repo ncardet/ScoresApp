@@ -1,6 +1,6 @@
 // Shared UI pieces: rating badge, explanation sheet, game rows, section headers.
 
-import { h, icon, logo, teamLogo, frag } from './dom.js';
+import { h, icon, sportIcon, logo, teamLogo, frag } from './dom.js';
 import { formatTime } from '../core/time.js';
 import { whereToWatch } from '../core/watch.js';
 import { getSettings, favoriteFor } from '../core/settings.js';
@@ -196,7 +196,7 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
   const lg = LEAGUE_BY_KEY[game.league];
   const circled = game.state === 'pre' && rating?.pred?.circle?.flagged;
   const sideBits = [
-    showLeague ? h('div', { class: 'league-tag' }, lg.short) : null,
+    showLeague ? h('div', { class: 'league-tag' }, sportIcon(lg.sport), lg.short) : null,
     h('div', { class: `status ${st.cls}` }, circled ? h('span', { class: 'circle-badge sm', title: `Circle this one: ${rating.pred.circle.reasons.join(', ')}` }, '◎') : null, st.text),
     w.status !== 'unknown' ? h('div', { class: `watch${w.status === 'none' ? ' none' : ''}` }, w.short) : null,
   ];
@@ -303,7 +303,7 @@ export function pickCard({ game, rating }, { index = 0 } = {}) {
   return h('a', { class: 'card pick', href: gameHref(game) },
     poster,
     h('div', { class: 'pick-body' },
-      h('div', { class: 'pick-league' }, h('span', null, `${lg?.name || lg?.short || ''}${note ? ` · ${note}` : ''}`), icon('right')),
+      h('div', { class: 'pick-league' }, h('span', null, sportIcon(lg?.sport), `${lg?.name || lg?.short || ''}${note ? ` · ${note}` : ''}`), icon('right')),
       h('div', { class: `pick-when${live ? ' live' : ''}` }, when),
       h('div', { class: 'pick-match' }, matchup),
       rating ? h('div', { class: 'pick-meta' },

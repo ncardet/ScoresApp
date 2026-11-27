@@ -2,7 +2,7 @@
 // Changes are stored on this device. config/favorites.js and config/services.js stay the
 // source of truth for the morning brief; "Copy as config" helps you update them.
 
-import { h, clear, fill, logo } from './dom.js';
+import { h, clear, fill, logo, sportIcon } from './dom.js';
 import { getSettings, saveSettings, resetSettings } from '../core/settings.js';
 import { MY_SERVICES } from '../../config/services.js';
 import { appHeader } from './components.js';
@@ -49,7 +49,7 @@ export function settingsView(root) {
     parts.push(h('div', { class: 'section-h' }, h('h2', null, 'Favorites'), h('span', { class: 'meta' }, 'pinned on Today, starred')));
     parts.push(h('div', { class: 'card list' },
       st.favorites.length ? st.favorites.map((f, i) => row(
-        h('div', { class: 'grow' }, h('div', null, f.name), h('div', { class: 'sub' }, f.leagues.map((k) => LEAGUE_BY_KEY[k]?.short || k).join(' · '))),
+        h('div', { class: 'grow' }, h('div', null, f.name), h('div', { class: 'sub' }, f.leagues.map((k, i) => [i ? ' · ' : '', sportIcon(LEAGUE_BY_KEY[k]?.sport), LEAGUE_BY_KEY[k]?.short || k]))),
         h('button', { class: 'btn danger', type: 'button', onclick: () => { const fav = [...st.favorites]; fav.splice(i, 1); saveSettings({ favorites: fav }); draw(); } }, 'Remove'),
       )) : row(h('div', { class: 'grow muted' }, 'No favorites yet.')),
       row(h('div', { class: 'grow' }, 'Add a team'), h('button', { class: 'btn primary', type: 'button', onclick: () => openPicker() }, 'Add'))));
@@ -69,7 +69,7 @@ export function settingsView(root) {
     // Leagues
     parts.push(h('div', { class: 'section-h' }, h('h2', null, 'Leagues')));
     parts.push(h('div', { class: 'card list' }, LEAGUES.map((l) => row(
-      h('div', { class: 'grow' }, l.name),
+      h('div', { class: 'grow' }, sportIcon(l.sport), l.name),
       toggle(!st.hiddenLeagues.includes(l.key), (on) => {
         const hidden = new Set(getSettings().hiddenLeagues);
         if (on) hidden.delete(l.key); else hidden.add(l.key);

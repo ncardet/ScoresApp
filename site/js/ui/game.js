@@ -2,7 +2,7 @@
 // detail (linescore, scoring, box score, play-by-play; soccer lineups / xG / momentum; F1 race).
 // Sections with no data are not rendered.
 
-import { h, clear, fill, icon, cssVar } from './dom.js';
+import { h, clear, fill, icon, sportIcon, cssVar } from './dom.js';
 import { badge, openRatingSheet, statusInfo, watchInfo, appHeader, teamMark, ribbonFor, watchPill } from './components.js';
 import { excitementChart, wpChart, momentumBuckets, momentumChart, periodTicks } from './chart.js';
 import { findGame, loadDetail, ratingForGame, getDay } from '../app/store.js';
@@ -422,7 +422,7 @@ export function gameView(root, params) {
   let alive = true;
   let timer = null;
 
-  const header = appHeader({ title: lg?.name || 'Game', back: 'Back' });
+  const header = appHeader({ title: lg ? [sportIcon(lg.sport), lg.name] : 'Game', back: 'Back' });
   const stripTitle = header.querySelector('.strip-title');
   const body = h('div');
   view.append(header, body);
@@ -469,7 +469,7 @@ export function gameView(root, params) {
     const lgx = LEAGUE_BY_KEY[game.league];
     const sections = [];
     const stx = statusInfo(game);
-    stripTitle.textContent = `${lgx.short} · ${game.state === 'pre' ? formatTime(game.start) : stx.text}`;
+    fill(stripTitle, sportIcon(lgx.sport), `${lgx.short} · ${game.state === 'pre' ? formatTime(game.start) : stx.text}`);
     if (game.sport === 'racing') {
       const st = statusInfo(game);
       const w = watchInfo(game);

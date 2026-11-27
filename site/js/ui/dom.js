@@ -64,8 +64,31 @@ const ICONS = {
   tv: '<rect x="3" y="5.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 21h7M12 18v3"/>',
 };
 
+/** Sport icons, keyed by the league `sport` field (core/leagues.js). Same 24px grid and round
+ *  2-unit strokes as ICONS; small parts (pentagon, puck, checks) are solid so they read at 14px. */
+export const SPORT_ICONS = {
+  basketball: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M6.4 4.95c2.4 3.1 2.4 11 0 14.1M17.6 4.95c-2.4 3.1-2.4 11 0 14.1"/>',
+  football: '<path d="M3.8 20.2C2 10.6 10.6 2 20.2 3.8 22 13.4 13.4 22 3.8 20.2z"/><path d="M9 15l6-6M10.8 10.8l2.4 2.4M9.1 12.5l2.4 2.4M12.5 9.1l2.4 2.4"/>',
+  baseball: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.7c2.7 2.9 2.7 9.7 0 12.6M18.4 5.7c-2.7 2.9-2.7 9.7 0 12.6"/><path stroke-width="1.6" d="M6.2 8.9l2-.7M6.6 12h2M6.2 15.1l2 .7M17.8 8.9l-2-.7M17.4 12h-2M17.8 15.1l-2 .7"/>',
+  hockey: '<path stroke-width="2.5" d="M7 2.5l5.4 12.8c.6 1.5 1.7 2.7 3.6 2.7h4.5"/><ellipse cx="6.2" cy="18.6" rx="3.4" ry="2" fill="currentColor" stroke="none"/>',
+  soccer: '<circle cx="12" cy="12" r="9"/><path d="M12 8.4l3.42 2.49-1.3 4.02H9.88l-1.3-4.02z" fill="currentColor"/>'
+    + '<path d="M12 8.4V5.6M15.42 10.89l2.67-.87M14.12 14.91l1.64 2.27M9.88 14.91l-1.64 2.27M8.58 10.89l-2.67-.87"/>'
+    + '<path fill="currentColor" d="M8.63 3.66a9 9 0 0 1 6.74 0L12 5.6zM18.89 6.21a9 9 0 0 1 2.09 6.42l-2.89-2.61zM19.63 16.77a9 9 0 0 1-5.45 3.96l1.58-3.55zM9.82 20.73a9 9 0 0 1-5.45-3.96l3.87.41zM3.02 12.63a9 9 0 0 1 2.09-6.42l.8 3.81z"/>',
+  racing: '<path d="M5 21V3.5M5 4h14v9H5"/><path d="M5 4h3.5v3H5zM12 4h3.5v3H12zM8.5 7H12v3H8.5zM15.5 7H19v3h-3.5zM5 10h3.5v3H5zM12 10h3.5v3H12z" fill="currentColor" stroke="none"/>',
+};
+
+function svgIcon(inner, cls = '') {
+  return frag(`<svg${cls ? ` class="${cls}"` : ''} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`);
+}
+
 export function icon(name) {
-  return frag(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`);
+  return svgIcon(ICONS[name] || '');
+}
+
+/** The sport's icon, to sit in front of a league name ("MCBB", "Premier League"). It takes the
+ *  size and colour of the text around it (.sport-ic), and screen readers skip it: the name stays. */
+export function sportIcon(sport) {
+  return Object.hasOwn(SPORT_ICONS, sport) ? svgIcon(SPORT_ICONS[sport], 'sport-ic') : null;
 }
 
 export function logo(url, alt = '') {

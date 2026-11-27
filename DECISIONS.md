@@ -312,6 +312,25 @@ page, Standings and Settings, in light and dark; `npm run screenshots <label>` r
 - **Top picks:** the first three games by Watch Priority (live games first); on past days the three
   best-rated finals ("Best of the day"). Shown when there are at least two candidates and four games.
   The carousel keeps its scroll position while the list refreshes.
+- **Sport icons** sit in front of every league name, full ("Men's College Basketball") or short
+  ("MCBB"):
+  - **Six icons, one per sport:** basketball, football, baseball, hockey (stick and puck), soccer and
+    a checkered flag for F1.
+  - **Drawing:** hand-drawn in `site/js/ui/dom.js` (`SPORT_ICONS`, `sportIcon()`), on the same 24px
+    grid and round 2-unit strokes as the other icons. The small parts (pentagon, puck, checks) are
+    solid so they read at 14px. Crossed hockey sticks were dropped because in a chip they looked like
+    a close ×.
+  - **Colour:** `currentColor`, so each icon is drawn in its label's colour: muted in the row tags,
+    `--on-wasabi` on a selected chip, rice or nori in the title strip. No new tokens, and both modes
+    work without extra rules.
+  - **Size:** about 1.1em of the label's text, inline, so chip heights don't change and long Top
+    Picks labels still end in "…". The 12px row tags use a 14px icon.
+  - **Where:** Top Picks, the Today and Look Ahead chips, the league tags on rows, "Circle this one",
+    the game page's title strip, the Standings chips, and in Settings the Leagues list and each
+    favourite's leagues.
+  - **Left as plain text:** the "No MCBB games" message, the team picker's dropdown (options can't
+    hold icons), the calibration list, and the morning brief files.
+  - **Accessibility:** decorative (`aria-hidden`); the league name stays as text.
 - **One token file:** every colour is a custom property in `site/css/tokens.css`:
   - light values on `:root` and `[data-theme="light"]`, dark on `[data-theme="dark"]`
   - the excitement bands, the strip and the fixed colours on `:root` (the same in both modes)
