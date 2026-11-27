@@ -14,6 +14,10 @@ import { aheadView } from './ui/ahead.js';
 import { settingsView } from './ui/settings.js';
 import { closeSheet } from './ui/components.js';
 import { prunePersisted } from './adapters/espn/client.js';
+import { initTheme } from './core/theme.js';
+
+// Theme first (index.html already set data-theme before paint; this follows the system live).
+initTheme();
 
 const root = document.getElementById('app');
 let cleanup = null;
@@ -58,6 +62,8 @@ function route() {
 }
 
 window.addEventListener('hashchange', route);
+// Logos and charts pick colours for the theme: redraw the current screen when it changes.
+window.addEventListener('sideline:theme', () => route()); // keeps the scroll position
 route();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

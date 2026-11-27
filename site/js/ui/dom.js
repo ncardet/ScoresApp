@@ -75,13 +75,17 @@ export function logo(url, alt = '') {
   return img;
 }
 
-/** Pick the logo variant that reads on the current theme. */
+/** Pick the logo variant that reads on the current theme (the app's setting, not just the OS). */
 export function teamLogo(team) {
-  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = document.documentElement.dataset.theme === 'dark';
   return (dark && team?.logoDark) || team?.logo || '';
 }
 
+/** A token's current value (e.g. cssVar('--wasabi')), for code that needs a concrete colour. */
+export function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 export function onTheme(fn) {
-  const mq = matchMedia('(prefers-color-scheme: dark)');
-  mq.addEventListener?.('change', fn);
+  window.addEventListener('sideline:theme', fn);
 }

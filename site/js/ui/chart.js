@@ -26,8 +26,12 @@ export function periodTicks(league, sport, periods, end) {
   return ticks;
 }
 
-/** Excitement intensity over the game (0..100), area coloured by excitement band. */
-export function excitementChart(curve, { ticks = [], end = 1, height = 120 } = {}) {
+/**
+ * Excitement intensity over the game (0..100): a wasabi-ink line over a 15% wasabi area, with the
+ * band thresholds (40 / 65 / 85) as faint dashed lines. `watchFrom` (0..1+), if given, marks where
+ * the game gets good, in the accent colour.
+ */
+export function excitementChart(curve, { ticks = [], end = 1, height = 120, watchFrom = null } = {}) {
   if (!curve?.length) return null;
   const H = height;
   const pad = { l: 6, r: 6, t: 8, b: 16 };
@@ -38,22 +42,20 @@ export function excitementChart(curve, { ticks = [], end = 1, height = 120 } = {
   const y = (v) => pad.t + ih - (v / 100) * ih;
   const line = curve.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join('');
   const area = `${line}L${x(curve.at(-1).t).toFixed(1)},${y(0)}L${x(curve[0].t).toFixed(1)},${y(0)}Z`;
-  const id = `g${Math.random().toString(36).slice(2, 8)}`;
-  const grid = [40, 65, 85].map((v) => `<line class="axis" x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke-dasharray="2 4"/>`).join('');
+  const grid = [40, 65, 85].map((v) => `<line class="band-line" x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}"/>`).join('');
   const tk = ticks.map((k) => `<line class="axis" x1="${x(k.t)}" x2="${x(k.t)}" y1="${pad.t}" y2="${y(0)}"/><text x="${x(k.t) + 2}" y="${H - 4}">${esc(k.label)}</text>`).join('');
+  const mark = watchFrom != null ? `<line class="marker" x1="${x(watchFrom)}" x2="${x(watchFrom)}" y1="${pad.t}" y2="${y(0)}" stroke-width="1.5"/><circle class="marker" cx="${x(watchFrom)}" cy="${pad.t + 2}" r="3"/>` : '';
   return frag(`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Excitement over the course of the game">
-    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="var(--great)"/><stop offset="0.3" stop-color="var(--good)"/>
-      <stop offset="0.6" stop-color="var(--ok)"/><stop offset="1" stop-color="var(--dull)"/></linearGradient></defs>
     ${grid}${tk}
-    <path d="${area}" fill="url(#${id})" opacity="0.85"/>
-    <path d="${line}" fill="none" stroke="var(--text)" stroke-opacity="0.55" stroke-width="1.2"/>
+    <path class="ex-area" d="${area}"/>
+    <path class="ex-line" d="${line}"/>
+    ${mark}
     <text x="${W - pad.r}" y="${y(85) - 3}" text-anchor="end">Great</text>
   </svg>`);
 }
 
 /** Home win probability; area above 50% in home colour, below in away colour. */
-export function wpChart(wp, { homeColor = '#0a84ff', awayColor = '#ff9500', homeLabel = 'Home', awayLabel = 'Away', ticks = [], end = 1, height = 110 } = {}) {
+export function wpChart(wp, { homeColor = 'var(--team-fallback-home)', awayColor = 'var(--team-fallback-away)', homeLabel = 'Home', awayLabel = 'Away', ticks = [], end = 1, height = 110 } = {}) {
   if (!wp?.length) return null;
   const H = height;
   const pad = { l: 6, r: 30, t: 6, b: 16 };

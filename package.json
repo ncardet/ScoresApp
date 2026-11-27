@@ -13,6 +13,9 @@
     "probe": "node scripts/probe-endpoints.mjs",
     "backfill": "node scripts/backfill.mjs",
     "brief": "node scripts/build-brief.mjs --force",
-    "fixtures": "node scripts/make-fixtures.mjs"
+    "fixtures": "node scripts/make-fixtures.mjs",
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "screenshots": "node scripts/screenshots.mjs"
   }
 }

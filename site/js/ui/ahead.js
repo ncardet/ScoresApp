@@ -3,8 +3,8 @@
 // Data: data/predictions.json (nightly). Games 0-2 days out are re-predicted with the latest
 // odds from the scoreboard when that day is loaded.
 
-import { h, fill } from './dom.js';
-import { badgeWithRange, sectionHeader, skeletonList, watchInfo, appHeader, teamMark } from './components.js';
+import { h, fill, logo, teamLogo } from './dom.js';
+import { badgeWithRange, sectionHeader, skeletonList, watchInfo, appHeader, teamStrip } from './components.js';
 import { loadPredictions, getDay, loadDay } from '../app/store.js';
 import { predict } from '../rating/index.js';
 import { LEAGUE_BY_KEY, LEAGUES } from '../core/leagues.js';
@@ -32,13 +32,13 @@ function aheadRow(e, game, rating) {
   const href = `#/game/${e.league}/${encodeURIComponent(e.id)}${e.eventId ? `?e=${e.eventId}` : ''}`;
   const teams = game.sport === 'racing'
     ? h('div', { class: 'teams' }, h('div', { class: 'race-title' }, `${e.gpName || 'Grand Prix'} · Race`), h('div', { class: 'race-sub' }, e.circuit || ''))
-    : h('div', { class: 'teams' }, [game.away, game.home].map((t) => h('div', { class: 'team-line' },
-      teamMark(t),
+    : h('div', { class: 'teams' }, (game.sport === 'soccer' ? [game.home, game.away] : [game.away, game.home]).map((t) => h('div', { class: 'team-line' },
+      teamStrip(t),
+      logo(teamLogo(t), ''),
       h('div', { class: 'team-name' }, t.rank ? h('span', { class: 'rank' }, t.rank) : null, t.short, fav && String(fav.id) === t.id ? h('span', { class: 'star' }, '★') : null),
       h('span'))));
+  // Teams and chance of Great on the left, time in the middle, the badge top-right.
   return h('a', { class: 'game-row', href },
-    fav ? h('span', { class: 'fav-flag', 'aria-hidden': 'true' }) : null,
-    rating ? badgeWithRange(rating) : h('span', { class: 'badge none' }, '—'),
     h('div', { class: 'ahead-main' }, teams,
       p ? h('div', { class: 'ahead-meta' }, p.circle?.flagged ? h('span', { class: 'circle-badge', title: 'Circle this one' }, '◎') : null,
         `${Math.round(p.pGreat * 100)}% chance of Great`) : null,
@@ -47,7 +47,8 @@ function aheadRow(e, game, rating) {
       h('div', { class: 'league-tag' }, lg?.short || e.league),
       h('div', { class: 'status' }, formatTime(e.start)),
       p ? h('span', { class: 'horizon' }, p.horizon.label) : null,
-      w.status === 'ok' ? h('div', { class: 'watch' }, w.short) : null));
+      w.status === 'ok' ? h('div', { class: 'watch' }, w.short) : null),
+    rating ? badgeWithRange(rating) : h('span', { class: 'badge none' }, '—'));
 }
 
 export function aheadView(root) {

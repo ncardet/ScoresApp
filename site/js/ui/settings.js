@@ -6,6 +6,7 @@ import { h, clear, fill, logo } from './dom.js';
 import { getSettings, saveSettings, resetSettings } from '../core/settings.js';
 import { MY_SERVICES } from '../../config/services.js';
 import { appHeader } from './components.js';
+import { THEMES, readTheme, setTheme } from '../core/theme.js';
 import { LEAGUES, LEAGUE_BY_KEY } from '../core/leagues.js';
 import { ADAPTERS } from '../adapters/index.js';
 import { lastUpdate, clearCaches } from '../app/store.js';
@@ -33,6 +34,16 @@ export function settingsView(root) {
   function draw() {
     const st = getSettings();
     const parts = [];
+
+    // Appearance: System / Light / Dark (System follows the phone, live).
+    const choice = readTheme();
+    parts.push(h('div', { class: 'section-h' }, h('h2', null, 'Appearance')));
+    parts.push(h('div', { class: 'card list' }, row(
+      h('div', { class: 'grow' }, h('div', null, 'Theme'), h('div', { class: 'sub' }, choice === 'system' ? 'Follows your phone' : `Always ${choice}`)),
+      h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Theme' }, THEMES.map((t) => h('button', {
+        type: 'button', role: 'radio', 'aria-pressed': String(choice === t), 'aria-checked': String(choice === t), 'data-theme-choice': t,
+        onclick: () => { setTheme(t); draw(); },
+      }, t === 'system' ? 'System' : t === 'light' ? 'Light' : 'Dark'))))));
 
     // Favorites
     parts.push(h('div', { class: 'section-h' }, h('h2', null, 'Favorites'), h('span', { class: 'meta' }, 'pinned on Today, starred')));

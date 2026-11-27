@@ -1,0 +1,93 @@
+/* Sideline design tokens: "Wasabi and Nori".
+   This is the only file with colour values; every component uses these custom properties.
+   Light values sit on :root (the default) and [data-theme="light"]; dark on [data-theme="dark"].
+   An inline script in index.html sets data-theme on <html> before the first paint, from the
+   System / Light / Dark setting (js/core/theme.js). */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces and text (rice paper) */
+  --bg: #F5F2E8;
+  --surface: #FFFFFF;
+  --surface-2: #EEF1EA;
+  --border: #DFE5DC;
+  --text: #0F1F1C;
+  --text-2: #5C6E68;
+  --text-3: #64726C;          /* spec #82918B: darkened (OKLCH L -10.4%) to reach 4.5:1 on --bg; see DECISIONS.md */
+
+  /* Brand and accent */
+  --wasabi: #A3C14A;          /* header bar, active tab pill, selected chip, primary button */
+  --on-wasabi: #1B230A;       /* text and icons on wasabi; never white */
+  --wasabi-ink: #5C781A;      /* spec #5E7A1C: L -0.6% to reach 4.5:1 on --bg. Star, links, active icons */
+  --accent: #C25536;          /* salmon; spec #D9694A: L -6.6% so white text reaches 4.5:1. Live, Circle this one */
+  --on-accent: #FFFFFF;
+  --focus: #5E7A1C;
+
+  /* Beyond the spec table: needed so no component carries its own colour. */
+  --ok-ring: var(--border);   /* light mode: 1px ring so the yellow badge doesn't fade into a white card */
+  --team-fallback-home: #5E7A1C;   /* when ESPN sends no usable team colour */
+  --team-fallback-away: #C25536;
+  --team-fallback-alt: #5C6E68;
+  --series-1: #5E7A1C;        /* chart series (F1 drivers) */
+  --series-2: #C25536;
+  --series-3: #3F7CAC;
+  --series-4: #8A5A9E;
+  --series-5: #2E8C7E;
+  --series-6: #8C7448;
+  --pitch-1: #4C8457;         /* soccer lineup pitch stripes */
+  --pitch-2: #477C51;
+  --pitch-line: #FFFFFF8C;
+  --pitch-ink: #FFFFFF;       /* player names on the pitch */
+  --shirt-ring: #0F1F1C;
+  --knob: #FFFFFF;            /* switch knob */
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces and text (nori) */
+  --bg: #0F1F1C;
+  --surface: #17302B;
+  --surface-2: #1E3A34;
+  --border: #2A453F;
+  --text: #F5F2E8;
+  --text-2: #9FB5AE;
+  --text-3: #80978F;          /* spec #6F857E: lightened (OKLCH L +5.8%) to reach 4.5:1 on --surface; see DECISIONS.md */
+
+  /* Brand and accent */
+  --wasabi: #A3C14A;
+  --on-wasabi: #1B230A;
+  --wasabi-ink: #A3C14A;
+  --accent: #F28C6B;
+  --on-accent: #3A1306;
+  --focus: #C9DD7E;
+
+  /* Beyond the spec table */
+  --ok-ring: transparent;
+  --team-fallback-home: #A3C14A;
+  --team-fallback-away: #F28C6B;
+  --team-fallback-alt: #9FB5AE;
+  --series-1: #A3C14A;
+  --series-2: #F28C6B;
+  --series-3: #7DB3DA;
+  --series-4: #C3A0D6;
+  --series-5: #5CC4B6;
+  --series-6: #C9B48A;
+  --pitch-1: #2B5A43;
+  --pitch-2: #27523D;
+  --pitch-line: #FFFFFF73;
+  --pitch-ink: #FFFFFF;
+  --shirt-ring: #0F1F1C;
+  --knob: #F5F2E8;
+}
+
+/* Excitement rating bands: the same in both modes. Badge text always uses the band's dark ink.
+   Wasabi is never a rating colour, so a Great game never looks like a selected control. */
+:root {
+  --dull: #7F918B;  --dull-ink: #14201D;
+  --ok: #E3C75A;    --ok-ink: #3A2F07;
+  --good: #F2A65A;  --good-ink: #3D2205;
+  --great: #EE5D45; --great-ink: #2E0A04;
+}
