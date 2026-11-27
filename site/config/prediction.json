@@ -2,161 +2,1543 @@
   "_doc": "Pre-game prediction settings. All point values, thresholds, base rates and k live here. Starting values from the spec; scripts/backtest.mjs rewrites the `fitted` block and the base rates / ranges after each backtest (see DECISIONS.md).",
   "version": 1,
   "k": 0.8,
-  "clip": [5, 98],
-
+  "clip": [
+    5,
+    98
+  ],
   "base": {
-    "nfl": { "regular": 55, "playoff": 58 },
-    "cfb": { "regular": 45, "playoff": 55 },
-    "nba": { "regular": 45, "playoff": 55 },
-    "mcbb": { "regular": 48, "playoff": 55 },
-    "wcbb": { "regular": 48, "playoff": 55 },
-    "mlb": { "regular": 48, "playoff": 56 },
-    "nhl": { "regular": 52, "playoff": 58 },
-    "epl": { "regular": 48, "playoff": 54 },
-    "mls": { "regular": 48, "playoff": 54 },
-    "nwsl": { "regular": 48, "playoff": 54 },
-    "wsl": { "regular": 48, "playoff": 54 },
-    "ucl": { "regular": 48, "playoff": 54 },
-    "uel": { "regular": 48, "playoff": 54 },
-    "f1": { "regular": 50, "playoff": 50 }
+    "nfl": {
+      "regular": 44,
+      "playoff": 54
+    },
+    "cfb": {
+      "regular": 42,
+      "playoff": 56
+    },
+    "nba": {
+      "regular": 46,
+      "playoff": 53
+    },
+    "mcbb": {
+      "regular": 44,
+      "playoff": 48
+    },
+    "wcbb": {
+      "regular": 43,
+      "playoff": 53
+    },
+    "mlb": {
+      "regular": 48,
+      "playoff": 71
+    },
+    "nhl": {
+      "regular": 49,
+      "playoff": 69
+    },
+    "epl": {
+      "regular": 49,
+      "playoff": 54
+    },
+    "mls": {
+      "regular": 47,
+      "playoff": 58
+    },
+    "nwsl": {
+      "regular": 47,
+      "playoff": 68
+    },
+    "wsl": {
+      "regular": 49,
+      "playoff": 54
+    },
+    "ucl": {
+      "regular": 40,
+      "playoff": 64
+    },
+    "uel": {
+      "regular": 43,
+      "playoff": 64
+    },
+    "f1": {
+      "regular": 49,
+      "playoff": 50
+    }
   },
-
   "range": {
     "_doc": "Half-width of the likely (25th-75th percentile) range before the backtest: with market odds / Elo only. Replaced per league by backtest residual quantiles in `fitted`.",
     "withOdds": 10,
     "eloOnly": 14,
-    "horizonMultiplier": { "prediction": 1.0, "forecast": 1.2, "early": 1.5 }
+    "horizonMultiplier": {
+      "prediction": 1,
+      "forecast": 1.2,
+      "early": 1.5
+    }
   },
-
   "horizons": [
-    { "key": "prediction", "label": "Prediction", "maxDays": 2 },
-    { "key": "forecast", "label": "Forecast", "maxDays": 7 },
-    { "key": "early", "label": "Early look", "maxDays": 14, "roundTo": 5 }
+    {
+      "key": "prediction",
+      "label": "Prediction",
+      "maxDays": 2
+    },
+    {
+      "key": "forecast",
+      "label": "Forecast",
+      "maxDays": 7
+    },
+    {
+      "key": "early",
+      "label": "Early look",
+      "maxDays": 14,
+      "roundTo": 5
+    }
   ],
-
   "great": 85,
   "dull": 40,
-
-  "quality": { "max": 6, "bottomQuartileBoth": -2 },
-  "importance": { "max": 10, "deadRubber": -5, "scale": 25 },
-  "narrative": { "cap": 5, "rivalry": 4, "nationalTv": 1, "primetime": 1, "divisionGame": 2 },
-  "availability": { "min": -6, "lineDiscount": 0.5 },
-  "blowoutGuard": { "closenessAtOrBelow": -7, "stakesNarrativeCap": 4 },
-
-  "priority": { "favorite": 5, "starMax": 4 },
-
+  "quality": {
+    "max": 6,
+    "bottomQuartileBoth": -2
+  },
+  "importance": {
+    "max": 10,
+    "deadRubber": -5,
+    "scale": 25
+  },
+  "narrative": {
+    "cap": 5,
+    "rivalry": 4,
+    "nationalTv": 1,
+    "primetime": 1,
+    "divisionGame": 2
+  },
+  "availability": {
+    "min": -6,
+    "lineDiscount": 0.5
+  },
+  "blowoutGuard": {
+    "closenessAtOrBelow": -7,
+    "stakesNarrativeCap": 4
+  },
+  "priority": {
+    "favorite": 5,
+    "starMax": 4
+  },
+  "brief": {
+    "_doc": "Morning brief: Skip warns about a high-profile game (favorite, star power, national TV or a ranked college team) that projects Dull or has at least this P(Dull).",
+    "skipMaxValue": 40,
+    "skipMinPDull": 0.35,
+    "topN": 5,
+    "perLeagueMax": 2,
+    "windowStartHour": 7,
+    "windowEndHour": 3
+  },
   "sports": {
     "nfl": {
-      "spread": [[3, 8], [6.5, 3], [9.5, -2], [13.5, -7], [999, -12]],
-      "total": { "high": 50, "highPts": 3, "low": 38, "lowPts": -3 },
-      "playoffSwing": [[40, 10], [20, 6], [10, 3]],
+      "spread": [
+        [
+          3,
+          8
+        ],
+        [
+          6.5,
+          3
+        ],
+        [
+          9.5,
+          -2
+        ],
+        [
+          13.5,
+          -7
+        ],
+        [
+          999,
+          -12
+        ]
+      ],
+      "total": {
+        "high": 50,
+        "highPts": 3,
+        "low": 38,
+        "lowPts": -3
+      },
+      "playoffSwing": [
+        [
+          40,
+          10
+        ],
+        [
+          20,
+          6
+        ],
+        [
+          10,
+          3
+        ]
+      ],
       "bothEliminated": -5,
-      "postseason": { "wildcard": 8, "divisional": 10, "conference": 12, "superbowl": 12 },
+      "postseason": {
+        "wildcard": 8,
+        "divisional": 10,
+        "conference": 12,
+        "superbowl": 12
+      },
       "qbOut": -4,
       "division": 2,
       "primetime": 1,
-      "weather": { "windMph": 20, "snow": true, "points": -2 }
+      "weather": {
+        "windMph": 20,
+        "snow": true,
+        "points": -2
+      },
+      "styleRange": [
+        -1,
+        2
+      ]
     },
     "cfb": {
-      "spread": [[3, 8], [7, 4], [14, -2], [21, -7], [999, -12]],
+      "spread": [
+        [
+          3,
+          8
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          14,
+          -2
+        ],
+        [
+          21,
+          -7
+        ],
+        [
+          999,
+          -12
+        ]
+      ],
       "rankedBoth": 5,
       "rankedTop10": 8,
-      "stakes": { "cfp": 8, "conferenceTitle": 6 },
+      "stakes": {
+        "cfp": 8,
+        "conferenceTitle": 6
+      },
       "rivalry": 4,
-      "total": { "high": 60, "highPts": 2 }
+      "total": {
+        "high": 60,
+        "highPts": 2
+      },
+      "styleRange": [
+        -1,
+        2
+      ]
     },
     "nba": {
-      "spread": [[3, 8], [6.5, 4], [9.5, 0], [12.5, -6], [999, -12]],
-      "starOut": [-3, -6],
-      "styleRange": [-2, 3],
+      "spread": [
+        [
+          3,
+          8
+        ],
+        [
+          6.5,
+          4
+        ],
+        [
+          9.5,
+          0
+        ],
+        [
+          12.5,
+          -6
+        ],
+        [
+          999,
+          -12
+        ]
+      ],
+      "starOut": [
+        -3,
+        -6
+      ],
+      "styleRange": [
+        -2,
+        3
+      ],
       "seedingLeverage": 8,
-      "playoffs": { "tied": 5, "elimination": 8, "game7": 12 },
-      "total": { "high": 235, "highPts": 2 }
+      "playoffs": {
+        "tied": 5,
+        "elimination": 8,
+        "game7": 12
+      },
+      "total": {
+        "high": 235,
+        "highPts": 2
+      }
     },
     "mcbb": {
-      "spread": [[3, 8], [6.5, 4], [11.5, -2], [17.5, -7], [999, -12]],
+      "spread": [
+        [
+          3,
+          8
+        ],
+        [
+          6.5,
+          4
+        ],
+        [
+          11.5,
+          -2
+        ],
+        [
+          17.5,
+          -7
+        ],
+        [
+          999,
+          -12
+        ]
+      ],
       "rankedBoth": 4,
       "rankedTop10": 7,
-      "tournament": { "first": 6, "second": 8, "sweet16": 10, "elite8": 12 },
-      "closeSeeds": [[8, 9], [7, 10], [5, 12]],
-      "raceStakes": [3, 6]
+      "tournament": {
+        "first": 6,
+        "second": 8,
+        "sweet16": 10,
+        "elite8": 12
+      },
+      "closeSeeds": [
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          5,
+          12
+        ]
+      ],
+      "raceStakes": [
+        3,
+        6
+      ],
+      "styleRange": [
+        -1,
+        2
+      ]
     },
     "wcbb": {
-      "spread": [[3, 8], [6.5, 4], [11.5, -2], [17.5, -7], [999, -12]],
+      "spread": [
+        [
+          3,
+          8
+        ],
+        [
+          6.5,
+          4
+        ],
+        [
+          11.5,
+          -2
+        ],
+        [
+          17.5,
+          -7
+        ],
+        [
+          999,
+          -12
+        ]
+      ],
       "rankedBoth": 4,
       "rankedTop10": 7,
-      "tournament": { "first": 6, "second": 8, "sweet16": 10, "elite8": 12 },
-      "closeSeeds": [[8, 9], [7, 10], [5, 12]],
-      "raceStakes": [3, 6]
+      "tournament": {
+        "first": 6,
+        "second": 8,
+        "sweet16": 10,
+        "elite8": 12
+      },
+      "closeSeeds": [
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          5,
+          12
+        ]
+      ],
+      "raceStakes": [
+        3,
+        6
+      ],
+      "styleRange": [
+        -1,
+        2
+      ]
     },
     "mlb": {
-      "moneyline": [[0.55, 5], [0.62, 1], [0.68, -2], [1, -5]],
+      "moneyline": [
+        [
+          0.55,
+          5
+        ],
+        [
+          0.62,
+          1
+        ],
+        [
+          0.68,
+          -2
+        ],
+        [
+          1,
+          -5
+        ]
+      ],
       "aces": 4,
       "aceEra": 3.25,
       "bullpenGame": -1,
       "totalMax": 1,
       "raceSwing": 8,
-      "postseason": { "elimination": 10, "winnerTakeAll": 12 }
+      "postseason": {
+        "elimination": 10,
+        "winnerTakeAll": 12
+      },
+      "styleRange": [
+        -1,
+        1
+      ],
+      "rainPoints": -1
     },
     "nhl": {
-      "moneyline": [[0.55, 4], [0.62, 1], [0.68, -2], [1, -5]],
+      "moneyline": [
+        [
+          0.55,
+          4
+        ],
+        [
+          0.62,
+          1
+        ],
+        [
+          0.68,
+          -2
+        ],
+        [
+          1,
+          -5
+        ]
+      ],
       "goalie": 2,
       "raceSwing": 8,
-      "playoffs": { "elimination": 8, "game7": 12 },
-      "rivalry": 2
+      "playoffs": {
+        "elimination": 8,
+        "game7": 12
+      },
+      "rivalry": 2,
+      "styleRange": [
+        -2,
+        2
+      ]
     },
     "soccer": {
-      "gap": [[0.15, 8], [0.35, 3], [0.55, -3], [1, -10]],
-      "boringDraw": { "pDraw": 0.3, "total": 2.25, "points": -3 },
-      "goalsLine": { "high": 3.0, "highPts": 3, "low": 2.25, "lowPts": -2 },
-      "secondLeg": { "level": 10, "twoGoals": 2, "threePlus": -8 },
+      "gap": [
+        [
+          0.15,
+          8
+        ],
+        [
+          0.35,
+          3
+        ],
+        [
+          0.55,
+          -3
+        ],
+        [
+          1,
+          -10
+        ]
+      ],
+      "boringDraw": {
+        "pDraw": 0.3,
+        "total": 2.25,
+        "points": -3
+      },
+      "goalsLine": {
+        "high": 3,
+        "highPts": 3,
+        "low": 2.25,
+        "lowPts": -2
+      },
+      "secondLeg": {
+        "level": 10,
+        "twoGoals": 2,
+        "threePlus": -8
+      },
       "tableLeverage": 10,
-      "knockout": { "min": 6, "final": 12 },
+      "knockout": {
+        "min": 6,
+        "final": 12
+      },
       "derby": 4,
-      "starsPriorityOnly": [2, 5]
+      "starsPriorityOnly": [
+        2,
+        5
+      ],
+      "styleRange": [
+        -2,
+        3
+      ]
     },
     "f1": {
       "circuitAverageDefault": 6.5,
       "circuitScale": 4,
       "circuitClip": 6,
-      "circuitOverride": { "Monaco": -6, "Suzuka": -6 },
-      "rain": [[0.6, 8], [0.3, 4]],
+      "circuitOverride": {
+        "Monaco": -6,
+        "Suzuka": -6
+      },
+      "rain": [
+        [
+          0.6,
+          8
+        ],
+        [
+          0.3,
+          4
+        ]
+      ],
       "streetCircuit": 2,
-      "streetCircuits": ["Baku", "Jeddah", "Singapore", "Marina Bay", "Las Vegas"],
-      "qualiGapTight": { "seconds": 0.1, "points": 3 },
-      "contenderBack": { "position": 6, "points": 4 },
-      "poleMargin": { "seconds": 0.4, "points": -4 },
-      "titleFight": [4, 6]
+      "streetCircuits": [
+        "Baku",
+        "Jeddah",
+        "Singapore",
+        "Marina Bay",
+        "Las Vegas"
+      ],
+      "qualiGapTight": {
+        "seconds": 0.1,
+        "points": 3
+      },
+      "contenderBack": {
+        "position": 6,
+        "points": 4
+      },
+      "poleMargin": {
+        "seconds": 0.4,
+        "points": -4
+      },
+      "titleFight": [
+        4,
+        6
+      ]
     }
   },
-
   "f1Circuits": {
     "_doc": "RaceFans fan-rating average per circuit (unlisted = 6.5). Matched by substring against ESPN circuit / OpenF1 location.",
-    "Interlagos": 7.54, "Silverstone": 7.52, "Americas": 7.27, "Austin": 7.27, "Red Bull Ring": 7.16, "Spielberg": 7.16,
-    "Bahrain": 7.06, "Sakhir": 7.06, "Montreal": 7.05, "Gilles Villeneuve": 7.05, "Hungaroring": 7.03, "Budapest": 7.03,
-    "Monza": 7.0, "Albert Park": 6.91, "Melbourne": 6.91, "Shanghai": 6.84, "Zandvoort": 6.76, "Imola": 6.62,
-    "Spa": 6.44, "Baku": 6.4, "Catalunya": 6.19, "Barcelona": 6.19, "Mexico": 6.19, "Hermanos Rodriguez": 6.19,
-    "Suzuka": 6.19, "Singapore": 6.18, "Marina Bay": 6.18, "Las Vegas": 6.17, "Miami": 6.1, "Yas Marina": 5.87,
-    "Abu Dhabi": 5.87, "Monaco": 5.85, "Jeddah": 5.79, "Losail": 5.46, "Lusail": 5.46, "Qatar": 5.46
+    "Interlagos": 7.54,
+    "Silverstone": 7.52,
+    "Americas": 7.27,
+    "Austin": 7.27,
+    "Red Bull Ring": 7.16,
+    "Spielberg": 7.16,
+    "Bahrain": 7.06,
+    "Sakhir": 7.06,
+    "Montreal": 7.05,
+    "Gilles Villeneuve": 7.05,
+    "Hungaroring": 7.03,
+    "Budapest": 7.03,
+    "Monza": 7,
+    "Albert Park": 6.91,
+    "Melbourne": 6.91,
+    "Shanghai": 6.84,
+    "Zandvoort": 6.76,
+    "Imola": 6.62,
+    "Spa": 6.44,
+    "Baku": 6.4,
+    "Catalunya": 6.19,
+    "Barcelona": 6.19,
+    "Mexico": 6.19,
+    "Hermanos Rodriguez": 6.19,
+    "Suzuka": 6.19,
+    "Singapore": 6.18,
+    "Marina Bay": 6.18,
+    "Las Vegas": 6.17,
+    "Miami": 6.1,
+    "Yas Marina": 5.87,
+    "Abu Dhabi": 5.87,
+    "Monaco": 5.85,
+    "Jeddah": 5.79,
+    "Losail": 5.46,
+    "Lusail": 5.46,
+    "Qatar": 5.46
   },
-
   "elo": {
     "_doc": "FiveThirtyEight-style Elo. carry = share of a rating kept at each new season (rest regresses to the mean). mov = margin-of-victory multiplier family.",
-    "nfl": { "k": 20, "hfa": 48, "mean": 1505, "carry": 0.667, "mov": "football", "pointsPerSpread": 25 },
-    "cfb": { "k": 25, "hfa": 55, "mean": 1500, "carry": 0.6, "mov": "football", "newTeam": 1250, "pointsPerSpread": 25 },
-    "nba": { "k": 20, "hfa": 100, "mean": 1505, "carry": 0.75, "mov": "basketball", "pointsPerSpread": 28 },
-    "mcbb": { "k": 22, "hfa": 90, "mean": 1500, "carry": 0.6, "mov": "basketball", "newTeam": 1350, "pointsPerSpread": 30 },
-    "wcbb": { "k": 22, "hfa": 90, "mean": 1500, "carry": 0.6, "mov": "basketball", "newTeam": 1350, "pointsPerSpread": 30 },
-    "mlb": { "k": 4, "hfa": 24, "mean": 1500, "carry": 0.67, "mov": "baseball" },
-    "nhl": { "k": 6, "hfa": 50, "mean": 1500, "carry": 0.7, "mov": "hockey" },
-    "epl": { "k": 20, "hfa": 65, "mean": 1500, "carry": 0.8, "mov": "soccer", "newTeam": 1400 },
-    "mls": { "k": 20, "hfa": 70, "mean": 1500, "carry": 0.8, "mov": "soccer" },
-    "nwsl": { "k": 20, "hfa": 60, "mean": 1500, "carry": 0.8, "mov": "soccer" },
-    "wsl": { "k": 20, "hfa": 60, "mean": 1500, "carry": 0.8, "mov": "soccer", "newTeam": 1400 },
-    "ucl": { "k": 20, "hfa": 60, "mean": 1500, "carry": 0.85, "mov": "soccer", "pool": "uefa" },
-    "uel": { "k": 20, "hfa": 60, "mean": 1500, "carry": 0.85, "mov": "soccer", "pool": "uefa" },
-    "draw": { "_doc": "Soccer draw probability = d0 * exp(-(dElo / width)^2); refit by the backtest.", "d0": 0.28, "width": 330 }
+    "nfl": {
+      "k": 20,
+      "hfa": 48,
+      "mean": 1505,
+      "carry": 0.667,
+      "mov": "football",
+      "pointsPerSpread": 25
+    },
+    "cfb": {
+      "k": 25,
+      "hfa": 55,
+      "mean": 1500,
+      "carry": 0.6,
+      "mov": "football",
+      "newTeam": 1250,
+      "pointsPerSpread": 25
+    },
+    "nba": {
+      "k": 20,
+      "hfa": 100,
+      "mean": 1505,
+      "carry": 0.75,
+      "mov": "basketball",
+      "pointsPerSpread": 28
+    },
+    "mcbb": {
+      "k": 22,
+      "hfa": 90,
+      "mean": 1500,
+      "carry": 0.6,
+      "mov": "basketball",
+      "newTeam": 1350,
+      "pointsPerSpread": 30
+    },
+    "wcbb": {
+      "k": 22,
+      "hfa": 90,
+      "mean": 1500,
+      "carry": 0.6,
+      "mov": "basketball",
+      "newTeam": 1350,
+      "pointsPerSpread": 30
+    },
+    "mlb": {
+      "k": 4,
+      "hfa": 24,
+      "mean": 1500,
+      "carry": 0.67,
+      "mov": "baseball"
+    },
+    "nhl": {
+      "k": 6,
+      "hfa": 50,
+      "mean": 1500,
+      "carry": 0.7,
+      "mov": "hockey"
+    },
+    "epl": {
+      "k": 20,
+      "hfa": 65,
+      "mean": 1500,
+      "carry": 0.8,
+      "mov": "soccer",
+      "newTeam": 1400
+    },
+    "mls": {
+      "k": 20,
+      "hfa": 70,
+      "mean": 1500,
+      "carry": 0.8,
+      "mov": "soccer"
+    },
+    "nwsl": {
+      "k": 20,
+      "hfa": 60,
+      "mean": 1500,
+      "carry": 0.8,
+      "mov": "soccer"
+    },
+    "wsl": {
+      "k": 20,
+      "hfa": 60,
+      "mean": 1500,
+      "carry": 0.8,
+      "mov": "soccer",
+      "newTeam": 1400
+    },
+    "ucl": {
+      "k": 20,
+      "hfa": 60,
+      "mean": 1500,
+      "carry": 0.85,
+      "mov": "soccer",
+      "pool": "uefa"
+    },
+    "uel": {
+      "k": 20,
+      "hfa": 60,
+      "mean": 1500,
+      "carry": 0.85,
+      "mov": "soccer",
+      "pool": "uefa"
+    },
+    "draw": {
+      "_doc": "Soccer draw probability = d0 * exp(-(dElo / width)^2); refit by the backtest.",
+      "d0": 0.28,
+      "width": 330
+    }
   },
-
-  "fitted": {}
+  "fitted": {
+    "nfl": {
+      "model": "rules",
+      "k": 0.59,
+      "tiers": {
+        "prediction": {
+          "iqr": 51.1,
+          "great": [
+            -13.4158,
+            0.2298
+          ],
+          "dull": [
+            6.4945,
+            -0.14
+          ],
+          "n": 570
+        },
+        "forecast": {
+          "iqr": 51.5,
+          "great": [
+            -14.0511,
+            0.2422
+          ],
+          "dull": [
+            6.2866,
+            -0.1357
+          ],
+          "n": 570
+        },
+        "early": {
+          "iqr": 51.2,
+          "great": [
+            -13.1251,
+            0.224
+          ],
+          "dull": [
+            6.2437,
+            -0.1349
+          ],
+          "n": 570
+        }
+      },
+      "trainedOn": [
+        2024,
+        2025
+      ],
+      "n": 570,
+      "updated": "2026-11-27"
+    },
+    "cfb": {
+      "model": "rules",
+      "k": 1,
+      "tiers": {
+        "prediction": {
+          "iqr": 43,
+          "great": [
+            -7.4469,
+            0.1067
+          ],
+          "dull": [
+            6.4205,
+            -0.1408
+          ],
+          "n": 864
+        },
+        "forecast": {
+          "iqr": 43.3,
+          "great": [
+            -7.6733,
+            0.1103
+          ],
+          "dull": [
+            6.4393,
+            -0.14
+          ],
+          "n": 864
+        },
+        "early": {
+          "iqr": 43.2,
+          "great": [
+            -7.9551,
+            0.1153
+          ],
+          "dull": [
+            6.5996,
+            -0.1431
+          ],
+          "n": 864
+        }
+      },
+      "trainedOn": [
+        2023,
+        2024,
+        2025
+      ],
+      "n": 864,
+      "updated": "2026-11-27"
+    },
+    "nba": {
+      "model": "rules",
+      "k": 0.86,
+      "tiers": {
+        "prediction": {
+          "iqr": 48.6,
+          "great": [
+            -7.4764,
+            0.1124
+          ],
+          "dull": [
+            6.2493,
+            -0.1357
+          ],
+          "n": 2639
+        },
+        "forecast": {
+          "iqr": 48.5,
+          "great": [
+            -6.7663,
+            0.0978
+          ],
+          "dull": [
+            5.4818,
+            -0.1195
+          ],
+          "n": 2639
+        },
+        "early": {
+          "iqr": 48.7,
+          "great": [
+            -6.8781,
+            0.1001
+          ],
+          "dull": [
+            5.352,
+            -0.1169
+          ],
+          "n": 2639
+        }
+      },
+      "trainedOn": [
+        2025,
+        2026
+      ],
+      "n": 2639,
+      "updated": "2026-11-27"
+    },
+    "nhl": {
+      "model": "rules",
+      "k": 0.36,
+      "tiers": {
+        "prediction": {
+          "iqr": 49.2,
+          "great": [
+            -18.8241,
+            0.3414
+          ],
+          "dull": [
+            2.4107,
+            -0.0572
+          ],
+          "n": 2799
+        },
+        "forecast": {
+          "iqr": 49.2,
+          "great": [
+            -18.971,
+            0.3444
+          ],
+          "dull": [
+            2.6177,
+            -0.0614
+          ],
+          "n": 2799
+        },
+        "early": {
+          "iqr": 49.1,
+          "great": [
+            -19.1927,
+            0.3489
+          ],
+          "dull": [
+            2.1127,
+            -0.0511
+          ],
+          "n": 2799
+        }
+      },
+      "trainedOn": [
+        2025,
+        2026
+      ],
+      "n": 2799,
+      "updated": "2026-11-27"
+    },
+    "mlb": {
+      "model": "rules",
+      "k": 0.3,
+      "tiers": {
+        "prediction": {
+          "iqr": 48,
+          "great": [
+            -7.9148,
+            0.1209
+          ],
+          "dull": [
+            5.4459,
+            -0.1198
+          ],
+          "n": 4946
+        },
+        "forecast": {
+          "iqr": 48,
+          "great": [
+            -9.5899,
+            0.1552
+          ],
+          "dull": [
+            5.5551,
+            -0.122
+          ],
+          "n": 4946
+        },
+        "early": {
+          "iqr": 47.9,
+          "great": [
+            -9.7051,
+            0.1576
+          ],
+          "dull": [
+            5.9858,
+            -0.1309
+          ],
+          "n": 4946
+        }
+      },
+      "trainedOn": [
+        2025,
+        2026
+      ],
+      "n": 4946,
+      "updated": "2026-11-27"
+    },
+    "mcbb": {
+      "model": "rules",
+      "k": 1,
+      "tiers": {
+        "prediction": {
+          "iqr": 40.1,
+          "great": [
+            -6.9681,
+            0.0976
+          ],
+          "dull": [
+            6.5137,
+            -0.1436
+          ],
+          "n": 2427
+        },
+        "forecast": {
+          "iqr": 42.2,
+          "great": [
+            -7.8592,
+            0.112
+          ],
+          "dull": [
+            7.7807,
+            -0.164
+          ],
+          "n": 2427
+        },
+        "early": {
+          "iqr": 41.6,
+          "great": [
+            -7.7735,
+            0.1103
+          ],
+          "dull": [
+            7.6798,
+            -0.1617
+          ],
+          "n": 2427
+        }
+      },
+      "trainedOn": [
+        2024,
+        2025,
+        2026
+      ],
+      "n": 2427,
+      "updated": "2026-11-27"
+    },
+    "wcbb": {
+      "model": "fitted",
+      "intercept": 47.65,
+      "coef": [
+        0.378,
+        1.496,
+        0,
+        0.751,
+        1.28,
+        0.932,
+        0,
+        0,
+        0,
+        0,
+        -17.605,
+        -35.391
+      ],
+      "k": 1,
+      "tiers": {
+        "prediction": {
+          "iqr": 39,
+          "great": [
+            -7.8877,
+            0.1138
+          ],
+          "dull": [
+            6.4926,
+            -0.1457
+          ],
+          "n": 2229
+        },
+        "forecast": {
+          "iqr": 39,
+          "great": [
+            -9.1499,
+            0.1335
+          ],
+          "dull": [
+            7.9665,
+            -0.169
+          ],
+          "n": 2229
+        },
+        "early": {
+          "iqr": 39.4,
+          "great": [
+            -9.1799,
+            0.134
+          ],
+          "dull": [
+            7.9021,
+            -0.1677
+          ],
+          "n": 2229
+        }
+      },
+      "trainedOn": [
+        2024,
+        2025,
+        2026
+      ],
+      "n": 2229,
+      "updated": "2026-11-27"
+    },
+    "epl": {
+      "model": "rules",
+      "k": 0.22,
+      "tiers": {
+        "prediction": {
+          "iqr": 46,
+          "great": [
+            -9.1496,
+            0.1457
+          ],
+          "dull": [
+            6.3349,
+            -0.1365
+          ],
+          "n": 1140
+        },
+        "forecast": {
+          "iqr": 46.1,
+          "great": [
+            -10.3029,
+            0.1691
+          ],
+          "dull": [
+            6.6364,
+            -0.1427
+          ],
+          "n": 1140
+        },
+        "early": {
+          "iqr": 46,
+          "great": [
+            -9.7518,
+            0.1579
+          ],
+          "dull": [
+            6.385,
+            -0.1376
+          ],
+          "n": 1140
+        }
+      },
+      "trainedOn": [
+        2023,
+        2024,
+        2025
+      ],
+      "n": 1140,
+      "updated": "2026-11-27"
+    },
+    "wsl": {
+      "model": "rules",
+      "k": 0.47,
+      "tiers": {
+        "prediction": {
+          "iqr": 47.3,
+          "great": [
+            -9.0655,
+            0.1424
+          ],
+          "dull": [
+            4.4434,
+            -0.0986
+          ],
+          "n": 394
+        },
+        "forecast": {
+          "iqr": 47.1,
+          "great": [
+            -9.0501,
+            0.1418
+          ],
+          "dull": [
+            4.4677,
+            -0.0987
+          ],
+          "n": 394
+        },
+        "early": {
+          "iqr": 46.7,
+          "great": [
+            -9.4458,
+            0.1496
+          ],
+          "dull": [
+            3.8499,
+            -0.0862
+          ],
+          "n": 394
+        }
+      },
+      "trainedOn": [
+        2023,
+        2024,
+        2025
+      ],
+      "n": 394,
+      "updated": "2026-11-27"
+    },
+    "ucl": {
+      "model": "rules",
+      "k": 0.57,
+      "tiers": {
+        "prediction": {
+          "iqr": 51.8,
+          "great": [
+            -12.6415,
+            0.213
+          ],
+          "dull": [
+            7.0183,
+            -0.1514
+          ],
+          "n": 503
+        },
+        "forecast": {
+          "iqr": 51.5,
+          "great": [
+            -13.4754,
+            0.2289
+          ],
+          "dull": [
+            6.7509,
+            -0.1453
+          ],
+          "n": 503
+        },
+        "early": {
+          "iqr": 52,
+          "great": [
+            -13.8753,
+            0.2367
+          ],
+          "dull": [
+            6.8191,
+            -0.1467
+          ],
+          "n": 503
+        }
+      },
+      "trainedOn": [
+        2023,
+        2024,
+        2025
+      ],
+      "n": 503,
+      "updated": "2026-11-27"
+    },
+    "uel": {
+      "model": "rules",
+      "k": 0.23,
+      "tiers": {
+        "prediction": {
+          "iqr": 45.5,
+          "great": [
+            -7.529,
+            0.1129
+          ],
+          "dull": [
+            4.4513,
+            -0.0987
+          ],
+          "n": 519
+        },
+        "forecast": {
+          "iqr": 45.4,
+          "great": [
+            -7.6878,
+            0.1157
+          ],
+          "dull": [
+            3.7018,
+            -0.0831
+          ],
+          "n": 519
+        },
+        "early": {
+          "iqr": 45.5,
+          "great": [
+            -8.7818,
+            0.1376
+          ],
+          "dull": [
+            3.7538,
+            -0.0841
+          ],
+          "n": 519
+        }
+      },
+      "trainedOn": [
+        2023,
+        2024,
+        2025
+      ],
+      "n": 519,
+      "updated": "2026-11-27"
+    },
+    "mls": {
+      "model": "rules",
+      "k": 0.3,
+      "tiers": {
+        "prediction": {
+          "iqr": 50.1,
+          "great": [
+            -9.7158,
+            0.1574
+          ],
+          "dull": [
+            6.6254,
+            -0.1422
+          ],
+          "n": 1582
+        },
+        "forecast": {
+          "iqr": 50.2,
+          "great": [
+            -9.0829,
+            0.1448
+          ],
+          "dull": [
+            4.6405,
+            -0.1021
+          ],
+          "n": 1582
+        },
+        "early": {
+          "iqr": 50.1,
+          "great": [
+            -9.2346,
+            0.1479
+          ],
+          "dull": [
+            4.9439,
+            -0.1083
+          ],
+          "n": 1582
+        }
+      },
+      "trainedOn": [
+        2024,
+        2025,
+        2026
+      ],
+      "n": 1582,
+      "updated": "2026-11-27"
+    },
+    "nwsl": {
+      "model": "rules",
+      "k": 0.28,
+      "tiers": {
+        "prediction": {
+          "iqr": 48.9,
+          "great": [
+            -9.7254,
+            0.1573
+          ],
+          "dull": [
+            14.0915,
+            -0.2943
+          ],
+          "n": 625
+        },
+        "forecast": {
+          "iqr": 48.8,
+          "great": [
+            -10.467,
+            0.1721
+          ],
+          "dull": [
+            12.4074,
+            -0.2597
+          ],
+          "n": 625
+        },
+        "early": {
+          "iqr": 48.8,
+          "great": [
+            -10.8973,
+            0.1807
+          ],
+          "dull": [
+            12.0948,
+            -0.2533
+          ],
+          "n": 625
+        }
+      },
+      "trainedOn": [
+        2024,
+        2025,
+        2026
+      ],
+      "n": 625,
+      "updated": "2026-11-27"
+    },
+    "f1": {
+      "model": "rules",
+      "k": 0.88,
+      "tiers": {
+        "prediction": {
+          "iqr": 51.9,
+          "great": [
+            -25.7229,
+            0.4791
+          ],
+          "dull": [
+            10.5183,
+            -0.2219
+          ],
+          "n": 91
+        },
+        "forecast": {
+          "iqr": 52.1,
+          "great": [
+            -28.1463,
+            0.5272
+          ],
+          "dull": [
+            9.3503,
+            -0.198
+          ],
+          "n": 91
+        },
+        "early": {
+          "iqr": 52.1,
+          "great": [
+            -28.1463,
+            0.5272
+          ],
+          "dull": [
+            9.3503,
+            -0.198
+          ],
+          "n": 91
+        }
+      },
+      "trainedOn": [
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "n": 91,
+      "updated": "2026-11-27"
+    }
+  },
+  "f1Coords": {
+    "_doc": "Circuit coordinates for the Open-Meteo race-hour rain forecast (substring match like f1Circuits).",
+    "Albert Park": [
+      -37.8497,
+      144.968
+    ],
+    "Melbourne": [
+      -37.8497,
+      144.968
+    ],
+    "Shanghai": [
+      31.3389,
+      121.2197
+    ],
+    "Suzuka": [
+      34.8431,
+      136.541
+    ],
+    "Bahrain": [
+      26.0325,
+      50.5106
+    ],
+    "Sakhir": [
+      26.0325,
+      50.5106
+    ],
+    "Jeddah": [
+      21.6319,
+      39.1044
+    ],
+    "Miami": [
+      25.9581,
+      -80.2389
+    ],
+    "Gilles Villeneuve": [
+      45.5,
+      -73.5228
+    ],
+    "Montreal": [
+      45.5,
+      -73.5228
+    ],
+    "Monaco": [
+      43.7347,
+      7.4206
+    ],
+    "Catalunya": [
+      41.57,
+      2.2611
+    ],
+    "Barcelona": [
+      41.57,
+      2.2611
+    ],
+    "Red Bull Ring": [
+      47.2197,
+      14.7647
+    ],
+    "Spielberg": [
+      47.2197,
+      14.7647
+    ],
+    "Silverstone": [
+      52.0786,
+      -1.0169
+    ],
+    "Spa": [
+      50.4372,
+      5.9714
+    ],
+    "Hungaroring": [
+      47.5789,
+      19.2486
+    ],
+    "Zandvoort": [
+      52.3888,
+      4.5409
+    ],
+    "Monza": [
+      45.6156,
+      9.2811
+    ],
+    "Madrid": [
+      40.4636,
+      -3.6181
+    ],
+    "Baku": [
+      40.3725,
+      49.8533
+    ],
+    "Marina Bay": [
+      1.2914,
+      103.864
+    ],
+    "Singapore": [
+      1.2914,
+      103.864
+    ],
+    "Americas": [
+      30.1328,
+      -97.6411
+    ],
+    "Austin": [
+      30.1328,
+      -97.6411
+    ],
+    "Mexico": [
+      19.4042,
+      -99.0907
+    ],
+    "Hermanos Rodriguez": [
+      19.4042,
+      -99.0907
+    ],
+    "Interlagos": [
+      -23.7036,
+      -46.6997
+    ],
+    "Sao Paulo": [
+      -23.7036,
+      -46.6997
+    ],
+    "Las Vegas": [
+      36.1147,
+      -115.1728
+    ],
+    "Losail": [
+      25.49,
+      51.4542
+    ],
+    "Lusail": [
+      25.49,
+      51.4542
+    ],
+    "Yas Marina": [
+      24.4672,
+      54.6031
+    ],
+    "Abu Dhabi": [
+      24.4672,
+      54.6031
+    ],
+    "Imola": [
+      44.3439,
+      11.7167
+    ]
+  },
+  "_styleDoc": "sports.<family>.styleRange: points for the scoring environment (average z-score of both teams' total scoring per game x stylePerZ, default 2), clipped to the range."
 }

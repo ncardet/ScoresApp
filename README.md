@@ -10,13 +10,20 @@ morning-brief feed, and free data sources (ESPN's public site API, plus OpenF1 f
 - **Game page:** score header; rating with a tap-to-explain sheet; excitement curve; win probability;
   linescore, scoring, box score and play-by-play. Soccer adds FotMob-style xG, match stats, momentum
   and lineups on a pitch. F1 adds classification, leader by lap, safety cars and the title race.
+- **Look Ahead:** the next 14 days of predictions grouped by day and ordered by Watch Priority, each
+  with its horizon label (Prediction, Forecast, Early look), number, likely range and chance of a
+  Great game; league and favorites filters; a "Circle this one" list of flagged games further out.
 - **Standings:** every league; NFL/NBA/NHL/MLB playoff pictures with the cut line; postseason
   brackets, March Madness and UCL/UEL knockouts when active; F1 drivers and constructors.
 - **Morning brief:** `data/brief.json` + `data/brief.md`, refreshed daily before 6:45 am PT. See
   [BRIEF_FEED.md](BRIEF_FEED.md).
 
-Ratings: **0–39 Dull · 40–64 OK · 65–84 Good · 85–100 Great.** An outlined badge is a prediction; a
-filled badge is live (pulsing) or final (frozen). 50 is a median game for its league.
+Ratings: **0–39 Dull · 40–64 OK · 65–84 Good · 85–100 Great.** An outlined badge is a prediction
+(with its likely range underneath); a filled badge is live (pulsing) or final (frozen). 50 is a
+median game for its league.
+
+Two numbers per game: the badge always shows **Predicted Excitement** (objective, no personal
+boosts). Lists are ordered by **Watch Priority** = prediction + 5 for your favorites + 0–4 star power.
 
 ## Run locally
 
@@ -39,8 +46,13 @@ Other scripts:
 | Command | What it does |
 |---|---|
 | `npm run probe` | Checks every ESPN endpoint for CORS and available fields → `docs/probe-report.md` |
-| `npm run backfill` | Re-scores ~220 recent games per league → `site/data/calibration/*.json` |
+| `npm run backfill` | Re-scores ~220 recent games per league → `site/data/calibration/*.json` (quick refresh) |
 | `npm run brief` | Builds `site/data/brief.json` / `brief.md` now (ignores the morning time gate) |
+| `node scripts/build-predictions.mjs --force` | Nightly job by hand: Elo, season simulations, `site/data/predictions.json` (`--leagues nfl,epl` for a subset) |
+| `node scripts/backfill-targets.mjs` | Backfills 2–3 seasons of post-game ratings per league into `.cache/targets` (resumable; slow the first time) |
+| `node scripts/backtest.mjs` | Walk-forward backtest → `reports/backtest.md`; also refits `config/prediction.json` and rewrites the calibration files (`--no-write` to only report) |
+| `node scripts/tune-rating.mjs --search 800` | Searches post-game weights against the labeled fixtures (prints; doesn't edit config) |
+| `node scripts/labeled-fixtures.mjs [slug …]` | Downloads the labeled sanity games in `test/fixtures/labeled_games.csv` |
 | `npm run fixtures` | Re-downloads the test games in `test/fixtures` |
 | `node scripts/make-icons.mjs` | Re-renders the app icons (needs Playwright) |
 
@@ -52,13 +64,17 @@ Behind a corporate HTTPS proxy, run Node scripts with `NODE_USE_ENV_PROXY=1`.
 2. **Settings → Pages → Source: GitHub Actions.**
 3. Push to `main`. The **Deploy** workflow runs the tests, then publishes `site/` to
    `https://<user>.github.io/<repo>/`.
-4. **Actions → Morning brief → Run workflow** once, to publish the first `brief.json`. After that
-   it runs every morning by itself.
+4. **Actions → Nightly predictions → Run workflow** once, then **Actions → Morning brief → Run
+   workflow**, to publish the first `predictions.json` and `brief.json`. After that both run by
+   themselves (predictions ~2 am PT, brief before 6:45 am PT).
 5. On your iPhone, open the site in Safari, tap **Share → Add to Home Screen**.
 
 Workflows:
 
 - `deploy.yml`: runs on every push to `main`.
+- `predictions.yml`: runs at 09:37 and 10:37 UTC; the script only works between 1 and 4 am Pacific.
+  It caches season schedules between runs (actions/cache), commits `predictions.json` and the Elo
+  files, and redeploys.
 - `brief.yml`: runs at 12:50 and 13:50 UTC. The script only works between 4 and 9 am Pacific, so
   daylight saving is handled. It commits the brief and redeploys.
 - `backfill.yml`: manual. Recalibrates ratings; run it once a season.
@@ -71,7 +87,9 @@ Everything you're likely to edit lives in `site/config/`:
 |---|---|
 | `favorites.js` | Your teams (ESPN team id plus leagues). Pinned on Today, starred, and used by the brief. |
 | `services.js` | Your services (`MY_SERVICES`) and which networks each carries (`NETWORKS`, `ALIASES`). |
-| `rating.js` | Component weights, bands, calibration curve, live blending, novelty bonuses, rivalries. |
+| `rating.js` | Post-game component weights and amplifiers, bands, calibration curve, novelty bonuses, rivalries. |
+| `prediction.json` | Pre-game model: base rates, k, per-sport term tables, Elo settings, horizons, ranges, brief settings, and the backtest's fitted values (`fitted`). |
+| `teams.json` | Star power (0–4) per team, for Watch Priority. |
 
 - **Find an ESPN team id:** easiest is **Settings → Add a team** in the app. Otherwise, soccer and
   college team pages show it in the URL (`espn.com/soccer/club/_/id/364/liverpool` → `364`), and
@@ -84,10 +102,10 @@ Everything you're likely to edit lives in `site/config/`:
 
 ## How the rating works
 
-Each game is measured on seven components, each normalized to 0–1. They are combined with the
-weights in `rating.js`, and the result is placed as a percentile among ~200 recent games of the same
-league (`site/data/calibration/`). The percentile maps to 0–100 so the median game is 50 and the top
-~12.5% are 85+.
+Each game is measured on eight components, each normalized to 0–1. They are combined with the
+weights in `rating.js` (stakes also multiplies the result), and placed as a percentile among up to
+1,500 backfilled games of the same league (`site/data/calibration/`). The percentile maps to 0–100
+so the median game is 50 and the top ~12.5% are 85+.
 
 | Component | What it measures |
 |---|---|
@@ -97,18 +115,45 @@ league (`site/data/calibration/`). The percentile maps to 0–100 so the median 
 | Comeback | How low the winner's (or, live, the current leader's) win probability fell. |
 | Novelty | Overtime, extra innings, shootouts, walk-offs, no-hitters, hat tricks, 40/50-point games, red cards, 15+/17+ point comebacks. |
 | Pace | Scoring (and shots, for soccer and hockey) versus league norms. |
-| Stakes | Playoffs, elimination games, Game 7s and finals, rivalries, ranked-vs-ranked college games. |
+| Stakes | Playoffs, elimination games, Game 7s and finals, rivalries, ranked-vs-ranked college games. Scaled by how competitive the game was, and also applied as a multiplier (×(1 + 0.37 × stakes)). |
+| Quality | Team quality (records, AP ranks): two good teams beat two bad ones. |
 
 - **Win probability:** ESPN's per-play value is used for NFL, college football, NBA, both college
   basketball leagues and MLB. NHL and soccer use Poisson models from score and time remaining;
   details are in `site/js/rating/wp.js` and DECISIONS.md.
-- **Predicted:** closeness from betting odds (or records), team quality, rivalry, stakes, rankings.
-- **Live:** blends the prediction with in-game signals, shifting toward the in-game rating as the
-  game goes on. It freezes at the final.
-- **F1:** only races are rated: lead changes, overtakes, the P1–P2 gap late, safety cars and red
-  flags, and championship stakes.
+- **Predicted:** see the next section.
+- **Live:** w × predicted + (1 − w) × measured so far, w = (1 − progress)². It freezes at the final.
+- **F1:** only races are rated: on-track lead changes and passes (pit-stop reshuffles don't count),
+  the P1–P2 gap late, a charge through the field, safety cars and red flags, and championship stakes.
 - **Explanations:** the sheet lists the components that drove the number, e.g. "3 lead changes, 2 in
   the 4th quarter · 4th quarter within one possession · Overtime".
+
+## How predictions work
+
+Before kickoff each game starts at a league base rate (the league's median rating minus what the
+terms add on average, kept separately for the playoffs) and pre-game terms move it up or down (`site/js/predict/`, values in
+`config/prediction.json`):
+
+- **Closeness:** the betting line (moneylines with the bookmaker margin removed, or the spread), else
+  our own Elo. Coin flips score up, heavy favorites score down ("Heavy favorite (−13.5): blowout risk").
+- **Quality** (both teams' Elo percentiles or AP ranks), **importance** (how much the game moves each
+  team's playoff/title/relegation odds in a 10,000-run season simulation), **stakes** (playoffs,
+  knockouts, second legs), **style** (both teams' scoring environment), **narrative** (rivalries,
+  primetime, national TV), **availability** (star or QB out, MLB aces, NHL backup goalies) and
+  **weather** (F1 rain, NFL wind/snow, MLB rain).
+- **Blowout guard:** a heavy favorite can't be rescued by stakes or narrative (capped at +4).
+- Predicted = Base + k × (Raw − Base), with k per league from the backtest; women's college basketball
+  uses a ridge regression on the same features because it clearly won out of sample there.
+- Each prediction has a **likely range** (the middle half of backtest outcomes for that league and
+  horizon) and **P(Great) / P(Dull)** from per-league logistic fits. Pre-game information explains
+  only a small part of how exciting a game turns out, so ranges are wide; the useful part is the
+  ranking.
+- **Horizons:** 0–2 days *Prediction*, 3–7 *Forecast*, 8–14 *Early look* (rounded to 5), 15+ days only a
+  **Circle this one** flag when two of five rules hit (two top-20% teams or AP top 10, top-10% stakes,
+  a rivalry, a favorite against a quality opponent, a marquee slot).
+
+`reports/backtest.md` has the walk-forward results per league and horizon against three baselines
+(constant, spread-only, quality + importance), including where the model doesn't beat them.
 
 ## When ESPN changes something
 
@@ -148,14 +193,17 @@ or its `errors` list isn't empty, check the Actions tab.
 ```
 site/                 published to GitHub Pages
   index.html, sw.js, manifest.webmanifest, icons/, css/
-  config/             favorites, services, rating weights
+  config/             favorites, services, rating weights, prediction model, star teams
   js/app.js           router
-  js/app/store.js     loads days, rates games, caches
-  js/ui/              home, game, standings, settings, charts
+  js/app/store.js     loads days, rates and predicts games, caches
+  js/ui/              home, game, look ahead, standings, settings, charts
   js/rating/          win-probability models, components, calibration, explanations, F1
+  js/predict/         Elo, season simulation, odds, pre-game terms, predictor
   js/adapters/        all external data access (see above)
-  data/               calibration/, brief.json, brief.md, ratings/
-scripts/              probe, backfill, brief, fixtures, dev server, icons
-test/                 node:test suites + saved ESPN games
-.github/workflows/    deploy, morning brief, recalibration
+  data/               calibration/, predictions.json, elo/, brief.json, brief.md, ratings/
+scripts/              probe, backfill, brief, predictions, backtest, tuner, fixtures, dev server, icons
+  lib/                season history, Elo walk, standings structure, stats, calibration rows
+reports/backtest.md   walk-forward backtest (regenerated by scripts/backtest.mjs)
+test/                 node:test suites + saved ESPN games + labeled sanity fixtures
+.github/workflows/    deploy, nightly predictions, morning brief, recalibration
 ```

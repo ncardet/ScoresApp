@@ -18,11 +18,15 @@ import RATING from '../site/config/rating.js';
 import { leagueHistory, SEASONS } from './lib/history.mjs';
 import { walk } from './lib/elo-walk.mjs';
 import { leagueStructure } from './lib/structure.mjs';
-import { simulateSeason, standingsFrom, FORMATS } from '../site/js/predict/simulate.js';
+import { simulateSeason, standingsFrom, FORMATS, seededRng } from '../site/js/predict/simulate.js';
 import { predictGame, FEATURES, isPlayoff } from '../site/js/predict/index.js';
 import { circuitAverage } from '../site/js/predict/terms.js';
 import { championshipStakes } from '../site/js/rating/f1.js';
 import { prepareCalibration, rawToRating, normalize, weighted, normalizeF1, COMPONENTS, F1_COMPONENTS } from '../site/js/rating/calibrate.js';
+import { calibrationFile, targetRow } from './lib/calibration.mjs';
+import { measureF1 } from '../site/js/rating/f1.js';
+import { raceControlSummary } from '../site/js/adapters/f1.js';
+import { scoringStyle } from '../site/js/predict/style.js';
 import { addDays } from '../site/js/core/time.js';
 import { getJson } from '../site/js/adapters/espn/client.js';
 import { parseStandings } from '../site/js/adapters/espn/standings.js';
@@ -51,16 +55,6 @@ async function readJson(file, fallback = null) {
   try { return JSON.parse(await readFile(file, 'utf8')); } catch { return fallback; }
 }
 
-/** Deterministic sample of n items. */
-function sample(arr, n, seed = 7) {
-  if (arr.length <= n) return arr;
-  const a = [...arr];
-  let s = seed;
-  const rand = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a.slice(0, n);
-}
-
 /** Week bucket (Tue-Mon) for football's "within-week" comparisons. */
 function groupKey(league, day) {
   if (league !== 'nfl' && league !== 'cfb') return day;
@@ -82,15 +76,13 @@ async function teamLeagueRows(league) {
   // Targets + recalibration from every backfilled game.
   const targets = {};
   for (const s of cfg.eval) targets[s] = await readJson(join(TARGET_DIR, league, `${s}.json`), {});
-  const rawRows = Object.values(targets).flatMap((t) => Object.values(t).filter((v) => v.raw).map((v) => v.raw));
-  if (rawRows.length < 50) return { league, rows: [], note: 'not enough backfilled games' };
-  const calFile = {
-    league, engine: RATING.version, generated: new Date().toISOString(), window: `seasons ${cfg.eval.join(', ')} (backfill)`,
-    n: Math.min(rawRows.length, 900), columns: COMPONENTS, rows: sample(rawRows, 900),
-  };
+  const entries = Object.values(targets).flatMap((t) => Object.values(t).filter((v) => v.b || v.raw));
+  if (entries.length < 50) return { league, rows: [], note: 'not enough backfilled games' };
+  const calFile = calibrationFile(league, entries, `seasons ${cfg.eval.join(', ')} (backfill)`);
+  const rawRows = entries;
   if (WRITE) await writeFile(`site/data/calibration/${league}.json`, JSON.stringify(calFile));
   const cal = prepareCalibration(calFile, league);
-  const actual = (raw) => rawToRating(weighted(normalize(Object.fromEntries(COMPONENTS.map((c, i) => [c, raw[i]])), cal.scales), RATING.weights), cal);
+  const actual = (raw) => rawToRating(weighted(normalize(Object.fromEntries(COMPONENTS.map((c, i) => [c, raw[i]])), cal.scales), RATING.weights, RATING.amplifiers), cal);
 
   // Point-in-time helpers.
   const pctCache = new Map();
@@ -104,20 +96,7 @@ async function teamLeagueRows(league) {
     pctCache.set(key, m);
     return m;
   };
-  const styleAt = (seasonGames, day) => {
-    if (league !== 'nba') return null;
-    const tot = new Map();
-    for (const g of seasonGames) {
-      if (g.day >= day || !g.done) break;
-      const t = (g.h.s ?? 0) + (g.a.s ?? 0);
-      for (const id of [g.h.id, g.a.id]) { const v = tot.get(id) || [0, 0]; v[0] += t; v[1]++; tot.set(id, v); }
-    }
-    const avgs = [...tot.entries()].filter(([, v]) => v[1] >= 5).map(([id, v]) => [id, v[0] / v[1]]);
-    if (avgs.length < 10) return null;
-    const m = mean(avgs.map((x) => x[1]));
-    const sd = Math.sqrt(mean(avgs.map((x) => (x[1] - m) ** 2))) || 1;
-    return new Map(avgs.map(([id, v]) => [id, (v - m) / sd]));
-  };
+  const styleAt = (seasonGames, day) => scoringStyle(seasonGames, { before: day });
 
   // Importance from weekly simulation checkpoints (regular season, leagues with a format).
   const impAt = new Map(); // season -> [{c, map}]
@@ -133,7 +112,7 @@ async function teamLeagueRows(league) {
         const played = games.filter((g) => g.day < c);
         const remaining = reg.filter((g) => g.day >= c).map((g) => ({ id: g.id, h: g.h.id, a: g.a.id, neutral: g.neutral }));
         const targetsSet = new Set(reg.filter((g) => g.day >= c && g.day < addDays(c, 21)).map((g) => g.id));
-        const res = simulateSeason({ league, table: standingsFrom(played, league), remaining, rating: (id) => book.asOf(id, c), structure, targets: targetsSet, runs: SIMS });
+        const res = simulateSeason({ league, table: standingsFrom(played, league), remaining, rating: (id) => book.asOf(id, c), structure, targets: targetsSet, runs: SIMS, rng: seededRng(`${league}|${s}|${c}`) });
         list.push({ c, map: res.importance });
       }
       impAt.set(s, list);
@@ -152,8 +131,9 @@ async function teamLeagueRows(league) {
     const seasonGames = histories.find((h) => h.season === s)?.games || [];
     for (const g of seasonGames) {
       const t = targets[s][g.id];
-      if (!t?.raw || !g.done || g.x || !displayable(league, g)) continue;
-      const y = actual(t.raw);
+      const raw = targetRow(t);
+      if (!raw || !g.done || g.x || !displayable(league, g)) continue;
+      const y = actual(raw);
       for (const tier of TIERS) {
         const D = addDays(g.day, -tier.offset);
         const game = toGame(g);
@@ -186,7 +166,14 @@ async function teamLeagueRows(league) {
 
 async function f1Rows() {
   const cache = await readJson(join(TARGET_DIR, 'f1', 'races.json'), {});
-  const races = Object.values(cache).filter((r) => r.raw);
+  // Races carrying their inputs (backfill v2) are re-measured with the current rating code.
+  const remeasure = (r) => {
+    if (!r.input) return r.raw;
+    const f1 = { laps: r.input.laps, control: raceControlSummary(r.input.rc), classification: r.input.classification, standings: cache._standings?.[r.year] || null, raceIndex: r.raceIndex };
+    const m = measureF1({ f1 });
+    return F1_COMPONENTS.map((c) => Math.round((m.raw[c] ?? 0) * 1e4) / 1e4);
+  };
+  const races = Object.entries(cache).filter(([k, r]) => k !== '_standings' && r.raw).map(([, r]) => ({ ...r, raw: remeasure(r) }));
   if (races.length < 20) return { league: 'f1', rows: [], note: 'not enough races' };
   const calFile = { league: 'f1', engine: RATING.version, generated: new Date().toISOString(), window: 'races 2023-2026 (backfill)', n: races.length, columns: F1_COMPONENTS, rows: races.map((r) => r.raw) };
   if (WRITE) await writeFile('site/data/calibration/f1.json', JSON.stringify(calFile));
@@ -352,15 +339,23 @@ function evaluateLeague(data) {
   let num = 0; let den = 0;
   for (let i = 0; i < dev.length; i++) { num += (dev[i] - md) * (ys[i] - my); den += (dev[i] - md) ** 2; }
   const kFit = den ? num / den * CFG.k : CFG.k;
-  const regY = rows.filter((r) => r.tier === 'prediction' && !r.playoff).map((r) => r.y);
-  const poY = rows.filter((r) => r.tier === 'prediction' && r.playoff).map((r) => r.y);
+  // Base rates: the segment's median rating, minus what the rule terms add on average there
+  // (k × mean term points), so the average prediction lands on the median. Otherwise a playoff
+  // median, which already contains the playoff stakes, gets the postseason terms on top again.
+  const kUse = Math.min(1, Math.max(0.2, kFit));
+  const seg = (playoff) => rows.filter((r) => r.tier === 'prediction' && !!r.playoff === playoff);
+  const centered = (rs) => median(rs.map((r) => r.y)) - kUse * mean(rs.map((r) => (r.rule - r.base) / CFG.k));
+  const reg = seg(false);
+  const po = seg(true);
   return {
     ...res,
     final: { intercept: Math.round(final.model.intercept * 100) / 100, coef: final.model.coef.map((c) => Math.round(c * 1000) / 1000), tiers: finalTiers },
     kFit,
-    baseRegular: regY.length ? median(regY) : null,
-    basePlayoff: poY.length >= 20 ? median(poY) : null,
-    nPlayoff: poY.length,
+    medianRegular: reg.length ? median(reg.map((r) => r.y)) : null,
+    medianPlayoff: po.length >= 20 ? median(po.map((r) => r.y)) : null,
+    baseRegular: reg.length ? centered(reg) : null,
+    basePlayoff: po.length >= 20 ? centered(po) : null,
+    nPlayoff: po.length,
     testSeasons,
   };
 }
@@ -370,6 +365,30 @@ function evaluateLeague(data) {
 const f2 = (x) => (Number.isFinite(x) ? x.toFixed(2) : '—');
 const f0 = (x) => (Number.isFinite(x) ? x.toFixed(1) : '—');
 const pc = (x) => (Number.isFinite(x) ? `${Math.round(x * 100)}%` : '—');
+
+export function fittedClearlyBetter(f, r) {
+  const rR = Number.isFinite(r?.withinDay) ? r.withinDay : -1;
+  const dR = f.withinDay - rR;
+  const dT = (f.top10 ?? 0) - (r?.top10 ?? 0);
+  return (dR >= 0.02 && dT >= -0.05) || (dR >= -0.005 && dT >= 0.05);
+}
+
+/**
+ * The addendum's success test for the model in use, 0-2 days out: "clearly beats" spread-only means
+ * at least +0.02 within-day rank correlation AND +5 points of top-decile precision; "falls short"
+ * means worse by more than that on either; anything else is a rough tie.
+ */
+function verdict(ev) {
+  const t = ev.tiers.prediction;
+  const m = ev.use === 'fitted' ? t.fitted : t.rules;
+  const sp = t.spread;
+  if (!Number.isFinite(sp.withinDay)) return { key: 'nobaseline', text: 'has no spread-only baseline (no lines or ratings to derive one)', m };
+  const dR = m.withinDay - sp.withinDay;
+  const dT = m.top10 - sp.top10;
+  if (dR >= 0.02 && dT >= 0.05) return { key: 'beats', text: 'clearly beats spread-only', m };
+  if (dR < -0.02 || dT < -0.05) return { key: 'short', text: 'falls short of spread-only', m };
+  return { key: 'ties', text: 'roughly ties spread-only', m };
+}
 
 function reportLeague(league, data, ev) {
   const L = [`## ${league.toUpperCase()}`, ''];
@@ -390,14 +409,14 @@ function reportLeague(league, data, ev) {
   }
   const t0 = ev.tiers.prediction;
   if (t0) {
-    const beats = t0.fitted.withinDay > t0.spread.withinDay && t0.fitted.top10 >= t0.spread.top10;
-    L.push('', `**Verdict (0-2 days):** ${beats ? 'beats' : 'does not clearly beat'} spread-only on within-day correlation (${f2(t0.fitted.withinDay)} vs ${f2(t0.spread.withinDay)}) and top-decile precision (${pc(t0.fitted.top10)} vs ${pc(t0.spread.top10)}). Closing line available for ${pc(t0.lineShare)} of test games.`);
+    const v = verdict(ev);
+    L.push('', `**Verdict (0-2 days, ${ev.use} model):** ${v.text} on within-day correlation (${f2(v.m.withinDay)} vs ${f2(t0.spread.withinDay)}) and top-decile precision (${pc(v.m.top10)} vs ${pc(t0.spread.top10)}). Closing line available for ${pc(t0.lineShare)} of test games.`);
     if (t0.fitted.calibration) {
       L.push('', 'P(Great) calibration (0-2 days, fitted):', '', '| Predicted | n | Mean predicted | Observed |', '|---|---|---|---|');
       for (const c of t0.fitted.calibration) L.push(`| ${c.bin} | ${c.n} | ${pc(c.predicted)} | ${pc(c.observed)} |`);
     }
   }
-  L.push('', `Model in use: **${ev.use}**. Base rate regular ${f0(ev.baseRegular)}${ev.basePlayoff != null ? `, playoff ${f0(ev.basePlayoff)}` : ''}. Rules k supported by the data: ${f2(ev.kFit)}.`, '');
+  L.push('', `Model in use: **${ev.use}**. Base rate regular ${f0(ev.baseRegular)} (median rating ${f0(ev.medianRegular)})${ev.basePlayoff != null ? `, playoff ${f0(ev.basePlayoff)} (median ${f0(ev.medianPlayoff)})` : ''}; bases are the medians minus the rule terms' average contribution, so typical stakes aren't counted twice. Rules k supported by the data: ${f2(ev.kFit)}.`, '');
   L.push('<details><summary>Fitted coefficients (points per unit)</summary>', '', '| Feature | Coef |', '|---|---|', ...FEATURES.map((f, i) => `| ${f} | ${ev.final.coef[i]} |`), `| intercept | ${ev.final.intercept} |`, '', '</details>', '');
   return L;
 }
@@ -412,8 +431,10 @@ async function main() {
     if (!data.rows.length) { results[league] = { data, ev: null }; console.log(`${league}: ${data.note}`); continue; }
     const ev = evaluateLeague(data);
     const t = ev.tiers.prediction;
-    // Use the fitted model only where it beats the rules out of sample.
-    ev.use = t && t.fitted.withinDay >= (Number.isFinite(t.rules.withinDay) ? t.rules.withinDay : -1) ? 'fitted' : 'rules';
+    // Use the fitted model only where it clearly beats the rules out of sample: +0.02 within-day
+    // rank correlation without losing top-decile precision, or as good a ranking with +5 points of
+    // top-decile precision. Otherwise keep the explainable rules.
+    ev.use = t && fittedClearlyBetter(t.fitted, t.rules) ? 'fitted' : 'rules';
     results[league] = { data, ev };
     cfgOut.fitted[league] = {
       model: ev.use,
@@ -426,7 +447,8 @@ async function main() {
     };
     if (ev.baseRegular != null) cfgOut.base[league].regular = Math.round(ev.baseRegular);
     if (ev.basePlayoff != null) cfgOut.base[league].playoff = Math.round(ev.basePlayoff);
-    console.log(`${league.padEnd(5)} rows ${data.rows.length / TIERS.length} · 0-2d within-day ρ fitted ${f2(t?.fitted.withinDay)} / rules ${f2(t?.rules.withinDay)} / spread ${f2(t?.spread.withinDay)} · top10 ${pc(t?.fitted.top10)} vs ${pc(t?.spread.top10)} · ${Math.round((Date.now() - t0) / 1000)}s`);
+    const use = ev.use === 'fitted' ? t?.fitted : t?.rules;
+    console.log(`${league.padEnd(5)} rows ${data.rows.length / TIERS.length} · 0-2d within-day ρ fitted ${f2(t?.fitted.withinDay)} / rules ${f2(t?.rules.withinDay)} / spread ${f2(t?.spread.withinDay)} · top10 ${ev.use} ${pc(use?.top10)} vs spread ${pc(t?.spread.top10)} · use ${ev.use} · ${t ? verdict(ev).key : '-'} · ${Math.round((Date.now() - t0) / 1000)}s`);
   }
   const L = ['# Pre-game prediction backtest', '', `Generated ${new Date().toISOString().slice(0, 16)}Z by \`scripts/backtest.mjs\`. Walk-forward: every number below is out of sample. Each test season was predicted by a model trained only on earlier seasons, using information available before kickoff (Elo, standings and simulations rebuilt as of the game date; closing lines only in the 0-2 day tier).`, '',
     'Targets are the post-game excitement ratings from our own algorithm. Metrics:', '',
@@ -434,7 +456,18 @@ async function main() {
     '- **Top-10% ≥65:** share of the predicted top 10% of games that rated Good or better.',
     '- **Great recall:** share of actual Great (85+) games that we had in our predicted top 20%.',
     '- **AUC:** how well predictions separate Great from Dull games (0.5 = coin flip).',
-    '- **Brier:** accuracy of P(Great) (lower is better; ~0.11 = always guessing the base rate of 12.5%).', ''];
+    '- **Brier:** accuracy of P(Great) (lower is better; ~0.11 = always guessing the base rate of 12.5%).',
+    '- **Sampling noise:** with n test games, a rank correlation has a standard error of about 1/√n (±0.06 for the NFL\'s 285) and the top-decile share about √(p(1−p)/(0.1·n)) (±9 points for the NFL). Smaller differences are ties, which is why the verdicts need +0.02 ρ *and* +5 points to call a win.',
+    '- **Leakage guard:** predictions only see `pregameView(game)` (no scores, status, plays or post-game records; series and aggregates are backed out). `test/predict.test.mjs` fails if a post-kickoff field changes a prediction.', ''];
+  L.push('## Summary (0-2 days out, model in use)', '', '| League | Model | Within-day ρ | Spread-only ρ | Top-10% ≥65 | Spread-only top-10% | AUC Great vs Dull | Verdict |', '|---|---|---|---|---|---|---|---|');
+  for (const league of LEAGUE_KEYS) {
+    const ev = results[league]?.ev;
+    const t = ev?.tiers.prediction;
+    if (!t) { L.push(`| ${league.toUpperCase()} | — | — | — | — | — | — | not enough data |`); continue; }
+    const v = verdict(ev);
+    L.push(`| ${league.toUpperCase()} | ${ev.use} | ${f2(v.m.withinDay)} | ${f2(t.spread.withinDay)} | ${pc(v.m.top10)} | ${pc(t.spread.top10)} | ${f2(v.m.auc)} | ${v.text} |`);
+  }
+  L.push('');
   for (const league of LEAGUE_KEYS) L.push(...reportLeague(league, results[league].data, results[league].ev));
   if (WRITE) {
     await mkdir('reports', { recursive: true });

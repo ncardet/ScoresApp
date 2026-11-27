@@ -10,9 +10,9 @@
 import RATING from '../../config/rating.js';
 import { normCdf } from './wp.js';
 
-export const COMPONENTS = ['swing', 'closeness', 'leadChanges', 'comeback', 'novelty', 'pace', 'stakes', 'quality'];
-export const F1_COMPONENTS = ['leadChanges', 'overtakes', 'finalGap', 'incidents', 'stakes'];
-const SCALED = ['swing', 'leadChanges', 'pace'];
+export const COMPONENTS = ['swing', 'closeness', 'leadChanges', 'comeback', 'novelty', 'pace', 'stakes', 'quality', 'lateSwing'];
+export const F1_COMPONENTS = ['leadChanges', 'overtakes', 'finalGap', 'incidents', 'stakes', 'charge'];
+const SCALED = ['swing', 'leadChanges', 'pace', 'lateSwing'];
 const F1_SCALED = ['leadChanges', 'overtakes'];
 
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
@@ -59,29 +59,46 @@ export function curveValue(p, curve = RATING.curve) {
  * lead changes and (late) comeback, so a blowout final gets little credit for being a final.
  */
 export function normalize(raw, scales) {
+  // A big swing in the final tenth (a late comeback) earns swing credit on its own.
+  const late = raw.lateSwing != null && scales.lateSwing ? clamp01(raw.lateSwing / scales.lateSwing) : 0;
   const n = {
-    swing: clamp01(raw.swing / scales.swing),
+    swing: Math.max(clamp01(raw.swing / scales.swing), (RATING.lateSwingCredit ?? 0) * late),
     closeness: clamp01(raw.closeness),
     leadChanges: clamp01(raw.leadChanges / scales.leadChanges),
     comeback: clamp01(raw.comeback),
     novelty: clamp01(raw.novelty),
     pace: clamp01(raw.pace / scales.pace),
   };
-  const comp = Math.max(n.closeness, n.swing, n.leadChanges, n.comeback);
-  n.stakes = clamp01(raw.stakes) * Math.sqrt(comp);
-  n.quality = clamp01(raw.quality ?? 0.5);
+  // How competitive the game really was. "Within one goal" is the norm in soccer, so closeness
+  // is trusted less there.
+  const closeTrust = scales.closeTrust ?? 1;
+  // compLate: judge competitiveness on the late game (final-tenth swing instead of whole-game
+  // swing), so a final that was tense early but decided late gets little stakes boost.
+  const swingC = RATING.compLate && raw.lateSwing != null && scales.lateSwing ? late : n.swing;
+  const comp = Math.max(n.closeness * closeTrust, swingC, n.leadChanges, n.comeback);
+  // Stakes and team quality amplify a competitive game; they cannot rescue a blowout.
+  n.stakes = clamp01(raw.stakes) * comp;
+  n.quality = 0.5 + (clamp01(raw.quality ?? 0.5) - 0.5) * comp;
+  n.qualityC = (clamp01(raw.quality ?? 0.5) - 0.5) * 2 * comp; // -1..1, for the quality amplifier
   return n;
 }
 
-export function weighted(norm, weights) {
+/**
+ * Weighted average of the normalized components, then multiplied by (1 + sum of amplifier × value):
+ * an amplifier (stakes) scales the in-game excitement instead of adding to it, so a regular-season
+ * classic is not capped below a playoff game and stakes can't rescue a dull game.
+ */
+export function weighted(norm, weights, amps = null) {
   let s = 0;
   let w = 0;
   for (const [k, wk] of Object.entries(weights)) {
-    if (norm[k] == null) continue;
+    if (norm[k] == null || !wk) continue;
     s += wk * norm[k];
     w += wk;
   }
-  return w ? s / w : 0;
+  let m = 1;
+  if (amps) for (const [k, a] of Object.entries(amps)) if (norm[k] != null && a) m += a * norm[k];
+  return (w ? s / w : 0) * m;
 }
 
 export function normalizeF1(raw, scales) {
@@ -91,6 +108,7 @@ export function normalizeF1(raw, scales) {
     finalGap: clamp01(raw.finalGap),
     incidents: clamp01(raw.incidents),
     stakes: clamp01(raw.stakes),
+    charge: clamp01(raw.charge ?? 0),
   };
 }
 
@@ -106,13 +124,13 @@ export function prepareCalibration(file, league) {
     if (!isF1 && o.quality == null) o.quality = 0.5;
     return o;
   });
-  const scales = { ...defaults };
+  const scales = { ...defaults, closeTrust: RATING.leagues[league]?.goalsPerGame ? (RATING.soccerCloseTrust ?? 0.6) : 1 };
   for (const k of isF1 ? F1_SCALED : SCALED) {
     const v = quantile(rows.map((r) => r[k]).filter(Number.isFinite).sort(asc), 0.95);
     if (v > 0) scales[k] = v;
   }
   const weights = isF1 ? RATING.f1.weights : RATING.weights;
-  const finals = rows.map((r) => weighted(isF1 ? normalizeF1(r, scales) : normalize(r, scales), weights)).sort(asc);
+  const finals = rows.map((r) => (isF1 ? weighted(normalizeF1(r, scales), weights) : weighted(normalize(r, scales), weights, RATING.amplifiers))).sort(asc);
   const prior = Array.isArray(file.prior) && file.prior.length ? [...file.prior].filter(Number.isFinite).sort(asc) : null;
   return { league, n: rows.length, scales, finals, prior, generated: file.generated || null, seasons: file.seasons || null };
 }

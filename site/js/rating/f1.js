@@ -48,20 +48,26 @@ export function measureF1(detail) {
   const f1 = detail.f1 || {};
   const laps = f1.laps || [];
   const cfg = RATING.f1;
+  // A pit stop reshuffles the order without any racing: the car that pits drops back and every
+  // car behind it moves up. So passes and lead changes only count between drivers who did not
+  // pit on the lap before, during or after.
+  const pitWindow = (i) => new Set([...(laps[i - 1]?.pits || []), ...(laps[i]?.pits || []), ...(laps[i + 1]?.pits || [])]);
   let leadChanges = 0;
+  let passes = 0;
   for (let i = 2; i < laps.length; i++) {
-    if (laps[i].order[0] !== laps[i - 1].order[0]) leadChanges++;
-  }
-  let overtakes = f1.overtakes;
-  if (overtakes == null && laps.length) {
-    overtakes = 0;
-    for (let i = 2; i < laps.length; i++) {
-      const prev = new Map(laps[i - 1].order.map((d, k) => [d, k]));
-      laps[i].order.forEach((d, k) => {
-        if (!laps[i].pits.includes(d) && prev.has(d) && k < prev.get(d)) overtakes += prev.get(d) - k;
-      });
+    const pits = pitWindow(i);
+    const before = laps[i - 1].order;
+    const now = laps[i].order;
+    if (before[0] !== now[0] && !pits.has(before[0]) && !pits.has(now[0])) leadChanges++;
+    const pos = new Map(before.map((d, k) => [d, k]));
+    const racing = now.filter((d) => pos.has(d) && !pits.has(d));
+    // On-track passes: pairs of racing drivers whose order flipped since the last lap.
+    for (let x = 0; x < racing.length; x++) {
+      for (let y = x + 1; y < racing.length; y++) if (pos.get(racing[x]) > pos.get(racing[y])) passes++;
     }
   }
+  // OpenF1's own "overtakes" feed counts pit-cycle position changes too; use it only without laps.
+  const overtakes = laps.length > 2 ? passes : (f1.overtakes ?? 0);
   const n = laps.length;
   const tail = laps.slice(Math.floor(n * 0.8)).filter((l) => l.gap12 != null);
   const closeShare = tail.length ? tail.filter((l) => l.gap12 < cfg.closeGapSeconds).length / tail.length : 0;
@@ -69,10 +75,21 @@ export function measureF1(detail) {
   const finalGap = clamp01(0.7 * closeShare + 0.3 * (finishGap == null ? 0 : clamp01(1 - finishGap / 5)));
   const c = f1.control || { safetyCars: 0, vsc: 0, redFlags: 0 };
   const incidents = clamp01((c.safetyCars + 0.5 * c.vsc + 1.5 * c.redFlags) / 3);
+  // Charge: the most places a podium finisher made up after the opening lap.
+  const finishOrder = (f1.classification || []).filter((r) => r.position).sort((a, b) => a.position - b.position).map((r) => r.number);
+  const podium = (finishOrder.length ? finishOrder : laps.at(-1)?.order || []).slice(0, 3);
+  const opening = laps[0]?.order || [];
+  let gained = 0;
+  let charger = null;
+  podium.forEach((d, p) => {
+    const s0 = opening.indexOf(d);
+    if (s0 >= 0 && s0 - p > gained) { gained = s0 - p; charger = { driver: d, from: s0 + 1, to: p + 1 }; }
+  });
+  const charge = clamp01(gained / (cfg.chargeNorm || 10));
   const st = championshipStakes(f1.standings, f1.raceIndex);
   return {
-    raw: { leadChanges, overtakes: overtakes || 0, finalGap, incidents, stakes: st.value },
-    facts: { leadChanges, overtakes, closeShare, finishGap, control: c, stakes: st, laps: n },
+    raw: { leadChanges, overtakes, finalGap, incidents, stakes: st.value, charge },
+    facts: { leadChanges, overtakes, closeShare, finishGap, control: c, stakes: st, laps: n, charge: charger },
   };
 }
 
@@ -86,7 +103,8 @@ export function f1Reasons(m, norm) {
   else if (norm.finalGap <= 0.1 && f.finishGap != null) add(`Winner clear by ${f.finishGap.toFixed(1)}s`, '-', 0.3);
   if (f.leadChanges >= 2) add(`${f.leadChanges} lead changes`, '+', 0.3 + norm.leadChanges * 0.2);
   else if (f.leadChanges === 0 && f.laps) add('Same leader every lap', '-', 0.25);
-  if (f.overtakes != null) add(`${f.overtakes} overtakes`, norm.overtakes >= 0.4 ? '+' : '-', 0.2 + Math.abs(norm.overtakes - 0.4) * 0.3);
+  if (f.charge && f.charge.from - f.charge.to >= 5) add(`P${f.charge.to} from P${f.charge.from} after lap 1`, '+', 0.3 + norm.charge * 0.3);
+  if (f.overtakes != null) add(`${f.overtakes} on-track passes`, norm.overtakes >= 0.4 ? '+' : '-', 0.2 + Math.abs(norm.overtakes - 0.4) * 0.3);
   const c = f.control || {};
   const bits = [];
   if (c.redFlags) bits.push(`${c.redFlags} red flag${c.redFlags > 1 ? 's' : ''}`);

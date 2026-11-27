@@ -1,0 +1,69 @@
+# Nightly pre-game predictions: updates Elo for every league, simulates the rest of each season
+# (10,000 runs) for playoff/title/relegation importance, and writes site/data/predictions.json
+# (next 14 days, plus "Circle this one" flags up to 60 days out). The morning brief reads it.
+#
+# Cron is UTC, so it is scheduled twice; the script exits unless it is 1-4 am in Los Angeles and
+# tonight's file is missing (daylight-saving-proof):
+#   09:37 UTC = 1:37 PST / 2:37 PDT   (normal run)
+#   10:37 UTC = 2:37 PST / 3:37 PDT   (backup if the first was delayed or failed)
+# Season schedules are cached between runs (actions/cache), so a normal night only refreshes
+# recent days; a cold cache re-downloads every season (slower, still well under the timeout).
+name: Nightly predictions
+
+on:
+  schedule:
+    - cron: '37 9 * * *'
+    - cron: '37 10 * * *'
+  workflow_dispatch:
+    inputs:
+      leagues:
+        description: 'Comma-separated league keys (blank = all)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: predictions
+  cancel-in-progress: false
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    outputs:
+      generated: ${{ steps.build.outputs.generated }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Restore season schedules
+        uses: actions/cache@v4
+        with:
+          path: .cache/history
+          key: history-${{ github.run_id }}
+          restore-keys: history-
+      - name: Build predictions
+        id: build
+        run: |
+          ARGS=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then ARGS="--force"; fi
+          if [ -n "${{ inputs.leagues }}" ]; then ARGS="$ARGS --leagues ${{ inputs.leagues }}"; fi
+          node scripts/build-predictions.mjs $ARGS
+      - name: Commit predictions
+        if: steps.build.outputs.generated == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/data/predictions.json site/data/elo
+          git commit -m "Predictions $(TZ=America/Los_Angeles date +%F)" || exit 0
+          for i in 1 2 3; do git pull --rebase --quiet && git push && break; sleep 5; done
+
+  deploy:
+    needs: predict
+    if: needs.predict.outputs.generated == 'true'
+    uses: ./.github/workflows/deploy.yml

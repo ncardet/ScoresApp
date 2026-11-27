@@ -255,6 +255,7 @@ a.game-row:visited { color: var(--text); }
 .rating-card { display: flex; gap: 16px; align-items: center; padding: 16px; width: 100%; text-align: left; }
 .rating-card .lbl { font: 700 18px var(--font-display); }
 .rating-card .why { color: var(--text-2); font-size: 14px; margin-top: 2px; }
+.rating-card .pred-line { color: var(--text); font-size: 13px; font-weight: 600; margin-top: 2px; }
 
 .block { margin-top: 16px; }
 .block-h { font: 700 17px var(--font-display); margin: 0 4px 8px; display: flex; justify-content: space-between; align-items: baseline; }
@@ -376,3 +377,22 @@ input[type="search"], select.input {
 @media (min-width: 700px) {
   .title { font-size: 36px; }
 }
+
+/* ---------- predictions ---------- */
+.badge-col { display: grid; justify-items: center; gap: 2px; }
+.badge-col .range { font-size: 10px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pred-block { margin-top: 12px; }
+.terms { display: grid; gap: 6px; margin: 8px 0; }
+.term { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.term .pos { color: var(--good); font-weight: 700; font-variant-numeric: tabular-nums; }
+.term .neg { color: var(--text-3); font-weight: 700; font-variant-numeric: tabular-nums; }
+.horizon { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-2); background: var(--chip); border-radius: 6px; padding: 1px 6px; }
+.ahead-main { min-width: 0; display: grid; }
+.ahead-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.ahead-reason { font-size: 12px; color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.circle-row { padding: 12px 14px; display: grid; gap: 4px; }
+.circle-row .when { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.03em; }
+.circle-row .flags { font-size: 13px; color: var(--text-2); }
+.circle-badge { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--good); color: var(--good); font-size: 12px; margin-right: 6px; vertical-align: -5px; }
+.tabbar .tab { padding: 2px 10px; }
+.circle-badge.sm { width: 16px; height: 16px; font-size: 9px; margin-right: 4px; vertical-align: -3px; box-shadow: inset 0 0 0 1.5px var(--good); }

@@ -153,8 +153,9 @@ export function contextFactors(game, { pregameProb } = {}) {
     }
   }
 
-  const sh = recordStrength(game.home?.record, lg.sport);
-  const sa = recordStrength(game.away?.record, lg.sport);
+  // Records mean little in the first few games of a season: require 4+ games played.
+  const sh = gamesPlayed(game.home?.record) >= 4 ? recordStrength(game.home?.record, lg.sport) : null;
+  const sa = gamesPlayed(game.away?.record) >= 4 ? recordStrength(game.away?.record, lg.sport) : null;
   let quality = 0.5;
   const strengths = [sh, sa].map((s, i) => {
     const rank = (i === 0 ? game.home : game.away)?.rank;

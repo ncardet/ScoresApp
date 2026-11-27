@@ -2,6 +2,7 @@
 import { readFile } from 'node:fs/promises';
 import { parseEvent, parseF1Event } from '../site/js/adapters/espn/parse.js';
 import { parseSummary } from '../site/js/adapters/espn/summary.js';
+import { raceControlSummary } from '../site/js/adapters/f1.js';
 
 export async function loadFixture(name) {
   const fx = JSON.parse(await readFile(new URL(`./fixtures/${name}.json`, import.meta.url), 'utf8'));
@@ -11,7 +12,8 @@ export async function loadFixture(name) {
       fx,
       detail: {
         key: race.key, league: 'f1', sport: 'racing', game: race, plays: [], wp: null,
-        f1: { results: race.drivers, ...fx.f1 },
+        // Raw race-control messages (when saved) are re-summarized, so parser fixes apply.
+        f1: { results: race.drivers, ...fx.f1, ...(fx.f1.rc ? { control: raceControlSummary(fx.f1.rc) } : {}) },
       },
     };
   }

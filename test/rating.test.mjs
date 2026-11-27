@@ -67,8 +67,13 @@ test('predicted rating uses context', async () => {
   assert.equal(rivalry.state, 'predicted');
   assert.ok(rivalry.value > mismatch.value, `rivalry ${rivalry.value} > mismatch ${mismatch.value}`);
   assert.ok(game7.value > rivalry.value, `game 7 ${game7.value} > rivalry ${rivalry.value}`);
-  assert.ok(game7.value >= 80, `game 7 predicted ${game7.value}`);
-  assert.match(rivalry.explain, /Rivalry/);
+  assert.ok(game7.value >= 65, `game 7 predicted ${game7.value}`);
+  assert.ok(mismatch.value < 45, `mismatch predicted ${mismatch.value}`);
+  assert.match(mismatch.explain, /blowout risk/);
+  assert.match(game7.explain, /Game 7/);
+  // Prediction carries its uncertainty.
+  assert.ok(rivalry.pred.low < rivalry.value && rivalry.pred.high > rivalry.value);
+  assert.ok(rivalry.pred.pGreat > 0 && rivalry.pred.pGreat < 1);
 });
 
 test('calibration: median maps to 50 and 87.5th percentile to 85', () => {
@@ -164,4 +169,44 @@ test('measure() reports where win probability came from', async () => {
   assert.equal(nba.timeline.source, 'espn');
   const nhl = measure((await loadFixture('nhl-blowout')).detail);
   assert.equal(nhl.timeline.source, 'model');
+});
+
+test('reversed play-by-play sides are detected and fixed (neutral-site ESPN quirk)', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { parseEvent } = await import('../site/js/adapters/espn/parse.js');
+  const { parseSummary } = await import('../site/js/adapters/espn/summary.js');
+  const fx = JSON.parse(await readFile(new URL('./fixtures/nfl-super-bowl-lviii.json', import.meta.url), 'utf8'));
+  const good = parseSummary(fx.summary, fx.league, parseEvent(fx.event, fx.league));
+  assert.ok(!good.sidesFixed, 'a normal game is left alone');
+  // Swap every play's homeScore/awayScore, as ESPN did for 2026 Toledo vs Michigan (Baha Mar).
+  const flipped = structuredClone(fx.summary);
+  for (const d of flipped.drives?.previous || []) {
+    for (const p of d.plays || []) if (p.homeScore != null) [p.homeScore, p.awayScore] = [p.awayScore, p.homeScore];
+  }
+  const fixed = parseSummary(flipped, fx.league, parseEvent(fx.event, fx.league));
+  assert.ok(fixed.sidesFixed, 'reversal detected');
+  const last = fixed.plays.filter((p) => p.hs != null).at(-1);
+  assert.equal(last.hs, Number(fixed.game.home.score));
+  assert.equal(last.as, Number(fixed.game.away.score));
+  const cal = await getCalibration('nfl');
+  assert.equal(rate(fixed, cal).value, rate(good, cal).value, 'same rating as the untouched game');
+});
+
+test('F1: the chequered flag is not a red flag; pit stops are not passes; a charge counts', async () => {
+  const { raceControlSummary } = await import('../site/js/adapters/f1.js');
+  const { measureF1 } = await import('../site/js/rating/f1.js');
+  const rc = raceControlSummary([{ flag: 'RED', message: 'RED FLAG', lap_number: 1 }, { flag: 'CHEQUERED', message: 'CHEQUERED FLAG', lap_number: 6 }]);
+  assert.equal(rc.redFlags, 1, '"CHEQUERED FLAG" contains "RED FLAG" but is the finish');
+  const lap = (n, order, pits = []) => ({ lap: n, order, pits, gap12: 2 });
+  const laps = [
+    lap(1, [1, 2, 3]), lap(2, [1, 2, 3]),
+    lap(3, [2, 3, 1], [1]), // the leader pits: everyone behind moves up, nobody passed anyone
+    lap(4, [2, 3, 1]), lap(5, [2, 3, 1]),
+    lap(6, [3, 2, 1]), // an on-track pass for the lead
+  ];
+  const m = measureF1({ f1: { laps, control: rc, classification: [{ position: 1, number: 3, gap: null }, { position: 2, number: 2, gap: 0.8 }, { position: 3, number: 1, gap: 9 }] } });
+  assert.equal(m.raw.overtakes, 1);
+  assert.equal(m.raw.leadChanges, 1);
+  assert.equal(m.facts.charge.from, 3, 'the winner was third after lap 1');
+  assert.ok(m.raw.charge > 0);
 });

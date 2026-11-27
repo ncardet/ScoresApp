@@ -10,7 +10,7 @@
 
 export default {
   // Bump when the maths changes, so cached final ratings are recomputed.
-  version: 3,
+  version: 4,
 
   bands: [
     { min: 85, key: 'great', label: 'Great' },
@@ -24,19 +24,27 @@ export default {
 
   // In-game component weights (normalised by their sum).
   weights: {
-    swing: 0.26,        // Game Excitement Index: sum of |change in win probability|, length-normalised
+    swing: 0.29,        // Game Excitement Index: sum of |change in win probability|, length-normalised
     closeness: 0.16,    // share of the final 20% of the game spent close
     leadChanges: 0.10,  // lead changes and ties, late ones weighted more
-    comeback: 0.18,     // how low the winner's (or current leader's) win probability got
+    comeback: 0.17,     // how low the winner's (or current leader's) win probability got
     novelty: 0.16,      // overtime, walk-offs, no-hitters, hat tricks, 40-point games, red cards...
     pace: 0.04,         // scoring / shots vs league norm
-    stakes: 0.10,       // playoffs, elimination, rivalry, ranked matchup
+    stakes: 0.19,       // playoffs, elimination, rivalry, ranked matchup (scaled by competitiveness)
     quality: 0.06,      // team quality (records / AP ranks): two good teams beat two bad ones
   },
-  comebackLateness: 0.65,     // comeback counts (1 - x) + x * t, t = when the winner's deepest hole came
+  // Amplifiers multiply the weighted in-game score by (1 + a x value): stakes (0..1, already
+  // scaled by how competitive the game was) and centred team quality (-1..1). Tuned on the
+  // labeled fixtures with calibration rebuilt from the backfill (scripts/tune-rating.mjs --search).
+  amplifiers: { stakes: 0.37, qualityC: 0.02 },
+
+  comebackLateness: 0.64,     // comeback counts (1 - x) + x * t, t = when the winner's deepest hole came
+  soccerCloseTrust: 0.6,      // soccer: "within a goal" is the norm, so late closeness counts this much
 
   swingResample: 0.005,       // sample win probability every 0.5% of regulation (0 = every play)
-  swingLateBoost: 2,          // a swing at time t (0..1) counts 1 + boost * t^2 (0 = textbook GEI)
+  swingLateBoost: 2.24,          // a swing at time t (0..1) counts 1 + boost * t^2 (0 = textbook GEI)
+  lateSwingCredit: 0,         // swing >= this x (final-tenth swing / its league 95th percentile); tried, off
+  compLate: false,            // judge competitiveness (for the amplifiers) on late swing only; tried, off
   lateWindow: 0.2,            // "late" = final 20% of regulation (plus any overtime)
   closeWp: [0.3, 0.7],        // win probability band that counts as close
   leadChangeLateBoost: 2,     // a lead change at time t (0..1) counts 1 + boost * t^2
@@ -121,9 +129,12 @@ export default {
 
   // F1 race rating weights (race only; other sessions are not rated).
   f1: {
-    weights: { leadChanges: 0.22, overtakes: 0.22, finalGap: 0.26, incidents: 0.12, stakes: 0.18 },
+    // On-track passes and neutralisations carry the most weight; tuned on the labeled races with
+    // every component kept meaningful (scripts/tune-rating.mjs --f1, constrained).
+    weights: { leadChanges: 0.06, overtakes: 0.3, finalGap: 0.2, incidents: 0.26, stakes: 0.08, charge: 0.05 },
     scales: { leadChanges: 6, overtakes: 120 },
     closeGapSeconds: 1.5,
+    chargeNorm: 10,             // places gained by a podium finisher after lap 1 for a full "charge"
     // Circuits where passing is easy/hard nudge the pre-race prediction (substring match).
     overtakingCircuits: { up: ['Las Vegas', 'Interlagos', 'Bahrain', 'Shanghai', 'Spa', 'Baku', 'Jeddah', 'Miami', 'Austin'], down: ['Monaco', 'Hungaroring', 'Marina Bay', 'Zandvoort', 'Imola'] },
   },

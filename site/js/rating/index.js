@@ -10,15 +10,19 @@
 import RATING from '../../config/rating.js';
 import { LEAGUE_BY_KEY } from '../core/leagues.js';
 import { buildTimeline } from './timeline.js';
-import { swing, closeness, leadChanges, comeback, novelty, pace, homeResult } from './components.js';
+import { swing, swingFromBins, closeness, leadChanges, comeback, novelty, pace, homeResult } from './components.js';
 import { contextFactors, priorRaw, stakesComponent } from './prior.js';
 import { normalize, weighted, rawToRating, priorToRating, normalizeF1 } from './calibrate.js';
 import { inGameReasons, pickReasons, joinReasons } from './explain.js';
-import { measureF1, f1Reasons, f1PriorRaw, completedRaces } from './f1.js';
+import { measureF1, f1Reasons } from './f1.js';
+import { predictGame, liveBlend } from '../predict/index.js';
 
 export { getCalibration, setCalibration, prepareCalibration } from './calibrate.js';
 
 export const ENGINE_VERSION = RATING.version;
+
+/** Components shown as bars on the explanation sheet. */
+const SHOWN = ['swing', 'closeness', 'leadChanges', 'comeback', 'novelty', 'pace', 'stakes', 'quality'];
 
 export function bandOf(value) {
   const v = Math.round(value);
@@ -39,19 +43,24 @@ function finish(state, value, reasons, extra = {}) {
   };
 }
 
-/** Predicted (pre-game) rating for a team-sport game. */
-export function predict(game, cal, { pregameProb } = {}) {
-  if (game.sport === 'racing') return null;
-  const f = contextFactors(game, { pregameProb });
-  const raw = priorRaw(f, game);
-  const value = priorToRating(raw, cal);
-  const reasons = f.reasons.map((r) => ({
-    text: r.text,
-    tone: r.tone || '+',
-    score: (RATING.prior.weights[r.key] || 0.1) * (r.tone === '-' ? 1 - r.value : r.value),
-  }));
-  if (!reasons.length) reasons.push({ text: 'Nothing special on paper', tone: '-', score: 0.1 });
-  return finish('predicted', value, reasons, { raw, factors: f });
+/**
+ * Predicted (pre-game) rating, from the pre-game model in js/predict (league base rate + terms,
+ * range, P(Great)). `ctx` carries Elo / importance / injuries from data/predictions.json.
+ */
+export function predict(game, cal, ctx = {}) {
+  if (game.sport === 'racing' && !game.isRace) return null;
+  const p = predictGame(game, ctx);
+  if (!p) return null;
+  const value = p.value ?? Math.round(p.exact);
+  return {
+    state: 'predicted',
+    value,
+    band: bandOf(value),
+    reasons: p.reasons.map(({ text, tone }) => ({ text, tone })),
+    explain: p.explain,
+    engine: ENGINE_VERSION,
+    pred: p,
+  };
 }
 
 /** Measure everything for a game detail (used by rate() and the backfill). */
@@ -82,7 +91,8 @@ export function measure(detail) {
   };
   // Compact measurements: everything the components are derived from (cached by the backfill).
   m.base = {
-    sw: m.swing.raw, cl: m.closeness.raw, lc: m.leadChanges.raw,
+    sw: m.swing.raw, swb: m.swing.bins.map((x) => Math.round(x * 10000) / 10000), el: m.swing.elapsed,
+    cl: m.closeness.raw, lc: m.leadChanges.raw,
     cb: m.comeback.raw, cbT: m.timeline.final ? m.comeback.t : 1,
     nv: m.novelty.raw, pc: m.pace.raw,
     st: ctx.stakes, riv: ctx.rivalry, rk: ctx.ranked, q: ctx.quality,
@@ -101,7 +111,10 @@ export function measure(detail) {
 export function componentsFrom(b) {
   const lateW = RATING.comebackLateness ?? 0.65;
   return {
-    swing: b.sw,
+    swing: b.swb ? swingFromBins(b.swb, b.el ?? 1, RATING.swingLateBoost || 0) : b.sw,
+    // Win-probability movement in the final tenth of regulation plus overtime: a one-way late
+    // comeback has modest total swing but a huge late one.
+    lateSwing: b.swb ? (b.swb[9] || 0) + (b.swb[10] || 0) : null,
     closeness: b.cl,
     leadChanges: b.lc,
     comeback: b.cb * (1 - lateW + lateW * Math.min(1, Math.max(0, b.cbT ?? 1))),
@@ -170,7 +183,7 @@ export function rate(detail, cal, opts = {}) {
   if (game.state === 'pre' || game.canceled) return predict(game, cal);
   const m = measure(detail);
   const norm = normalize(m.raw, cal?.scales || RATING.leagues[game.league]?.scales);
-  const raw = weighted(norm, RATING.weights);
+  const raw = weighted(norm, RATING.weights, RATING.amplifiers);
   const inGame = rawToRating(raw, cal);
   const live = game.state === 'in';
   const lg = LEAGUE_BY_KEY[game.league];
@@ -180,15 +193,16 @@ export function rate(detail, cal, opts = {}) {
   let value = inGame;
   let predicted = opts.predicted;
   if (live) {
-    if (!predicted) predicted = predict(game, cal, { pregameProb: m.timeline.preProb });
-    const a = Math.pow(Math.min(1, Math.max(0, m.timeline.progress)), RATING.live.gamma);
-    value = (1 - a) * (predicted?.value ?? 50) + a * inGame;
+    if (!predicted) predicted = predict(game, cal);
+    // Live = w * Predicted + (1 - w) * Measured so far, w = (1 - progress)^2.
+    value = liveBlend(predicted?.value ?? 50, inGame, m.timeline.progress);
+    const a = 1 - (1 - Math.min(1, Math.max(0, m.timeline.progress))) ** 2;
     if (a < 0.5) {
       for (const r of predicted?.reasons || []) if (r.tone === '+') reasons.push({ ...r, score: 0.05 });
     }
   }
   return finish(live ? 'live' : 'final', value, reasons, {
-    components: Object.fromEntries(Object.entries(norm).map(([k, v]) => [k, +v.toFixed(3)])),
+    components: Object.fromEntries(SHOWN.filter((k) => norm[k] != null).map((k) => [k, +norm[k].toFixed(3)])),
     raw: +raw.toFixed(4),
     inGame: Math.round(inGame),
     source: m.timeline.source,
@@ -201,13 +215,8 @@ export function rate(detail, cal, opts = {}) {
 
 // ---------- F1 ----------
 
-export function predictF1(game, cal, standings) {
-  if (!game?.isRace) return null;
-  const idx = completedRaces(standings);
-  const p = f1PriorRaw(game, standings, idx);
-  const value = priorToRating(p.raw, cal);
-  const reasons = p.reasons.length ? p.reasons : [{ text: 'Regular race weekend', tone: '-', score: 0.1 }];
-  return finish('predicted', value, reasons, { raw: p.raw });
+export function predictF1(game, cal, standings, ctx = {}) {
+  return predict(game, cal, ctx);
 }
 
 export function rateF1(detail, cal, opts = {}) {

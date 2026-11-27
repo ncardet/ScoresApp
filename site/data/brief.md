@@ -1,39 +1,52 @@
 # Sideline brief — Thursday, November 26
 
-_Generated 2026-11-26 12:31 PM PT. Times are Pacific._
+_Generated 2026-11-26 6:20 PM PT. Games starting 7:00 AM today to 3:00 AM tomorrow, Pacific._
 
 ## Today's top games
 
-1. **81 Good** (predicted) · NFL · Chiefs at Bills · 5:20 PM PT · NBC (YouTube TV, Peacock)
-   Projected within 3 points · Two of the better teams
-2. **74 Good** (predicted) · MCBB · Louisville at St John's · 6:00 PM PT · ESPN2 (YouTube TV)
-   Projected within 1.5 points · Two of the better teams · Ranked matchup (No. 13 vs No. 25)
-3. **72 Good** (predicted) · MCBB · Utah State at USC · 1:30 PM PT · CBS Sports Network (YouTube TV)
-   Projected within 1.5 points · Two of the better teams
-4. **71 Good** (live) · MCBB · Georgetown at Texas · Halftime · FS1 (YouTube TV)
-   8 lead changes and 3 ties · Evenly matched on record · Two of the better teams
-5. **66 Good** (predicted) · MCBB · Miami at Michigan · 12:30 PM PT · ESPN2 (YouTube TV)
-   Projected within 1.5 points
+1. **82 Good** (live) · MCBB · LSU at SMU · 6:56 - 2nd · CBS Sports Network (YouTube TV)
+   Big momentum swings · Coming back from 14 points down · Within one possession right now
+2. **64 OK** (live) · CFB · TCU at Texas Tech · 4:43 - 2nd · ESPN (YouTube TV)
+   Within one score right now · Leading after falling to a 17% win chance
+3. **56 OK** (live) · MCBB · Louisville at St John's · 12:47 - 1st · ESPN2 (YouTube TV)
+   Within one possession right now · Ranked matchup (No. 13 vs No. 25) · Ranked matchup (No. 13 vs No. 25)
+4. **50 OK** (live) · NFL · Chiefs at Bills · 9:38 - 2nd · NBC (YouTube TV, Peacock)
+   Within one score right now
 
 ## Favorites today
 
-- ★ MCBB · Utah State at USC · 1:30 PM PT · CBS Sports Network (YouTube TV) · predicted 72 (Good)
+- ★ USC Trojans (men) · MCBB · USC at Utah State · Final · CBS Sports Network (YouTube TV) · final 78 (Good) · USC 74, Utah State 78
+
+## Sleeper
+
+MCBB · Baylor at Gonzaga · 8:30 PM PT · ESPN (YouTube TV): 15% chance of Great (predicted 54, likely 34–74). Two good teams by rating · Close line (GONZ −3.5) · Two up-tempo teams.
+
+## Skip
+
+MCBB · Texas Tech at Oregon · 8:30 PM PT: Texas Tech −10.5: blowout risk (predicted 45, 50% chance of Dull).
 
 ## Worth a replay (Wednesday, November 25)
 
-1. **99 Great** · MCBB · LSU at Arizona St · LSU 94, Arizona St 92 (2OT)
-   2 overtimes · Wild momentum swings · Came back from 12 points down
-2. **99 Great** · NHL · Blues at Islanders · Blues 2, Islanders 3 (SO)
+1. **98 Great** (final) · NHL · Blues at Islanders · Blues 2, Islanders 3 (SO)
    Overtime · Shootout · Wild momentum swings
-3. **90 Great** · MCBB · South Carolina at USC · South Carolina 69, USC 71
-   Wild momentum swings · Came back from 10 points down · Close for much of the final 8 minutes
-4. **87 Great** · NBA · Bulls at Hornets · Bulls 107, Hornets 105
-   Wild momentum swings · 22 lead changes and 7 ties, 13 in the 4th quarter · 4th quarter within one possession
-5. **87 Great** · UCL · Sporting vs Man Utd · Sporting 2, Man Utd 2
-   Red card · Big momentum swings · Came back from 1 goal down
-6. **86 Great** · NBA · Spurs at Trail Blazers · Spurs 111, Trail Blazers 116
+2. **95 Great** (final) · MCBB · LSU at Arizona St · LSU 94, Arizona St 92 (2OT)
+   2 overtimes · Wild momentum swings · 14 lead changes and 12 ties, 18 in the final 8 minutes
+3. **90 Great** (final) · NBA · Spurs at Trail Blazers · Spurs 111, Trail Blazers 116
    Victor Wembanyama: 44 points · Wild momentum swings · 25 lead changes and 13 ties, 1 in the 4th quarter
-7. **85 Great** · UCL · PSG vs AS Roma · PSG 2, AS Roma 2
-   Came back from 1 goal down · Final 20 minutes within a goal · 1 lead change and 2 ties, 1 in the final 20 minutes
+4. **87 Great** (final) · UCL · Sporting vs Man Utd · Sporting 2, Man Utd 2
+   Red card · Big momentum swings · Final 20 minutes within a goal
+5. **86 Great** (final) · MCBB · South Carolina at USC · South Carolina 69, USC 71
+   Wild momentum swings · Close for much of the final 8 minutes · 8 lead changes and 10 ties, 2 in the final 8 minutes
+6. **85 Great** (final) · UCL · PSG vs AS Roma · PSG 2, AS Roma 2
+   Big momentum swings · Final 20 minutes within a goal · Came back from 1 goal down
 
-Open the app: /
+## Coming up
+
+- ◎ CFB · Saturday, November 28 · Michigan at Ohio State: Rivalry · Rivalry week
+- ◎ CFB · Saturday, November 28 · USC at UCLA: Rivalry · Favorite vs a quality opponent · Rivalry week
+- ◎ CFB · Saturday, November 28 · Auburn at Alabama: Rivalry · Rivalry week
+- ◎ EPL · Sunday, November 29 · Arsenal vs Man City: Two top-20% teams · Big standings stakes
+- ◎ NBA · Monday, November 30 · Lakers at Rockets: Two top-20% teams · Favorite vs a quality opponent
+- ◎ NHL · Tuesday, December 1 · Golden Knights at Kings: Rivalry · Favorite vs a quality opponent
+
+Open the app: (set SITE_URL)

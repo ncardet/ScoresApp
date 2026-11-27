@@ -1,35 +1,88 @@
 {
-  "schema_version": 1,
-  "generated_at": "2026-11-26T20:31:47.837Z",
-  "generated_at_pt": "2026-11-26 12:31 PM PT",
+  "schema_version": 2,
+  "generated_at": "2026-11-27T02:20:13.345Z",
+  "generated_at_pt": "2026-11-26 6:20 PM PT",
   "timezone": "America/Los_Angeles",
   "date": "2026-11-26",
   "replay_date": "2026-11-25",
   "scheduled": false,
-  "engine_version": 3,
-  "app_url": "/",
+  "engine_version": 4,
+  "prediction_version": 1,
+  "predictions_date": "2026-11-26",
+  "app_url": null,
+  "window": {
+    "start": "2026-11-26T15:00:00.000Z",
+    "end": "2026-11-27T11:00:00.000Z",
+    "start_pt": "7:00 AM",
+    "end_pt": "3:00 AM"
+  },
   "top_games": [
     {
-      "id": "nfl:401873082",
-      "league": "NFL",
-      "league_key": "nfl",
-      "matchup": "Chiefs at Bills",
-      "home": "Buffalo Bills",
-      "away": "Kansas City Chiefs",
-      "start_time_pt": "5:20 PM",
-      "start_iso": "2026-11-27T01:20Z",
-      "status": "scheduled",
-      "status_detail": "5:20 PM PT",
-      "rating": 81,
-      "rating_state": "predicted",
+      "id": "mcbb:401918972",
+      "league": "MCBB",
+      "league_key": "mcbb",
+      "matchup": "LSU at SMU",
+      "home": "SMU Mustangs",
+      "away": "LSU Tigers",
+      "start_time_pt": "4:00 PM",
+      "start_iso": "2026-11-27T00:00Z",
+      "status": "live",
+      "status_detail": "6:56 - 2nd",
+      "rating": 82,
+      "rating_state": "live",
       "band": "Good",
-      "reason": "Projected within 3 points · Two of the better teams",
-      "favorite": false,
-      "watch": [
-        "NBC (YouTube TV, Peacock)"
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 82,
+      "reason": "Big momentum swings · Coming back from 14 points down · Within one possession right now",
+      "reasons": [
+        "Big momentum swings",
+        "Coming back from 14 points down",
+        "Within one possession right now"
       ],
-      "watch_summary": "NBC (YouTube TV, Peacock)",
-      "url": "/#/game/nfl/401873082"
+      "favorite": false,
+      "favorite_team": null,
+      "watch": [
+        "CBS Sports Network (YouTube TV)"
+      ],
+      "watch_summary": "CBS Sports Network (YouTube TV)",
+      "url": null
+    },
+    {
+      "id": "cfb:401856879",
+      "league": "CFB",
+      "league_key": "cfb",
+      "matchup": "TCU at Texas Tech",
+      "home": "Texas Tech Red Raiders",
+      "away": "TCU Horned Frogs",
+      "start_time_pt": "5:00 PM",
+      "start_iso": "2026-11-27T01:00Z",
+      "status": "live",
+      "status_detail": "4:43 - 2nd",
+      "rating": 64,
+      "rating_state": "live",
+      "band": "OK",
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 64,
+      "reason": "Within one score right now · Leading after falling to a 17% win chance",
+      "reasons": [
+        "Within one score right now",
+        "Leading after falling to a 17% win chance"
+      ],
+      "favorite": false,
+      "favorite_team": null,
+      "watch": [
+        "ESPN (YouTube TV)"
+      ],
+      "watch_summary": "ESPN (YouTube TV)",
+      "url": null
     },
     {
       "id": "mcbb:401920530",
@@ -40,84 +93,62 @@
       "away": "Louisville Cardinals",
       "start_time_pt": "6:00 PM",
       "start_iso": "2026-11-27T02:00Z",
-      "status": "scheduled",
-      "status_detail": "6:00 PM PT",
-      "rating": 74,
-      "rating_state": "predicted",
-      "band": "Good",
-      "reason": "Projected within 1.5 points · Two of the better teams · Ranked matchup (No. 13 vs No. 25)",
-      "favorite": false,
-      "watch": [
-        "ESPN2 (YouTube TV)"
-      ],
-      "watch_summary": "ESPN2 (YouTube TV)",
-      "url": "/#/game/mcbb/401920530"
-    },
-    {
-      "id": "mcbb:401921673",
-      "league": "MCBB",
-      "league_key": "mcbb",
-      "matchup": "Utah State at USC",
-      "home": "USC Trojans",
-      "away": "Utah State Aggies",
-      "start_time_pt": "1:30 PM",
-      "start_iso": "2026-11-26T21:30Z",
-      "status": "scheduled",
-      "status_detail": "1:30 PM PT",
-      "rating": 72,
-      "rating_state": "predicted",
-      "band": "Good",
-      "reason": "Projected within 1.5 points · Two of the better teams",
-      "favorite": true,
-      "watch": [
-        "CBS Sports Network (YouTube TV)"
-      ],
-      "watch_summary": "CBS Sports Network (YouTube TV)",
-      "url": "/#/game/mcbb/401921673"
-    },
-    {
-      "id": "mcbb:401906869",
-      "league": "MCBB",
-      "league_key": "mcbb",
-      "matchup": "Georgetown at Texas",
-      "home": "Texas Longhorns",
-      "away": "Georgetown Hoyas",
-      "start_time_pt": "11:30 AM",
-      "start_iso": "2026-11-26T19:30Z",
       "status": "live",
-      "status_detail": "Halftime",
-      "rating": 71,
+      "status_detail": "12:47 - 1st",
+      "rating": 56,
       "rating_state": "live",
-      "band": "Good",
-      "reason": "8 lead changes and 3 ties · Evenly matched on record · Two of the better teams",
-      "favorite": false,
-      "watch": [
-        "FS1 (YouTube TV)"
+      "band": "OK",
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 56,
+      "reason": "Within one possession right now · Ranked matchup (No. 13 vs No. 25) · Ranked matchup (No. 13 vs No. 25)",
+      "reasons": [
+        "Within one possession right now",
+        "Ranked matchup (No. 13 vs No. 25)",
+        "Ranked matchup (No. 13 vs No. 25)"
       ],
-      "watch_summary": "FS1 (YouTube TV)",
-      "url": "/#/game/mcbb/401906869"
-    },
-    {
-      "id": "mcbb:401920537",
-      "league": "MCBB",
-      "league_key": "mcbb",
-      "matchup": "Miami at Michigan",
-      "home": "Michigan Wolverines",
-      "away": "Miami Hurricanes",
-      "start_time_pt": "12:30 PM",
-      "start_iso": "2026-11-26T20:30Z",
-      "status": "scheduled",
-      "status_detail": "12:30 PM PT",
-      "rating": 66,
-      "rating_state": "predicted",
-      "band": "Good",
-      "reason": "Projected within 1.5 points",
       "favorite": false,
+      "favorite_team": null,
       "watch": [
         "ESPN2 (YouTube TV)"
       ],
       "watch_summary": "ESPN2 (YouTube TV)",
-      "url": "/#/game/mcbb/401920537"
+      "url": null
+    },
+    {
+      "id": "nfl:401873082",
+      "league": "NFL",
+      "league_key": "nfl",
+      "matchup": "Chiefs at Bills",
+      "home": "Buffalo Bills",
+      "away": "Kansas City Chiefs",
+      "start_time_pt": "5:20 PM",
+      "start_iso": "2026-11-27T01:20Z",
+      "status": "live",
+      "status_detail": "9:38 - 2nd",
+      "rating": 50,
+      "rating_state": "live",
+      "band": "OK",
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 54,
+      "reason": "Within one score right now",
+      "reasons": [
+        "Within one score right now"
+      ],
+      "favorite": false,
+      "favorite_team": null,
+      "watch": [
+        "NBC (YouTube TV, Peacock)"
+      ],
+      "watch_summary": "NBC (YouTube TV, Peacock)",
+      "url": null
     }
   ],
   "favorites_today": [
@@ -125,49 +156,107 @@
       "id": "mcbb:401921673",
       "league": "MCBB",
       "league_key": "mcbb",
-      "matchup": "Utah State at USC",
-      "home": "USC Trojans",
-      "away": "Utah State Aggies",
+      "matchup": "USC at Utah State",
+      "home": "Utah State Aggies",
+      "away": "USC Trojans",
       "start_time_pt": "1:30 PM",
       "start_iso": "2026-11-26T21:30Z",
-      "status": "scheduled",
-      "status_detail": "1:30 PM PT",
-      "rating": 72,
-      "rating_state": "predicted",
+      "status": "final",
+      "status_detail": "Final",
+      "rating": 78,
+      "rating_state": "final",
       "band": "Good",
-      "reason": "Projected within 1.5 points · Two of the better teams",
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 83,
+      "reason": "Wild momentum swings · Close for much of the final 8 minutes · 5 lead changes and 2 ties, 3 in the final 8 minutes",
+      "reasons": [
+        "Wild momentum swings",
+        "Close for much of the final 8 minutes",
+        "5 lead changes and 2 ties, 3 in the final 8 minutes"
+      ],
       "favorite": true,
+      "favorite_team": "USC Trojans (men)",
       "watch": [
         "CBS Sports Network (YouTube TV)"
       ],
       "watch_summary": "CBS Sports Network (YouTube TV)",
-      "url": "/#/game/mcbb/401921673"
+      "url": null,
+      "final_score": "USC 74, Utah State 78"
     }
   ],
+  "sleeper": {
+    "id": "mcbb:401920540",
+    "league": "MCBB",
+    "league_key": "mcbb",
+    "matchup": "Baylor at Gonzaga",
+    "home": "Gonzaga Bulldogs",
+    "away": "Baylor Bears",
+    "start_time_pt": "8:30 PM",
+    "start_iso": "2026-11-27T04:30Z",
+    "status": "scheduled",
+    "status_detail": "8:30 PM PT",
+    "rating": 54,
+    "rating_state": "predicted",
+    "band": "OK",
+    "rating_low": 34,
+    "rating_high": 74,
+    "p_great": 0.15,
+    "p_dull": 0.23,
+    "horizon": "Prediction",
+    "watch_priority": 54,
+    "reason": "Two good teams by rating · Close line (GONZ −3.5) · Two up-tempo teams",
+    "reasons": [
+      "Two good teams by rating",
+      "Close line (GONZ −3.5)",
+      "Two up-tempo teams"
+    ],
+    "favorite": false,
+    "favorite_team": null,
+    "watch": [
+      "ESPN (YouTube TV)"
+    ],
+    "watch_summary": "ESPN (YouTube TV)",
+    "url": null
+  },
+  "skip": {
+    "id": "mcbb:401920531",
+    "league": "MCBB",
+    "league_key": "mcbb",
+    "matchup": "Texas Tech at Oregon",
+    "home": "Oregon Ducks",
+    "away": "Texas Tech Red Raiders",
+    "start_time_pt": "8:30 PM",
+    "start_iso": "2026-11-27T04:30Z",
+    "status": "scheduled",
+    "status_detail": "8:30 PM PT",
+    "rating": 45,
+    "rating_state": "predicted",
+    "band": "OK",
+    "rating_low": 25,
+    "rating_high": 65,
+    "p_great": 0.07,
+    "p_dull": 0.5,
+    "horizon": "Prediction",
+    "watch_priority": 45,
+    "reason": "Two good teams by rating · TTU −10.5",
+    "reasons": [
+      "Two good teams by rating",
+      "TTU −10.5"
+    ],
+    "favorite": false,
+    "favorite_team": null,
+    "watch": [
+      "ESPN2 (YouTube TV)"
+    ],
+    "watch_summary": "ESPN2 (YouTube TV)",
+    "url": null,
+    "warning": "Texas Tech −10.5: blowout risk"
+  },
   "worth_a_replay": [
-    {
-      "id": "mcbb:401921669",
-      "league": "MCBB",
-      "league_key": "mcbb",
-      "matchup": "LSU at Arizona St",
-      "home": "Arizona State Sun Devils",
-      "away": "LSU Tigers",
-      "start_time_pt": "11:00 AM",
-      "start_iso": "2026-11-25T19:00Z",
-      "status": "final",
-      "status_detail": "Final/2OT",
-      "rating": 99,
-      "rating_state": "final",
-      "band": "Great",
-      "reason": "2 overtimes · Wild momentum swings · Came back from 12 points down",
-      "favorite": false,
-      "watch": [
-        "CBS Sports Network (YouTube TV)"
-      ],
-      "watch_summary": "CBS Sports Network (YouTube TV)",
-      "url": "/#/game/mcbb/401921669",
-      "final_score": "LSU 94, Arizona St 92 (2OT)"
-    },
     {
       "id": "nhl:401892785",
       "league": "NHL",
@@ -179,59 +268,97 @@
       "start_iso": "2026-11-26T00:00Z",
       "status": "final",
       "status_detail": "Final/SO",
-      "rating": 99,
+      "rating": 98,
       "rating_state": "final",
       "band": "Great",
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 98,
       "reason": "Overtime · Shootout · Wild momentum swings",
+      "reasons": [
+        "Overtime",
+        "Shootout",
+        "Wild momentum swings"
+      ],
       "favorite": false,
+      "favorite_team": null,
       "watch": [],
       "watch_summary": "Not on your services",
-      "url": "/#/game/nhl/401892785",
+      "url": null,
       "final_score": "Blues 2, Islanders 3 (SO)"
     },
     {
-      "id": "mcbb:401921670",
+      "id": "mcbb:401921669",
       "league": "MCBB",
       "league_key": "mcbb",
-      "matchup": "South Carolina at USC",
-      "home": "USC Trojans",
-      "away": "South Carolina Gamecocks",
-      "start_time_pt": "2:17 PM",
-      "start_iso": "2026-11-25T22:17Z",
+      "matchup": "LSU at Arizona St",
+      "home": "Arizona State Sun Devils",
+      "away": "LSU Tigers",
+      "start_time_pt": "11:00 AM",
+      "start_iso": "2026-11-25T19:00Z",
+      "status": "final",
+      "status_detail": "Final/2OT",
+      "rating": 95,
+      "rating_state": "final",
+      "band": "Great",
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 95,
+      "reason": "2 overtimes · Wild momentum swings · 14 lead changes and 12 ties, 18 in the final 8 minutes",
+      "reasons": [
+        "2 overtimes",
+        "Wild momentum swings",
+        "14 lead changes and 12 ties, 18 in the final 8 minutes"
+      ],
+      "favorite": false,
+      "favorite_team": null,
+      "watch": [
+        "CBS Sports Network (YouTube TV)"
+      ],
+      "watch_summary": "CBS Sports Network (YouTube TV)",
+      "url": null,
+      "final_score": "LSU 94, Arizona St 92 (2OT)"
+    },
+    {
+      "id": "nba:401909325",
+      "league": "NBA",
+      "league_key": "nba",
+      "matchup": "Spurs at Trail Blazers",
+      "home": "Portland Trail Blazers",
+      "away": "San Antonio Spurs",
+      "start_time_pt": "7:00 PM",
+      "start_iso": "2026-11-26T03:00Z",
       "status": "final",
       "status_detail": "Final",
       "rating": 90,
       "rating_state": "final",
       "band": "Great",
-      "reason": "Wild momentum swings · Came back from 10 points down · Close for much of the final 8 minutes",
-      "favorite": true,
-      "watch": [
-        "CBS Sports Network (YouTube TV)"
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 93,
+      "reason": "Victor Wembanyama: 44 points · Wild momentum swings · 25 lead changes and 13 ties, 1 in the 4th quarter",
+      "reasons": [
+        "Victor Wembanyama: 44 points",
+        "Wild momentum swings",
+        "25 lead changes and 13 ties, 1 in the 4th quarter"
       ],
-      "watch_summary": "CBS Sports Network (YouTube TV)",
-      "url": "/#/game/mcbb/401921670",
-      "final_score": "South Carolina 69, USC 71"
-    },
-    {
-      "id": "nba:401909318",
-      "league": "NBA",
-      "league_key": "nba",
-      "matchup": "Bulls at Hornets",
-      "home": "Charlotte Hornets",
-      "away": "Chicago Bulls",
-      "start_time_pt": "4:00 PM",
-      "start_iso": "2026-11-26T00:00Z",
-      "status": "final",
-      "status_detail": "Final",
-      "rating": 87,
-      "rating_state": "final",
-      "band": "Great",
-      "reason": "Wild momentum swings · 22 lead changes and 7 ties, 13 in the 4th quarter · 4th quarter within one possession",
       "favorite": false,
-      "watch": [],
-      "watch_summary": "No TV listing",
-      "url": "/#/game/nba/401909318",
-      "final_score": "Bulls 107, Hornets 105"
+      "favorite_team": null,
+      "watch": [
+        "ESPN (YouTube TV)"
+      ],
+      "watch_summary": "ESPN (YouTube TV)",
+      "url": null,
+      "final_score": "Spurs 111, Trail Blazers 116"
     },
     {
       "id": "ucl:401915373",
@@ -247,37 +374,61 @@
       "rating": 87,
       "rating_state": "final",
       "band": "Great",
-      "reason": "Red card · Big momentum swings · Came back from 1 goal down",
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 87,
+      "reason": "Red card · Big momentum swings · Final 20 minutes within a goal",
+      "reasons": [
+        "Red card",
+        "Big momentum swings",
+        "Final 20 minutes within a goal"
+      ],
       "favorite": false,
+      "favorite_team": null,
       "watch": [
         "Paramount+"
       ],
       "watch_summary": "Paramount+",
-      "url": "/#/game/ucl/401915373",
+      "url": null,
       "final_score": "Sporting 2, Man Utd 2"
     },
     {
-      "id": "nba:401909325",
-      "league": "NBA",
-      "league_key": "nba",
-      "matchup": "Spurs at Trail Blazers",
-      "home": "Portland Trail Blazers",
-      "away": "San Antonio Spurs",
-      "start_time_pt": "7:00 PM",
-      "start_iso": "2026-11-26T03:00Z",
+      "id": "mcbb:401921670",
+      "league": "MCBB",
+      "league_key": "mcbb",
+      "matchup": "South Carolina at USC",
+      "home": "USC Trojans",
+      "away": "South Carolina Gamecocks",
+      "start_time_pt": "2:17 PM",
+      "start_iso": "2026-11-25T22:17Z",
       "status": "final",
       "status_detail": "Final",
       "rating": 86,
       "rating_state": "final",
       "band": "Great",
-      "reason": "Victor Wembanyama: 44 points · Wild momentum swings · 25 lead changes and 13 ties, 1 in the 4th quarter",
-      "favorite": false,
-      "watch": [
-        "ESPN (YouTube TV)"
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 91,
+      "reason": "Wild momentum swings · Close for much of the final 8 minutes · 8 lead changes and 10 ties, 2 in the final 8 minutes",
+      "reasons": [
+        "Wild momentum swings",
+        "Close for much of the final 8 minutes",
+        "8 lead changes and 10 ties, 2 in the final 8 minutes"
       ],
-      "watch_summary": "ESPN (YouTube TV)",
-      "url": "/#/game/nba/401909325",
-      "final_score": "Spurs 111, Trail Blazers 116"
+      "favorite": true,
+      "favorite_team": "USC Trojans (men)",
+      "watch": [
+        "CBS Sports Network (YouTube TV)"
+      ],
+      "watch_summary": "CBS Sports Network (YouTube TV)",
+      "url": null,
+      "final_score": "South Carolina 69, USC 71"
     },
     {
       "id": "ucl:401915374",
@@ -293,18 +444,130 @@
       "rating": 85,
       "rating_state": "final",
       "band": "Great",
-      "reason": "Came back from 1 goal down · Final 20 minutes within a goal · 1 lead change and 2 ties, 1 in the final 20 minutes",
+      "rating_low": null,
+      "rating_high": null,
+      "p_great": null,
+      "p_dull": null,
+      "horizon": null,
+      "watch_priority": 89,
+      "reason": "Big momentum swings · Final 20 minutes within a goal · Came back from 1 goal down",
+      "reasons": [
+        "Big momentum swings",
+        "Final 20 minutes within a goal",
+        "Came back from 1 goal down"
+      ],
       "favorite": false,
+      "favorite_team": null,
       "watch": [
         "Paramount+"
       ],
       "watch_summary": "Paramount+",
-      "url": "/#/game/ucl/401915374",
+      "url": null,
       "final_score": "PSG 2, AS Roma 2"
     }
   ],
+  "coming_up": [
+    {
+      "id": "cfb:401858540",
+      "league": "CFB",
+      "league_key": "cfb",
+      "matchup": "Michigan at Ohio State",
+      "date": "2026-11-28",
+      "day_label": "Saturday, November 28",
+      "start_time_pt": "9:00 AM",
+      "start_iso": "2026-11-28T17:00Z",
+      "reasons": [
+        "Rivalry",
+        "Rivalry week"
+      ],
+      "flagged_on": "2026-11-26",
+      "url": null
+    },
+    {
+      "id": "cfb:401858543",
+      "league": "CFB",
+      "league_key": "cfb",
+      "matchup": "USC at UCLA",
+      "date": "2026-11-28",
+      "day_label": "Saturday, November 28",
+      "start_time_pt": "12:30 PM",
+      "start_iso": "2026-11-28T20:30Z",
+      "reasons": [
+        "Rivalry",
+        "Favorite vs a quality opponent",
+        "Rivalry week"
+      ],
+      "flagged_on": "2026-11-26",
+      "url": null
+    },
+    {
+      "id": "cfb:401856757",
+      "league": "CFB",
+      "league_key": "cfb",
+      "matchup": "Auburn at Alabama",
+      "date": "2026-11-28",
+      "day_label": "Saturday, November 28",
+      "start_time_pt": "4:30 PM",
+      "start_iso": "2026-11-29T00:30Z",
+      "reasons": [
+        "Rivalry",
+        "Rivalry week"
+      ],
+      "flagged_on": "2026-11-26",
+      "url": null
+    },
+    {
+      "id": "epl:401878753",
+      "league": "EPL",
+      "league_key": "epl",
+      "matchup": "Arsenal vs Man City",
+      "date": "2026-11-29",
+      "day_label": "Sunday, November 29",
+      "start_time_pt": "8:30 AM",
+      "start_iso": "2026-11-29T16:30Z",
+      "reasons": [
+        "Two top-20% teams",
+        "Big standings stakes"
+      ],
+      "flagged_on": "2026-11-26",
+      "url": null
+    },
+    {
+      "id": "nba:401910064",
+      "league": "NBA",
+      "league_key": "nba",
+      "matchup": "Lakers at Rockets",
+      "date": "2026-11-30",
+      "day_label": "Monday, November 30",
+      "start_time_pt": "4:30 PM",
+      "start_iso": "2026-12-01T00:30Z",
+      "reasons": [
+        "Two top-20% teams",
+        "Favorite vs a quality opponent"
+      ],
+      "flagged_on": "2026-11-26",
+      "url": null
+    },
+    {
+      "id": "nhl:401892839",
+      "league": "NHL",
+      "league_key": "nhl",
+      "matchup": "Golden Knights at Kings",
+      "date": "2026-12-01",
+      "day_label": "Tuesday, December 1",
+      "start_time_pt": "7:00 PM",
+      "start_iso": "2026-12-02T03:00Z",
+      "reasons": [
+        "Rivalry",
+        "Favorite vs a quality opponent"
+      ],
+      "flagged_on": "2026-11-26",
+      "url": null
+    }
+  ],
   "counts": {
-    "games_today": 35,
+    "games_in_window": 35,
+    "rated_in_window": 35,
     "finished_yesterday": 45,
     "rated_yesterday": 45
   },

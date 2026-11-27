@@ -8,7 +8,8 @@
 
 import { ADAPTERS } from '../adapters/index.js';
 import { getJson } from '../adapters/espn/client.js';
-import { getCalibration, predict, rate, predictF1, ENGINE_VERSION } from '../rating/index.js';
+import { getCalibration, predict, rate, ENGINE_VERSION } from '../rating/index.js';
+import { watchPriority } from '../predict/index.js';
 import { kvGet, kvSet, kvKeys, kvDel } from '../core/kv.js';
 import { enabledLeagues, favoriteTeamIds, favoriteFor, getSettings } from '../core/settings.js';
 import { todayKey, addDays } from '../core/time.js';
@@ -17,12 +18,11 @@ import { LEAGUE_BY_KEY } from '../core/leagues.js';
 const LIVE_DETAIL_TTL = 55 * 1000;
 const DETAIL_CONCURRENCY = 4;
 const SNAPSHOT_DAYS = 5;
-export const FAVORITE_BOOST = 8;
+export const FAVORITE_BOOST = 5; // Watch Priority bonus (config/prediction.json priority.favorite)
 
 const days = new Map(); // dateKey -> DayState
 const details = new Map(); // game key -> { detail, at }
 const listeners = new Set();
-let f1Standings = null;
 
 function newDay(dateKey) {
   return {
@@ -94,25 +94,41 @@ function saveSnapshot(day) {
 
 // ---------- ratings ----------
 
-async function f1StandingsCached() {
-  if (f1Standings && Date.now() - f1Standings.at < 3600e3) return f1Standings.data;
-  try {
-    const data = await ADAPTERS.f1.standings();
-    f1Standings = { at: Date.now(), data };
-    return data;
-  } catch {
-    return f1Standings?.data || null;
-  }
+// ---------- pre-game predictions (nightly data/predictions.json + live odds) ----------
+
+let predState = { at: 0, data: null, map: new Map(), circle: [], promise: null };
+
+/** The nightly predictions file (Elo, importance, injuries, weather per upcoming game). */
+export async function loadPredictions({ force = false } = {}) {
+  if (!force && predState.data && Date.now() - predState.at < 30 * 60e3) return predState;
+  if (predState.promise) return predState.promise;
+  predState.promise = (async () => {
+    try {
+      const res = await getJson(new URL('../../data/predictions.json', import.meta.url).href, { timeout: 8000, retries: 0, persist: true });
+      const data = res.json || {};
+      predState = { at: Date.now(), data, map: new Map((data.games || []).map((g) => [g.key, g])), circle: data.circle || [], promise: null };
+    } catch {
+      predState = { ...predState, promise: null };
+    }
+    return predState;
+  })();
+  return predState.promise;
 }
 
+/**
+ * Predicted rating for a game: the nightly inputs (Elo, simulation, injuries, weather) re-run
+ * against the scoreboard's current odds, so a newly posted line replaces the Elo estimate.
+ * Without a nightly entry it still predicts from the odds alone (every term has a fallback).
+ */
 async function predictedFor(game) {
+  if (game.sport === 'racing' && !game.isRace) return null;
   const cal = await getCalibration(game.league);
-  if (game.sport === 'racing') {
-    if (!game.isRace) return null;
-    return predictF1(game, cal, await f1StandingsCached());
-  }
-  return predict(game, cal);
+  const preds = await loadPredictions();
+  const entry = preds.map.get(game.key);
+  return predict(game, cal, { ...(entry?.inputs || {}), favorites: getSettings().favorites });
 }
+
+export { predictedFor };
 
 const finalKey = (game) => `rating:${game.key}:v${ENGINE_VERSION}`;
 
@@ -308,10 +324,11 @@ export function displayRating(day, key) {
 }
 
 /** Sort key: rating (+ a modest boost for favorites). */
+/** Sort key = Watch Priority: rating + favorite bonus + star power (never shown as the badge). */
 export function rankScore(day, game) {
   const rating = displayRating(day, game.key) || day.ratings.get(game.key)?.predicted;
-  const base = rating?.value ?? 45;
-  return base + (favoriteFor(game) ? FAVORITE_BOOST : 0);
+  if (rating?.state === 'predicted' && rating.pred?.priority != null) return rating.pred.priority;
+  return watchPriority(game, rating?.value ?? 45, { favorites: getSettings().favorites }).value;
 }
 
 /** Oldest data timestamp across leagues for the "showing data from" banner. */

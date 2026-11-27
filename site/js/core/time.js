@@ -31,6 +31,23 @@ export function addDays(key, n) {
   return dt.toISOString().slice(0, 10);
 }
 
+/**
+ * The instant at a Pacific wall-clock time on a date key (DST-safe). Hours past 23 roll into
+ * the next day, so ptTime(key, 27) is 3 am the following day.
+ */
+export function ptTime(key, hour = 0, minute = 0) {
+  const [y, m, d] = key.split('-').map(Number);
+  const want = Date.UTC(y, m - 1, d, hour, minute);
+  let t = want + 8 * 3600e3;
+  for (let i = 0; i < 3; i++) {
+    const p = ptParts(new Date(t));
+    const wall = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute);
+    if (wall === want) break;
+    t += want - wall;
+  }
+  return new Date(t);
+}
+
 /** ESPN's `dates=` parameter format. */
 export function espnDate(key) {
   return key.replaceAll('-', '');

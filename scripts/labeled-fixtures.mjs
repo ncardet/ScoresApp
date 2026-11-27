@@ -13,7 +13,7 @@ import { ADAPTERS } from '../site/js/adapters/index.js';
 import { getJson } from '../site/js/adapters/espn/client.js';
 import { parseEvent } from '../site/js/adapters/espn/parse.js';
 import { parseStandings } from '../site/js/adapters/espn/standings.js';
-import { lapTable, raceControlSummary } from '../site/js/adapters/f1.js';
+import { lapTable, raceControlSummary, compactRaceControl } from '../site/js/adapters/f1.js';
 import { addDays, espnDate } from '../site/js/core/time.js';
 import { LEAGUE_BY_KEY } from '../site/js/core/leagues.js';
 import { trimSummary } from './make-fixtures.mjs';
@@ -99,13 +99,15 @@ async function buildF1(row) {
   const year = +row.date.slice(0, 4);
   if (year < 2023) return { drop: 'OpenF1 has no lap data before 2023' };
   const sessions = await openf1(`sessions?year=${year}`);
-  const race = sessions.find((s) => s.session_name === 'Race' && s.date_start.slice(0, 10) === row.date && `${s.location} ${s.circuit_short_name} ${s.country_name}`.toLowerCase().includes(row.team1.toLowerCase().slice(0, 5)));
+  const fold = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const race = sessions.find((s) => s.session_name === 'Race' && s.date_start.slice(0, 10) === row.date && fold(`${s.location} ${s.circuit_short_name} ${s.country_name}`).includes(fold(row.team1).slice(0, 5)));
   if (!race) return { drop: 'race not found in OpenF1' };
   const races = sessions.filter((s) => s.session_name === 'Race').sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
   const raceIndex = races.indexOf(race);
   const laps = lapTable(await openf1(`laps?session_key=${race.session_key}`));
   const overtakes = await openf1(`overtakes?session_key=${race.session_key}`).catch(() => null);
-  const rc = raceControlSummary(await openf1(`race_control?session_key=${race.session_key}`));
+  const rcRaw = await openf1(`race_control?session_key=${race.session_key}`);
+  const rc = raceControlSummary(rcRaw);
   const result = await openf1(`session_result?session_key=${race.session_key}`).catch(() => []);
   const q = sessions.find((s) => s.meeting_key === race.meeting_key && s.session_name === 'Qualifying');
   const quali = q ? await openf1(`session_result?session_key=${q.session_key}`).catch(() => null) : null;
@@ -115,7 +117,7 @@ async function buildF1(row) {
   return {
     f1: {
       race: { location: race.location, circuit: race.circuit_short_name, start: race.date_start, raceIndex },
-      laps, overtakes: Array.isArray(overtakes) ? overtakes.length : null, control: rc,
+      laps, overtakes: Array.isArray(overtakes) ? overtakes.length : null, control: rc, rc: compactRaceControl(rcRaw),
       classification: (result || []).sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).map((r) => ({ position: r.position, number: r.driver_number, gap: r.gap_to_leader })),
       standings: st ? parseStandings(st.json) : null,
       raceIndex,

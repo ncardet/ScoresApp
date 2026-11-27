@@ -82,9 +82,13 @@ function closenessTerms(game, ctx, m) {
     const gap = Math.abs(m.home - m.away);
     const pts = step(S.soccer.gap, gap);
     const fav = m.home >= m.away ? home : away;
+    // Words follow the favorite's win chance (a soccer side at 57% is favored, not "heavily").
+    const pf = Math.max(m.home, m.away);
+    const who = fav?.short || 'Favorite';
     const text = gap <= 0.15 ? 'Evenly matched (win chances within 15%)'
-      : pts < 0 ? `${fav?.short || 'Favorite'} heavily favored (${pct(Math.max(m.home, m.away))})`
-        : `${fav?.short || 'Favorite'} slight favorite`;
+      : pf >= 0.7 ? `${who} heavily favored (${pct(pf)})`
+        : pf >= 0.5 ? `${who} favored (${pct(pf)})`
+          : `${who} slight favorite (${pct(pf)})`;
     out.push({ key: 'closeness', group: 'closeness', points: pts, text });
     const ou = game.odds?.overUnder;
     if (m.draw >= S.soccer.boringDraw.pDraw && ou != null && ou <= S.soccer.boringDraw.total) {
@@ -103,7 +107,7 @@ function closenessTerms(game, ctx, m) {
     const fav = m.home >= m.away ? home : away;
     out.push({
       key: 'closeness', group: 'closeness', points: pts,
-      text: pf <= 0.55 ? `Toss-up (${fav?.abbr || 'fav'} ${pct(pf)})` : pts < 0 ? `${fav?.short || 'Favorite'} heavy favorite (${pct(pf)})` : `${fav?.short || 'Favorite'} favored (${pct(pf)})`,
+      text: pf <= 0.55 ? `Toss-up (${fav?.abbr || 'fav'} ${pct(pf)})` : pf >= 0.7 ? `${fav?.short || 'Favorite'} heavy favorite (${pct(pf)})` : `${fav?.short || 'Favorite'} favored (${pct(pf)})`,
     });
     if (fam === 'mlb' && game.odds?.overUnder != null) {
       const ou = game.odds.overUnder;
@@ -120,7 +124,7 @@ function closenessTerms(game, ctx, m) {
   const market = m.source === 'market' ? spreadInfo(game.odds, home, away) : null;
   if (market) {
     abs = market.abs;
-    text = abs <= 3 ? `Coin-flip line (${market.text})` : `${market.text}`;
+    text = abs <= 3 ? `Coin-flip line (${market.text})` : abs <= 7 ? `Close line (${market.text})` : `${market.text}`;
   } else if (m.source === 'elo' || m.diff != null) {
     const sp = spreadFromElo(m.diff ?? 0, game.league);
     if (sp != null) {
@@ -288,17 +292,77 @@ function narrativeTerms(game, ctx) {
 
 // ---------------- style / availability / matchup / weather ----------------
 
+const STYLE_TEXT = {
+  nba: ['Two up-tempo teams', 'Two slow-paced teams'],
+  mcbb: ['Two up-tempo teams', 'Two slow-paced teams'],
+  wcbb: ['Two up-tempo teams', 'Two slow-paced teams'],
+  soccer: ['Two high-scoring sides', 'Two low-scoring sides'],
+};
+
+/** Scoring environment of both teams (z-scores from scoringStyle), every team sport. */
 function styleTerm(game, ctx) {
-  if (family(game.league) !== 'nba' || !ctx.style) return null;
-  const [lo, hi] = S.nba.styleRange;
+  const fam = family(game.league);
+  const range = S[fam]?.styleRange;
+  if (!ctx.style || !range) return null;
+  const [lo, hi] = range;
   const z = ((ctx.style.home ?? 0) + (ctx.style.away ?? 0)) / 2;
-  const pts = Math.round(Math.max(lo, Math.min(hi, z * 2)) * 10) / 10;
+  const pts = Math.round(Math.max(lo, Math.min(hi, z * (S[fam].stylePerZ ?? 2))) * 10) / 10;
   if (!pts) return null;
-  return { key: 'style', group: 'style', points: pts, text: pts > 0 ? 'Two up-tempo teams' : 'Two slow-paced teams' };
+  const [up, down] = STYLE_TEXT[fam] || ['Two high-scoring teams', 'Two low-scoring teams'];
+  return { key: 'style', group: 'style', points: pts, text: pts > 0 ? up : down };
+}
+
+/**
+ * Starters from the scoreboard's probables: MLB "aces" when both listed starters have an ERA at or
+ * under the config line (with at least 5 decisions, so early-season ERAs don't count), a bullpen
+ * game when a side lists no starter; NHL "backup goalie" when the listed goalie isn't the one who
+ * has started most of that team's recent games (ctx.goalieNo1, from the nightly job).
+ */
+export function probableExtras(game, ctx = {}) {
+  const fam = family(game.league);
+  const out = {};
+  const h = game.home?.probable;
+  const a = game.away?.probable;
+  if (fam === 'mlb') {
+    const ace = (p) => p?.era != null && p.era <= S.mlb.aceEra && (p.wins ?? 0) + (p.losses ?? 0) >= 5;
+    if (ace(h) && ace(a)) out.aces = `${a.name} vs ${h.name}`;
+    // Only a day out is a missing starter meaningful (they're announced a day or two ahead).
+    const soon = game.start && new Date(game.start) - (ctx.now ? new Date(ctx.now) : new Date()) < 30 * 3600e3;
+    if (soon && (h || a) && !(h && a)) out.bullpen = true;
+  }
+  if (fam === 'nhl' && ctx.goalieNo1) {
+    const g = {};
+    for (const [side, p] of [['home', h], ['away', a]]) {
+      const no1 = ctx.goalieNo1[side];
+      if (p?.name && no1 && p.name !== no1) g[side] = 'backup';
+    }
+    if (Object.keys(g).length) out.goalie = g;
+  }
+  return out;
+}
+
+/**
+ * Outdoor weather from ESPN's forecast: NFL wind (summary gusts, from the nightly job) or snow
+ * lowers the passing game; an MLB rain forecast risks a delay or rainout.
+ */
+function weatherTerms(game, ctx) {
+  const fam = family(game.league);
+  if (game.indoor === true) return [];
+  const text = game.weather?.text || '';
+  const gust = ctx.extras?.windGust ?? null;
+  if (fam === 'nfl') {
+    const W = S.nfl.weather;
+    if (W.snow && /snow|flurr|sleet|blizzard/i.test(text)) return [{ key: 'weather', group: 'weather', points: W.points, text: 'Snow in the forecast' }];
+    if (gust != null && gust >= W.windMph) return [{ key: 'weather', group: 'weather', points: W.points, text: `Wind gusts near ${Math.round(gust)} mph` }];
+  }
+  if (fam === 'mlb' && /rain|storm|shower|thunder/i.test(text)) {
+    return [{ key: 'weather', group: 'weather', points: S.mlb.rainPoints ?? -1, text: 'Rain in the forecast: delay or rainout risk' }];
+  }
+  return [];
 }
 
 function availabilityTerms(game, ctx, hasLine) {
-  const x = ctx.extras || {};
+  const x = { ...probableExtras(game, ctx), ...(ctx.extras || {}) };
   const fam = family(game.league);
   const out = [];
   const mult = hasLine ? CFG.availability.lineDiscount : 1;
@@ -387,6 +451,7 @@ export function computeTerms(game, ctx = {}) {
     styleTerm(game, ctx),
     ...narrativeTerms(game, ctx),
     ...availabilityTerms(game, ctx, m.source === 'market'),
+    ...weatherTerms(game, ctx),
   ].filter(Boolean);
   // Narrative is capped in total.
   const nar = terms.filter((t) => t.group === 'narrative');

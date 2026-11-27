@@ -66,7 +66,23 @@ export function swing(points, progress) {
     if (t >= late) lateSum += d;
   }
   const elapsed = Math.max(progress, 1 / RATING.maxSwingExtrapolation);
-  return { raw: weightedSum / weightMass(elapsed, k), sum, lateSum };
+  // Swing per tenth of regulation (+ overtime), so the late weighting can be re-tuned from cache.
+  const bins = new Array(11).fill(0);
+  for (let i = 1; i < series.length; i++) {
+    const t = series[i].t;
+    bins[t >= 1 ? 10 : Math.min(9, Math.floor(t * 10))] += Math.abs(series[i].wp - series[i - 1].wp);
+  }
+  return { raw: weightedSum / weightMass(elapsed, k), sum, lateSum, bins, elapsed };
+}
+
+/** Swing from per-tenth bins with late boost k (see swing()). */
+export function swingFromBins(bins, elapsed, k) {
+  let s = 0;
+  for (let i = 0; i < bins.length; i++) {
+    const t = i === 10 ? 1 : (i + 0.5) / 10;
+    s += bins[i] * (1 + k * Math.min(t, 1) ** 2);
+  }
+  return s / weightMass(Math.max(elapsed, 1 / RATING.maxSwingExtrapolation), k);
 }
 
 /** Fraction of [start, end] that is close (WP in band or margin within one score). */

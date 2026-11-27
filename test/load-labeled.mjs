@@ -3,6 +3,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 import { parseEvent } from '../site/js/adapters/espn/parse.js';
 import { parseSummary } from '../site/js/adapters/espn/summary.js';
+import { raceControlSummary } from '../site/js/adapters/f1.js';
 
 const DIR = new URL('./fixtures/labeled/', import.meta.url);
 
@@ -17,7 +18,9 @@ export async function loadLabeled() {
     if (fx.league === 'f1') {
       const r = fx.f1.race;
       game = { key: `f1:${fx.slug}`, id: fx.slug, league: 'f1', sport: 'racing', isRace: true, state: 'post', completed: true, start: r.start, circuit: `${r.circuit} ${r.location}`, gpName: r.location, notes: [], seasonType: 2, drivers: [] };
-      detail = { key: game.key, league: 'f1', sport: 'racing', game, plays: [], wp: null, f1: { ...fx.f1 } };
+      // Raw race-control messages (when saved) are re-summarized, so parser fixes apply.
+      const control = fx.f1.rc ? raceControlSummary(fx.f1.rc) : fx.f1.control;
+      detail = { key: game.key, league: 'f1', sport: 'racing', game, plays: [], wp: null, f1: { ...fx.f1, control } };
     } else {
       game = parseEvent(fx.event, fx.league);
       detail = parseSummary(fx.summary, fx.league, game);

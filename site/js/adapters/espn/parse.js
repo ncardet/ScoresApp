@@ -38,7 +38,19 @@ export function parseTeam(c = {}) {
     hits: num((c.hits ?? null)),
     errors: num((c.errors ?? null)),
     form: c.form || '',
+    probable: parseProbable(c.probables),
   };
+}
+
+/** Probable starter from the scoreboard: MLB pitcher (with ERA, record) or NHL goalie. */
+function parseProbable(list) {
+  const p = (list || []).find((x) => /probableStarting(Pitcher|Goalie)/i.test(x.name || '')) || null;
+  const name = p?.athlete?.displayName || p?.athlete?.fullName;
+  if (!name) return null;
+  const stat = (abbr) => num((p.statistics || []).find((x) => x.abbreviation === abbr)?.displayValue);
+  const out = { name, id: p.athlete?.id != null ? String(p.athlete.id) : null };
+  if (/Pitcher/i.test(p.name)) Object.assign(out, { era: stat('ERA'), wins: stat('W'), losses: stat('L'), saves: stat('SV') });
+  return out;
 }
 
 const CANCELED = /POSTPONED|CANCELED|CANCELLED|FORFEIT|ABANDONED/;
@@ -263,6 +275,9 @@ export function parseEvent(ev, leagueKey) {
     neutral: !!comp.neutralSite,
     conferenceGame: !!comp.conferenceCompetition,
     venue: comp.venue?.fullName || '',
+    indoor: comp.venue?.indoor ?? null,
+    // Forecast for outdoor venues (ESPN/AccuWeather): condition text and temperature.
+    weather: ev.weather?.displayValue ? { text: ev.weather.displayValue, temp: num(ev.weather.temperature) } : null,
     live: status.state === 'in' ? parseSituation(comp.situation, home.id) : null,
     soccer: lg.sport === 'soccer' ? { events: parseSoccerDetails(comp.details, home.id) } : null,
     groups: comp.groups?.id ? String(comp.groups.id) : null,

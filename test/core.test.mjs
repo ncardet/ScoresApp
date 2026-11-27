@@ -90,3 +90,26 @@ test('morning brief gate is daylight-saving-proof', async () => {
   // Night before (11 pm PT) -> skip.
   assert.equal((await shouldRun(new Date('2026-07-11T06:00:00Z'), none)).run, false);
 });
+
+test('brief v2: top 5 by Watch Priority, at most 2 per league; skip is never a pick; sleeper outside the top', async () => {
+  const { selectSections, skipWarning } = await import('../scripts/build-brief.mjs');
+  let n = 0;
+  const mk = (league, value, { priority = value, pGreat = 0.1, pDull = 0.1, fav = false, terms = [], probs = { home: 0.5, away: 0.5 } } = {}) => {
+    n++;
+    const g = { key: `${league}:${n}`, id: String(n), league, sport: 'basketball', state: 'pre', home: { id: 'h', short: `Home${n}` }, away: { id: 'a', short: `Away${n}` }, broadcasts: [] };
+    const pred = { value, pGreat, pDull, priority, priorityParts: fav ? [{ label: 'Favorite', points: 5 }] : [], terms, probs };
+    return { g, r: { state: 'predicted', value, pred } };
+  };
+  const rated = [
+    mk('nba', 80), mk('nba', 79), mk('nba', 78), // third NBA game must be skipped by the league cap
+    mk('nfl', 70), mk('nhl', 60), mk('epl', 55), mk('mlb', 50, { pGreat: 0.3 }),
+    mk('nba', 45, { priority: 54, fav: true, pDull: 0.5, terms: [{ key: 'closeness', points: -8, spread: 14, text: 'Heavy favorite' }], probs: { home: 0.9, away: 0.1 } }),
+  ];
+  const { top, sleeper, skip } = selectSections(rated);
+  assert.deepEqual(top.map((x) => x.r.value), [80, 79, 70, 60, 55]);
+  assert.ok(top.filter((x) => x.g.league === 'nba').length <= 2);
+  assert.equal(skip.r.value, 45, 'the favorite projecting Dull is the skip');
+  assert.ok(!top.some((x) => x.g.key === skip.g.key));
+  assert.equal(sleeper.r.value, 50, 'highest P(Great) outside the top 5');
+  assert.equal(skipWarning(skip.g, skip.r.pred), `${skip.g.home.short} −14: blowout risk`);
+});

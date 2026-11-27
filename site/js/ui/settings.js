@@ -82,6 +82,8 @@ export function settingsView(root) {
         h('a', { class: 'btn', href: 'data/brief.json', target: '_blank', rel: 'noopener' }, 'brief.json'),
         h('a', { class: 'btn', href: 'data/brief.md', target: '_blank', rel: 'noopener' }, '.md')),
       row(h('div', { class: 'grow' }, 'Rating engine'), h('div', { class: 'muted' }, `v${ENGINE_VERSION}`)),
+      row(h('div', { class: 'grow' }, h('div', null, 'Weather data by Open-Meteo.com'), h('div', { class: 'sub' }, 'Used for F1 rain chances (CC BY 4.0)')),
+        h('a', { class: 'btn', href: 'https://open-meteo.com/', target: '_blank', rel: 'noopener' }, 'Open-Meteo')),
       calRows,
       row(h('div', { class: 'grow' }, 'Clear cached games and ratings'), h('button', { class: 'btn danger', type: 'button', onclick: async (e) => { e.target.textContent = 'Clearing…'; await clearCaches(); e.target.textContent = 'Cleared'; } }, 'Clear')),
       row(h('div', { class: 'grow' }, h('div', null, 'Copy favorites as config'), h('div', { class: 'sub' }, 'Paste into config/favorites.js so the brief matches')),

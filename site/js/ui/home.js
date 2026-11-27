@@ -1,5 +1,5 @@
 // Home ("Today"): favorites pinned on top, then Live now (by current excitement), then every
-// other game ranked by rating (predicted or final). League chips, date picker, pull-to-refresh,
+// other game ranked by Watch Priority (rating + favorites + star power). League chips, date picker, pull-to-refresh,
 // and auto-refresh every ~45 s while a game is live and the app is visible.
 
 import { h, clear, fill, icon } from './dom.js';
@@ -134,7 +134,7 @@ export function homeView(root, params = {}) {
       others.sort((a, b) => rankScore(day, b.game) - rankScore(day, a.game) || new Date(a.game.start) - new Date(b.game.start));
       const past = dateKey < todayKey();
       const title = past ? 'Results' : dateKey > todayKey() ? 'Schedule' : live.length || favs.length ? 'All games' : 'Games';
-      listEl.append(sectionHeader(title, 'by rating'),
+      listEl.append(sectionHeader(title, 'by watch priority'),
         h('div', { class: 'card list' }, others.map((e) => gameRow(e, { showLeague }))));
     }
     if (!favs.length && !live.length && !others.length) {

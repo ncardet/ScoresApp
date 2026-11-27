@@ -65,6 +65,13 @@ export function lapTable(laps) {
   return table;
 }
 
+/** The race-control messages the rating reads, compacted for caching ({lap, flag, msg}). */
+export function compactRaceControl(rc) {
+  return (rc || [])
+    .filter((m) => m.flag || /SAFETY CAR|RED FLAG/i.test(m.message || ''))
+    .map((m) => ({ lap_number: m.lap_number ?? null, flag: m.flag || null, message: m.message || '' }));
+}
+
 /** Summarize race-control messages into neutralisations. */
 export function raceControlSummary(rc) {
   let safetyCars = 0;
@@ -75,7 +82,8 @@ export function raceControlSummary(rc) {
     const msg = (m.message || '').toUpperCase();
     if (/^SAFETY CAR DEPLOYED/.test(msg)) { safetyCars++; events.push({ lap: m.lap_number, type: 'SC' }); }
     else if (/^VIRTUAL SAFETY CAR DEPLOYED/.test(msg)) { vsc++; events.push({ lap: m.lap_number, type: 'VSC' }); }
-    else if (m.flag === 'RED' || /RED FLAG/.test(msg)) { redFlags++; events.push({ lap: m.lap_number, type: 'Red flag' }); }
+    // "CHEQUERED FLAG" contains the letters "RED FLAG": match the word, never the finish.
+    else if (m.flag === 'RED' || /(^|[^A-Z])RED FLAG/.test(msg)) { redFlags++; events.push({ lap: m.lap_number, type: 'Red flag' }); }
   }
   return { safetyCars, vsc, redFlags, events };
 }

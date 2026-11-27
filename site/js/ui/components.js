@@ -29,13 +29,36 @@ export function badge(rating, { size = '', pending = false, onTap } = {}) {
   return el;
 }
 
+/** Badge plus the likely range underneath for pre-game predictions. */
+export function badgeWithRange(rating, opts = {}) {
+  const b = badge(rating, opts);
+  if (rating?.state !== 'predicted' || !rating.pred) return b;
+  return h('span', { class: 'badge-col' }, b, h('span', { class: 'range' }, `${rating.pred.low}–${rating.pred.high}`));
+}
+
 const COMP_LABEL = {
   swing: 'Momentum swings', closeness: 'Late closeness', leadChanges: 'Lead changes', comeback: 'Comeback',
-  novelty: 'Rare moments', pace: 'Scoring pace', stakes: 'Stakes',
-  overtakes: 'Overtakes', finalGap: 'Fight for the win', incidents: 'Safety cars / flags',
+  novelty: 'Rare moments', pace: 'Scoring pace', stakes: 'Stakes', quality: 'Team quality',
+  overtakes: 'On-track passes', finalGap: 'Fight for the win', incidents: 'Safety cars / flags', charge: 'Charge through the field',
 };
 
 let openSheet = null;
+
+const SOURCE_LABEL = { market: 'betting odds', elo: 'team ratings (Elo)', none: 'schedule context' };
+
+/** Range, P(Great), horizon and the point contribution of every pre-game term. */
+function predictionBlock(p) {
+  const terms = (p.terms || []).filter((t) => t.text && Math.abs(t.points) >= 0.5).sort((a, b) => b.points - a.points);
+  return h('div', { class: 'pred-block' },
+    h('p', { class: 'muted' },
+      `${p.horizon?.label || 'Prediction'}: likely ${p.low}–${p.high} · ${Math.round(p.pGreat * 100)}% chance of Great · ${Math.round(p.pDull * 100)}% chance of Dull. Based on ${SOURCE_LABEL[p.source] || 'context'}; starts from a league base of ${Math.round(p.base)}.`),
+    terms.length ? h('div', { class: 'terms' }, terms.map((t) => h('div', { class: 'term' },
+      h('span', null, t.text),
+      h('span', { class: t.points >= 0 ? 'pos' : 'neg' }, `${t.points >= 0 ? '+' : '−'}${Math.abs(t.points).toFixed(1)}`)))) : null,
+    p.priorityParts?.length ? h('p', { class: 'tiny' }, `Watch Priority ${p.priority} (${p.priorityParts.map((x) => `+${x.points} ${x.label.toLowerCase()}`).join(', ')}): used for ordering only.`) : null,
+    h('p', { class: 'tiny' }, 'Pre-game information explains only part of how exciting a game turns out, so the range matters more than the exact number.'),
+  );
+}
 
 export function closeSheet() {
   if (!openSheet) return;
@@ -61,6 +84,7 @@ export function openRatingSheet(rating, { title = '', predicted = null } = {}) {
         h('div', { class: 'muted' }, `${STATE_LABEL[rating.state]} rating${rating.state === 'live' ? ' · updates as the game goes' : rating.state === 'final' ? ' · frozen' : ' · before the game'}`),
         title ? h('div', { class: 'tiny' }, title) : null)),
     h('ul', { class: 'reasons' }, reasons.map((r) => h('li', { class: r.tone === '-' ? 'neg' : '' }, r.text))),
+    rating.pred ? predictionBlock(rating.pred) : null,
     predicted && rating.state !== 'predicted' ? h('p', { class: 'muted' }, `Predicted before the game: ${predicted.value} (${predicted.band.label}).`) : null,
     comps.length ? h('div', { class: 'comp-bars' }, comps.map(([k, v]) => h('div', { class: 'comp' },
       h('span', null, COMP_LABEL[k] || k),
@@ -133,9 +157,10 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
   const st = statusInfo(game);
   const w = watchInfo(game);
   const lg = LEAGUE_BY_KEY[game.league];
+  const circled = game.state === 'pre' && rating?.pred?.circle?.flagged;
   const sideBits = [
     showLeague ? h('div', { class: 'league-tag' }, lg.short) : null,
-    h('div', { class: `status ${st.cls}` }, st.text),
+    h('div', { class: `status ${st.cls}` }, circled ? h('span', { class: 'circle-badge sm', title: `Circle this one: ${rating.pred.circle.reasons.join(', ')}` }, '◎') : null, st.text),
     w.status !== 'unknown' ? h('div', { class: `watch${w.status === 'none' ? ' none' : ''}` }, w.short) : null,
   ];
   if (game.sport === 'racing') {
@@ -143,7 +168,7 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
       ? game.drivers.slice(0, 3).map((d, i) => `${i + 1}. ${d.short || d.name}`).join('  ')
       : '';
     return h('a', { class: 'game-row', href: `#/game/${game.league}/${encodeURIComponent(game.id)}?e=${game.eventId}`, onclick: onOpen ? (e) => { e.preventDefault(); onOpen(game); } : null },
-      game.isRace ? badge(rating, { pending }) : h('span', { class: 'badge none', title: 'Only the race is rated' }, 'F1'),
+      game.isRace ? badgeWithRange(rating, { pending }) : h('span', { class: 'badge none', title: 'Only the race is rated' }, 'F1'),
       h('div', { class: 'teams' },
         h('div', { class: 'race-title' }, `${game.shortName} · ${game.sessionLabel}`),
         h('div', { class: 'race-sub' }, game.circuit),
@@ -156,7 +181,7 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
     onclick: onOpen ? (e) => { e.preventDefault(); onOpen(game); } : null,
   },
     fav ? h('span', { class: 'fav-flag', 'aria-hidden': 'true' }) : null,
-    badge(rating, { pending }),
+    badgeWithRange(rating, { pending }),
     // Soccer lists the home side first (European convention); US sports list away @ home.
     h('div', { class: 'teams' }, game.sport === 'soccer'
       ? [teamLine(game.home, game, game.away, fav), teamLine(game.away, game, game.home, fav)]

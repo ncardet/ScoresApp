@@ -129,8 +129,9 @@ function ratingCard(rating, predicted, game) {
     badge(rating, { size: 'lg', onTap: () => openRatingSheet(rating, { predicted, title: game.name }) }),
     h('div', null,
       h('div', { class: 'lbl' }, `${rating.band.label}${rating.state === 'predicted' ? ' (predicted)' : rating.state === 'live' ? ' (live)' : ''}`),
+      rating.pred ? h('div', { class: 'pred-line' }, `${rating.pred.horizon?.label || 'Prediction'}: likely ${rating.pred.low}–${rating.pred.high} · ${Math.round(rating.pred.pGreat * 100)}% chance of Great`) : null,
       h('div', { class: 'why' }, rating.explain || 'Tap for details'),
-      predicted && rating.state !== 'predicted' ? h('div', { class: 'tiny', style: { marginTop: '4px' } }, `Predicted ${predicted.value}`) : null));
+      predicted && rating.state !== 'predicted' ? h('div', { class: 'tiny', style: { marginTop: '4px' } }, `Predicted ${predicted.value}${predicted.pred ? ` (likely ${predicted.pred.low}–${predicted.pred.high})` : ''}`) : null));
   card.addEventListener('click', () => openRatingSheet(rating, { predicted, title: game.name }));
   return card;
 }

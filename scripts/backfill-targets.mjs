@@ -15,7 +15,8 @@ import { LEAGUE_BY_KEY, LEAGUES } from '../site/js/core/leagues.js';
 import { measure } from '../site/js/rating/index.js';
 import { leagueHistory, SEASONS, CACHE_DIR } from './lib/history.mjs';
 import { measureF1 } from '../site/js/rating/f1.js';
-import { lapTable, raceControlSummary } from '../site/js/adapters/f1.js';
+import { lapTable, raceControlSummary, compactRaceControl } from '../site/js/adapters/f1.js';
+import { F1_COMPONENTS } from '../site/js/rating/calibrate.js';
 import { parseStandings } from '../site/js/adapters/espn/standings.js';
 import FAVORITES from '../site/config/favorites.js';
 
@@ -26,6 +27,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
 const LEAGUE_KEYS = args.leagues ? String(args.leagues).split(',') : [...Object.keys(SEASONS), 'f1'];
 const CONC = +args.concurrency || 6;
 export const TARGET_DIR = join(CACHE_DIR, '..', 'targets');
+export const TARGET_VERSION = 2; // 2: ESPN reversed home/away play scores are detected and fixed
 const r4 = (x) => (Number.isFinite(x) ? Math.round(x * 10000) / 10000 : 0);
 
 const favIds = (league) => new Set(FAVORITES.filter((f) => f.leagues.includes(league)).map((f) => String(f.id)));
@@ -40,7 +42,7 @@ export function displayable(league, g) {
 /** Compact history game -> minimal adapter Game, enough for summary parsing. */
 export function toGame(g) {
   const lg = LEAGUE_BY_KEY[g.league];
-  const team = (t) => ({ id: t.id, abbr: t.a, short: t.n, name: t.n, score: t.s, winner: t.w, rank: t.r, record: t.rec || '', linescores: [] });
+  const team = (t) => ({ id: t.id, abbr: t.a, short: t.n, name: t.n, score: t.s, winner: t.w, rank: t.r, record: t.rec || '', linescores: [], logo: t.l || '', color: t.col || null });
   return {
     key: `${g.league}:${g.id}`, id: g.id, league: g.league, sport: lg.sport, start: g.start,
     state: g.st, completed: g.done, canceled: g.x, detail: g.detail, period: g.period,
@@ -66,8 +68,15 @@ async function backfillLeague(league) {
     await mkdir(join(TARGET_DIR, league), { recursive: true });
     const cache = await loadCache(file);
     const games = (hist.find((h) => h.season === season)?.games || []).filter((g) => g.done && !g.x && displayable(league, g));
-    // Entries from before the base-measurement format (raw only) are refetched.
-    const todo = games.filter((g) => !cache[g.id] || (!cache[g.id].b && !cache[g.id].error));
+    // Refetch entries from before the base-measurement format (raw only), and neutral-site games
+    // or big "comebacks" measured before the reversed-sides fix (TARGET_VERSION 2).
+    const stale = (c) => (c.v || 1) < TARGET_VERSION && (c.b?.cb > 0.3 || c.neutral);
+    const todo = games.filter((g) => {
+      const c = cache[g.id];
+      if (!c) return true;
+      if (c.error) return false;
+      return !c.b?.swb || stale({ ...c, neutral: g.neutral });
+    });
     const t0 = Date.now();
     let n = 0;
     let saveAt = Date.now();
@@ -78,10 +87,13 @@ async function backfillLeague(league) {
         const m = measure(detail);
         const o = detail.odds;
         cache[g.id] = {
-          b: Object.fromEntries(Object.entries(m.base).map(([k, v]) => [k, r4(v)])),
+          b: Object.fromEntries(Object.entries(m.base).map(([k, v]) => [k, Array.isArray(v) ? v : r4(v)])),
           src: m.timeline.source === 'espn' ? 1 : 0,
           line: o && (o.home != null || o.spread != null) ? { h: o.home, a: o.away, d: o.draw, sp: o.spread, ou: o.overUnder, det: o.details || '' } : null,
           fb: detail.predictor?.home ?? null,
+          v: TARGET_VERSION,
+          ...(detail.sidesFixed ? { fx: 1 } : {}),
+          ...(detail.wpDropped ? { wd: 1 } : {}),
         };
       } catch (e) {
         cache[g.id] = { error: String(e.message || e).slice(0, 80) };
@@ -120,32 +132,36 @@ async function backfillF1() {
     const races = sessions.filter((s) => s.session_name === 'Race' && new Date(s.date_end) < new Date()).sort((x, y) => new Date(x.date_start) - new Date(y.date_start));
     const st = await getJson(`https://site.api.espn.com/apis/v2/sports/racing/f1/standings?season=${year}`).catch(() => null);
     const standings = st ? parseStandings(st.json) : null;
+    (cache._standings ||= {})[year] = standings;
     for (const [raceIndex, s] of races.entries()) {
       const key = String(s.session_key);
-      if (cache[key]?.raw || cache[key]?.error) continue;
+      // Version 2 keeps the compact inputs (lap table, race control, classification) so the
+      // race can be re-measured after a rating change without refetching OpenF1.
+      // Network failures are retried on the next run; a race without lap data is not.
+      if (cache[key]?.v === 2 && (cache[key].raw || /no laps|HTTP 404/.test(cache[key].error || ''))) continue;
       try {
         const laps = await openf1(`laps?session_key=${s.session_key}`);
         const table = lapTable(laps);
         if (table.length < 5) throw new Error('no laps');
-        const overtakes = await openf1(`overtakes?session_key=${s.session_key}`).catch(() => null);
         const rc = await openf1(`race_control?session_key=${s.session_key}`);
         const result = await openf1(`session_result?session_key=${s.session_key}`).catch(() => []);
         // Qualifying of the same meeting (pre-race information).
         const q = sessions.find((x) => x.meeting_key === s.meeting_key && x.session_name === 'Qualifying');
         const quali = q ? await openf1(`session_result?session_key=${q.session_key}`).catch(() => null) : null;
         const classification = (result || []).sort((x, y) => (x.position ?? 99) - (y.position ?? 99)).map((r) => ({ position: r.position, gap: r.gap_to_leader, number: r.driver_number }));
-        const m = measureF1({ f1: { laps: table, overtakes: Array.isArray(overtakes) ? overtakes.length : null, control: raceControlSummary(rc), classification, standings, raceIndex } });
+        const m = measureF1({ f1: { laps: table, control: raceControlSummary(rc), classification, standings, raceIndex } });
         const best = (r) => (Array.isArray(r.duration) ? r.duration.filter(Number.isFinite).at(-1) : r.duration);
         const qs = (quali || []).filter((r) => r.position).sort((x, y) => x.position - y.position);
         const qGap = qs.length > 1 && best(qs[0]) && best(qs[1]) ? best(qs[1]) - best(qs[0]) : null;
         cache[key] = {
-          year, raceIndex, location: s.location, circuit: s.circuit_short_name, start: s.date_start,
-          raw: ['leadChanges', 'overtakes', 'finalGap', 'incidents', 'stakes'].map((c) => r4(m.raw[c])),
+          v: 2, year, raceIndex, location: s.location, circuit: s.circuit_short_name, start: s.date_start,
+          raw: F1_COMPONENTS.map((c) => r4(m.raw[c])),
           quali: qs.slice(0, 10).map((r) => r.driver_number), qGap: qGap != null ? r4(qGap) : null,
+          input: { laps: table, rc: compactRaceControl(rc), classification },
         };
         console.log(`  f1 ${year} R${raceIndex + 1} ${s.location}: ok`);
       } catch (e) {
-        cache[key] = { year, raceIndex, location: s.location, error: String(e.message || e).slice(0, 80) };
+        cache[key] = { v: 2, year, raceIndex, location: s.location, error: String(e.message || e).slice(0, 80) };
         console.log(`  f1 ${year} ${s.location}: ${e.message}`);
       }
       await writeFile(file, JSON.stringify(cache));

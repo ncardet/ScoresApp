@@ -374,6 +374,59 @@ function parseWp(json, plays) {
   return pts;
 }
 
+// ---------- consistency ----------
+
+/**
+ * ESPN sometimes reverses homeScore/awayScore in the play-by-play of neutral-site games while
+ * the header has the official home team (seen: 2026 Toledo vs Michigan, Baha Mar). Check which
+ * team actually scored each basket/goal/run (and the final score) and swap the play scores back.
+ * Also drops ESPN's win-probability series when it was built on reversed scores or ends on the
+ * wrong winner.
+ */
+export function fixReversedSides(detail) {
+  const g = detail.game;
+  if (detail.sport === 'soccer' || !g?.home || !g?.away) return detail;
+  let agree = 0;
+  let disagree = 0;
+  let hs = 0;
+  let as = 0;
+  let last = null;
+  for (const p of detail.plays || []) {
+    if (p.hs == null || p.as == null) continue;
+    const dh = p.hs - hs;
+    const da = p.as - as;
+    if (p.side && (dh > 0) !== (da > 0)) {
+      if ((dh > 0 ? 'home' : 'away') === p.side) agree++;
+      else disagree++;
+    }
+    hs = p.hs;
+    as = p.as;
+    last = p;
+  }
+  const fh = Number(g.home.score);
+  const fa = Number(g.away.score);
+  const final = g.state === 'post' && Number.isFinite(fh) && Number.isFinite(fa) && fh !== fa;
+  const finalSwapped = final && last && last.hs === fa && last.as === fh;
+  const finalMatches = final && last && last.hs === fh && last.as === fa;
+  if (!finalMatches && ((disagree >= 3 && disagree > agree * 2) || (finalSwapped && disagree >= agree))) {
+    for (const p of detail.plays) {
+      if (p.hs == null || p.as == null) continue;
+      [p.hs, p.as] = [p.as, p.hs];
+    }
+    detail.sidesFixed = true;
+  }
+  // ESPN's win probability was computed on the same reversed scores (or otherwise ends on the
+  // wrong winner): it can't be repaired, so drop it and let our score/time model rebuild it.
+  if (detail.wp?.length) {
+    const end = detail.wp[detail.wp.length - 1].wp;
+    if (detail.sidesFixed || (final && ((fh > fa && end < 0.1) || (fa > fh && end > 0.9)))) {
+      detail.wp = null;
+      detail.wpDropped = true;
+    }
+  }
+  return detail;
+}
+
 // ---------- public ----------
 
 /**
@@ -444,5 +497,6 @@ export function parseSummary(json, leagueKey, baseGame) {
   }
   monotonic(detail.plays);
   detail.wp = parseWp(json, detail.plays);
+  fixReversedSides(detail);
   return detail;
 }

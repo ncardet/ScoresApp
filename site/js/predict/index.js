@@ -32,9 +32,11 @@ export function baseRate(game) {
 
 /** Days from `now` (Pacific calendar days) until the game. */
 export function daysOut(game, now = new Date()) {
+  const start = new Date(game.start);
+  if (!game.start || Number.isNaN(start.getTime())) return 0; // unknown kickoff: treat as today
   const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' });
   const a = new Date(`${fmt.format(now)}T12:00:00Z`);
-  const b = new Date(`${fmt.format(new Date(game.start))}T12:00:00Z`);
+  const b = new Date(`${fmt.format(start)}T12:00:00Z`);
   return Math.round((b - a) / 86400000);
 }
 
@@ -92,8 +94,7 @@ function isFavoriteTeam(game, favorites) {
 export function watchPriority(game, value, { favorites = [] } = {}) {
   const parts = [];
   if (isFavoriteTeam(game, favorites)) parts.push({ label: 'Favorite', points: CFG.priority.favorite });
-  const soccer = family(game.league) === 'soccer';
-  const cap = soccer ? 5 : CFG.priority.starMax;
+  const cap = CFG.priority.starMax; // the addendum's 0-4 for star power or marquee appeal
   let star = Math.max(starOf(game.league, game.home?.id), starOf(game.league, game.away?.id));
   if (/super bowl|world series|finals|national championship/i.test((game.notes || []).join(' '))) star = Math.max(star, 3);
   if (star) parts.push({ label: 'Star power', points: Math.min(cap, star) });
@@ -237,12 +238,12 @@ export function pregameView(game) {
       series = { homeWins: h, awayWins: a, total: s.total, toWin: s.toWin ?? (s.total ? Math.floor(s.total / 2) + 1 : null) };
     }
   }
-  const team = (t) => t && ({ id: t.id, abbr: t.abbr, short: t.short, name: t.name, rank: t.rank ?? null, color: t.color, logo: t.logo });
+  const team = (t) => t && ({ id: t.id, abbr: t.abbr, short: t.short, name: t.name, rank: t.rank ?? null, color: t.color, logo: t.logo, probable: t.probable ?? null });
   return {
     key: game.key, id: game.id, league: game.league, sport: game.sport, start: game.start, state: 'pre',
     notes: game.notes || [], seasonType: game.seasonType, seasonSlug: game.seasonSlug || '',
     neutral: !!game.neutral, conferenceGame: !!game.conferenceGame, tournament: !!game.tournament,
-    broadcasts: game.broadcasts || [], venue: game.venue || '', indoor: game.indoor ?? null,
+    broadcasts: game.broadcasts || [], venue: game.venue || '', indoor: game.indoor ?? null, weather: game.weather ?? null,
     odds: game.odds || null, series,
     home: team(game.home), away: team(game.away),
     // F1

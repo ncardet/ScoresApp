@@ -44,6 +44,7 @@ const US_PRESEASON = new Set(['nfl', 'cfb', 'nba', 'nhl', 'mlb', 'mcbb', 'wcbb']
 export function compact(g, season) {
   const t = (x) => ({
     id: x.id, a: x.abbr, n: x.short || x.name, s: x.score, w: !!x.winner, r: x.rank || null, c: x.conferenceId || null, rec: x.record || '',
+    l: x.logo || undefined, col: x.color || undefined,
   });
   return {
     id: g.id,
@@ -97,7 +98,8 @@ function keepGame(league, g) {
 /** Dates to query for a day-kind season. */
 async function seasonDates(league, cfg, season) {
   const [from, to] = cfg.window(season);
-  const last = to < todayKey() ? to : addDays(todayKey(), 30);
+  // The whole season, future dates included (the simulator needs the remaining schedule).
+  const last = to;
   if (cfg.noCalendar) {
     const out = [];
     for (let d = from; d <= last; d = addDays(d, 1)) out.push(d);
