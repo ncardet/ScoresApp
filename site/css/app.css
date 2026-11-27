@@ -184,6 +184,7 @@ a.wordmark:visited { color: var(--on-wasabi); }
 }
 a.game-row:visited { color: var(--text); }
 .game-row:active { background: var(--surface-2); }
+.game-row.static:active { background: none; }
 .teams { display: grid; gap: 7px; min-width: 0; }
 .team-line { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 10px; min-width: 0; }
 .team-line > img, .team-line > .logo-ph { width: 26px; height: 26px; object-fit: contain; justify-self: center; }
@@ -499,6 +500,7 @@ input[type="search"], select.input {
 .circle-row { padding: 13px 16px; display: grid; gap: 5px; }
 .circle-row .when { font: 800 13px/1 var(--font-cond); color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
 .circle-row .flags { font-size: 13px; color: var(--text-2); }
+.off-row { padding: 13px 16px; font: 800 15px/1.2 var(--font-cond); color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; }
 .circle-badge {
   display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
   background: var(--accent); color: var(--on-accent); border: 2px solid var(--text); font-size: 12px; margin-right: 6px; vertical-align: -6px;

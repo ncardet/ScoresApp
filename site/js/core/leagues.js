@@ -69,7 +69,44 @@ export const LEAGUES = [
   {
     key: 'f1', name: 'Formula 1', short: 'F1', sport: 'racing', espn: 'racing/f1',
   },
+
+  // ---- Optional leagues: off until switched on in Settings → Optional leagues. ----
+  // They never reach the morning brief unless config/prediction.json brief.includeOptional is on.
+  {
+    key: 'seriea', name: 'Serie A', short: 'Serie A', sport: 'soccer', espn: 'soccer/ita.1', optional: true,
+    note: 'Soccer model · Paramount+',
+    periods: 2, periodMinutes: 45, otMinutes: 15, oneScore: 1,
+  },
+  {
+    key: 'uecl', name: 'Conference League', short: 'UECL', sport: 'soccer', espn: 'soccer/uefa.europa.conf', optional: true,
+    note: 'Soccer model · Paramount+',
+    periods: 2, periodMinutes: 45, otMinutes: 15, oneScore: 1, knockouts: true,
+  },
+  {
+    key: 'uwcl', name: "Women's Champions League", short: 'UWCL', sport: 'soccer', espn: 'soccer/uefa.wchampions', optional: true,
+    note: 'Soccer model · Paramount+',
+    periods: 2, periodMinutes: 45, otMinutes: 15, oneScore: 1, knockouts: true,
+  },
+  {
+    // ESPN has only the finishing order (no lead changes, cautions or margin), so: schedule + results.
+    key: 'nascar', name: 'NASCAR Cup Series', short: 'NASCAR', sport: 'racing', espn: 'racing/nascar-premier', optional: true,
+    scheduleOnly: true, standings: false, noGamePage: true, note: 'Schedule and results, not rated: ESPN has no lap data',
+  },
+  {
+    // The four Grand Slams, singles. ESPN's ATP feed carries both singles draws at the majors.
+    key: 'tennis', name: 'Tennis Grand Slams', short: 'Tennis', sport: 'tennis', espn: 'tennis/atp', optional: true,
+    standings: false, noGamePage: true, note: 'Grand Slams, singles · rated on sets and tiebreaks',
+  },
+  {
+    key: 'ufc', name: 'UFC', short: 'UFC', sport: 'mma', espn: 'mma/ufc', optional: true,
+    scheduleOnly: true, standings: false, noGamePage: true, note: 'Schedule only · Paramount+',
+  },
 ];
+
+/** The leagues that are always available (switch one off in Settings → Leagues). */
+export const CORE_LEAGUES = LEAGUES.filter((l) => !l.optional);
+/** Leagues the user switches on in Settings → Optional leagues (all off by default). */
+export const OPTIONAL_LEAGUES = LEAGUES.filter((l) => l.optional);
 
 export const LEAGUE_BY_KEY = Object.fromEntries(LEAGUES.map((l) => [l.key, l]));
 

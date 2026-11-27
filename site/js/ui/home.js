@@ -65,7 +65,7 @@ export function homeView(root, params = {}) {
       out.push({
         game: g,
         rating: displayRating(day, g.key),
-        pending: (g.state !== 'pre' && !g.canceled && !(g.sport === 'racing' && !g.isRace) && !day.ratings.get(g.key)?.current) || day.pending.has(g.key),
+        pending: (g.state !== 'pre' && !g.canceled && !(g.sport === 'racing' && !g.isRace) && !LEAGUE_BY_KEY[g.league]?.scheduleOnly && !day.ratings.get(g.key)?.current) || day.pending.has(g.key),
         fav: !!favoriteFor(g),
       });
     }
@@ -124,7 +124,8 @@ export function homeView(root, params = {}) {
     const showLeague = filter === 'all';
     // Top picks: the best few games still to come (live first), or the day's best finals.
     const past = dateKey < todayKey();
-    const pool = shown.filter((e) => e.rating && !e.game.canceled && (e.game.sport !== 'racing' || e.game.isRace) && (past ? e.game.state === 'post' : e.game.state !== 'post'));
+    // Optional leagues without a game page (tennis, NASCAR, UFC) never make Top Picks: the cards link to game pages.
+    const pool = shown.filter((e) => e.rating && !e.game.canceled && (e.game.sport !== 'racing' || e.game.isRace) && !LEAGUE_BY_KEY[e.game.league]?.noGamePage && (past ? e.game.state === 'post' : e.game.state !== 'post'));
     pool.sort((a, b) => (b.game.state === 'in') - (a.game.state === 'in') || (past ? b.rating.value - a.rating.value : rankScore(day, b.game) - rankScore(day, a.game)));
     const picks = pool.slice(0, 3);
     if (picks.length >= 2 && shown.length >= 4) {

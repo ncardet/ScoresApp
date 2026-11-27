@@ -127,9 +127,18 @@ function entry(g, rating, { replay = false } = {}) {
   return base;
 }
 
+/**
+ * Leagues the brief covers: every core league; optional leagues (Serie A, NASCAR, tennis, ...) only
+ * when config/prediction.json brief.includeOptional is on, and then only those in optionalLeagues.
+ */
+export function briefLeagues(brief = CFG.brief) {
+  const opted = new Set(brief?.includeOptional ? brief.optionalLeagues || [] : []);
+  return LEAGUES.filter((l) => !l.optional || opted.has(l.key));
+}
+
 async function loadDay(dateKey, errors) {
   const out = [];
-  await mapLimit(LEAGUES, 6, async (lg) => {
+  await mapLimit(briefLeagues(), 6, async (lg) => {
     try {
       const res = await ADAPTERS[lg.key].scoreboard(dateKey, { favoriteTeamIds: favIds(lg.key) });
       out.push(...res.games);

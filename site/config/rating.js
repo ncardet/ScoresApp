@@ -116,6 +116,10 @@ export default {
     mls: { goalsPerGame: 3.0, totalNorm: 3.0, shotNorm: 25, scales: { swing: 2.2, leadChanges: 5, pace: 1.9 } },
     nwsl: { goalsPerGame: 2.7, totalNorm: 2.7, shotNorm: 24, scales: { swing: 2.2, leadChanges: 5, pace: 1.9 } },
     wsl: { goalsPerGame: 3.0, totalNorm: 3.0, shotNorm: 24, scales: { swing: 2.2, leadChanges: 5, pace: 1.9 } },
+    // Optional leagues: no backfill, so these defaults set the scale (normal-curve calibration).
+    seriea: { goalsPerGame: 2.6, totalNorm: 2.6, shotNorm: 24, scales: { swing: 2.2, leadChanges: 5, pace: 1.9 } },
+    uecl: { goalsPerGame: 2.8, totalNorm: 2.8, shotNorm: 25, scales: { swing: 2.2, leadChanges: 5, pace: 1.9 } },
+    uwcl: { goalsPerGame: 3.2, totalNorm: 3.2, shotNorm: 24, scales: { swing: 2.2, leadChanges: 5, pace: 1.9 } },
   },
 
   // Used only if a league has no calibration file: raw score -> percentile via a normal curve.

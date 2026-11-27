@@ -75,6 +75,8 @@ export const SPORT_ICONS = {
     + '<path d="M12 8.4V5.6M15.42 10.89l2.67-.87M14.12 14.91l1.64 2.27M9.88 14.91l-1.64 2.27M8.58 10.89l-2.67-.87"/>'
     + '<path fill="currentColor" d="M8.63 3.66a9 9 0 0 1 6.74 0L12 5.6zM18.89 6.21a9 9 0 0 1 2.09 6.42l-2.89-2.61zM19.63 16.77a9 9 0 0 1-5.45 3.96l1.58-3.55zM9.82 20.73a9 9 0 0 1-5.45-3.96l3.87.41zM3.02 12.63a9 9 0 0 1 2.09-6.42l.8 3.81z"/>',
   racing: '<path d="M5 21V3.5M5 4h14v9H5"/><path d="M5 4h3.5v3H5zM12 4h3.5v3H12zM8.5 7H12v3H8.5zM15.5 7H19v3h-3.5zM5 10h3.5v3H5zM12 10h3.5v3H12z" fill="currentColor" stroke="none"/>',
+  tennis: '<ellipse cx="14.2" cy="9.8" rx="5.2" ry="6.6" transform="rotate(45 14.2 9.8)"/><path d="M10.4 13.6L4 20"/><path stroke-width="1.3" d="M11.6 8.1l4.3 4.3M13.9 5.8l4.3 4.3"/><circle cx="18.6" cy="18.6" r="2.3" fill="currentColor" stroke="none"/>',
+  mma: '<path d="M8 14.5c-1.6-2-2.3-4.4-1.9-6.8C6.7 4.8 9.3 3 12.6 3c4.2 0 6.9 2.9 6.9 6.7 0 2.3-.9 3.6-2 4.8z" fill="currentColor"/><path d="M8.6 10.2c-2-.8-4 .3-4 2.2 0 1.4 1.2 2.1 3.4 2.1"/><rect x="8" y="14.5" width="9.5" height="6.5" rx="1.6"/>',
 };
 
 function svgIcon(inner, cls = '') {

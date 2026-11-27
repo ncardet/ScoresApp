@@ -9,6 +9,7 @@
 import { ADAPTERS } from '../adapters/index.js';
 import { getJson } from '../adapters/espn/client.js';
 import { getCalibration, predict, rate, ENGINE_VERSION } from '../rating/index.js';
+import { rateTennis, predictedTennis } from '../rating/tennis.js';
 import { watchPriority } from '../predict/index.js';
 import { kvGet, kvSet, kvKeys, kvDel } from '../core/kv.js';
 import { enabledLeagues, favoriteTeamIds, favoriteFor, getSettings } from '../core/settings.js';
@@ -122,6 +123,8 @@ export async function loadPredictions({ force = false } = {}) {
  */
 async function predictedFor(game) {
   if (game.sport === 'racing' && !game.isRace) return null;
+  if (LEAGUE_BY_KEY[game.league]?.scheduleOnly) return null;
+  if (game.sport === 'tennis') return predictedTennis(game);
   const cal = await getCalibration(game.league);
   const preds = await loadPredictions();
   const entry = preds.map.get(game.key);
@@ -146,6 +149,8 @@ async function rateLeague(day, leagueKey) {
       const cached = await kvGet(finalKey(g)).catch(() => null);
       if (cached) r.current = cached;
     }
+    // Tennis is rated from the scoreboard's set scores (no detail to fetch).
+    if (g.sport === 'tennis' && g.state !== 'pre' && !g.canceled) r.current = rateTennis(g);
     day.ratings.set(g.key, r);
   }
   notify(day.dateKey);
@@ -153,6 +158,7 @@ async function rateLeague(day, leagueKey) {
 
 function needsDetail(day, g) {
   if (g.canceled) return false;
+  if (g.sport === 'tennis' || LEAGUE_BY_KEY[g.league]?.scheduleOnly) return false;
   if (g.sport === 'racing' && !g.isRace) return false;
   const r = day.ratings.get(g.key);
   if (g.state === 'post') return !r?.current || r.current.state !== 'final';

@@ -28,7 +28,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
   if (a.startsWith('--')) acc.push([a.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]);
   return acc;
 }, []));
-const LEAGUE_KEYS = args.leagues ? String(args.leagues).split(',') : LEAGUES.map((l) => l.key);
+const LEAGUE_KEYS = args.leagues ? String(args.leagues).split(',') : LEAGUES.filter((l) => !l.optional).map((l) => l.key);
 const TARGET = +args.games || 220;
 const CONC = +args.concurrency || 6;
 const OUT = args.out || 'site/data/calibration';

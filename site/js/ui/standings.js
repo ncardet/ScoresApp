@@ -6,7 +6,7 @@ import { h, clear, fill, logo, teamLogo, sportIcon } from './dom.js';
 import { LEAGUES, LEAGUE_BY_KEY } from '../core/leagues.js';
 import { ADAPTERS } from '../adapters/index.js';
 import { postseasonGames, currentWindow } from '../adapters/espn/postseason.js';
-import { favoriteTeamIds, getSettings } from '../core/settings.js';
+import { favoriteTeamIds, getSettings, enabledLeagues } from '../core/settings.js';
 import { formatStamp } from '../core/time.js';
 
 const KEY = 'sideline.standingsLeague';
@@ -201,7 +201,7 @@ function bracketView(lg, games) {
 
 export function standingsView(root, params = {}) {
   let key = params.league || (() => { try { return localStorage.getItem(KEY); } catch { return null; } })() || 'nba';
-  if (!LEAGUE_BY_KEY[key]) key = 'nba';
+  if (!Object.hasOwn(LEAGUE_BY_KEY, key) || LEAGUE_BY_KEY[key].standings === false) key = 'nba';
   const chips = h('div', { class: 'chips', role: 'toolbar', 'aria-label': 'Leagues' });
   const body = h('div');
   const view = h('div', { class: 'view' },
@@ -212,8 +212,7 @@ export function standingsView(root, params = {}) {
   let seq = 0;
 
   function drawChips() {
-    const hidden = new Set(getSettings().hiddenLeagues);
-    fill(chips, LEAGUES.filter((l) => !hidden.has(l.key)).map((l) => h('button', {
+    fill(chips, enabledLeagues().filter((l) => l.standings !== false).map((l) => h('button', {
       class: 'chip', type: 'button', 'aria-pressed': String(l.key === key),
       onclick: () => { key = l.key; try { localStorage.setItem(KEY, key); } catch { /* ignore */ } drawChips(); load(); },
     }, sportIcon(l.sport), l.short)));

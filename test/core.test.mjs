@@ -189,3 +189,22 @@ test('a service added to the config starts on for a phone that saved its toggles
     delete globalThis.localStorage;
   }
 });
+
+test('off-season: next game day from ESPN calendars or the cached season; Look Ahead lines', async () => {
+  const { firstCalendarDay, firstSeasonDay } = await import('../scripts/lib/offseason.mjs');
+  const { offSeasonLines, returnsLabel } = await import('../site/js/core/offseason.js');
+  // Day whitelist (NBA, WNBA): the listed dates have games.
+  assert.equal(firstCalendarDay({ calendar: ['2026-12-01T08:00Z', '2027-05-15T07:00Z'], calendarIsWhitelist: true }, '2026-12-11'), '2027-05-15');
+  // MLB blacklist: the listed dates are the days without games.
+  assert.equal(firstCalendarDay({ calendar: ['2027-02-18T08:00Z', '2027-02-19T08:00Z'], calendarIsWhitelist: false, calendarStartDate: '2027-02-18T08:00Z', calendarEndDate: '2027-12-11T07:59Z' }, '2026-12-11'), '2027-02-20');
+  // List calendars (NFL weeks): each week's start.
+  assert.equal(firstCalendarDay({ calendar: [{ label: 'Preseason', startDate: '2026-08-06T07:00Z', entries: [{ startDate: '2026-08-06T07:00Z' }, { startDate: '2026-08-13T07:00Z' }] }] }, '2026-08-07'), '2026-08-13');
+  assert.equal(firstCalendarDay({ calendar: [], calendarIsWhitelist: true }, '2026-12-11'), null, 'nothing scheduled');
+  assert.equal(firstSeasonDay([{ st: 'post', day: '2026-12-20' }, { st: 'pre', day: '2027-01-05' }, { st: 'pre', x: true, day: '2026-12-15' }], '2026-12-11'), '2027-01-05');
+  // One line per off-season league, only for the leagues passed in (enabled), in their order.
+  const leagues = [{ key: 'wnba', short: 'WNBA', sport: 'basketball' }, { key: 'mlb', short: 'MLB', sport: 'baseball' }, { key: 'nba', short: 'NBA', sport: 'basketball' }];
+  const lines = offSeasonLines({ mlb: { returns: '2027-02-19', preseason: true }, wnba: { returns: null } }, leagues, '2026-11-27');
+  assert.deepEqual(lines.map((l) => l.text), ['WNBA: off-season', 'MLB returns Feb 19, 2027 (preseason)']);
+  assert.equal(returnsLabel('2026-12-05', '2026-11-27'), 'Dec 5');
+  assert.deepEqual(offSeasonLines({}, leagues, '2026-11-27'), [], 'leagues with games in the next 14 days get no line');
+});

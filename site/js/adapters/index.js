@@ -14,8 +14,14 @@ import mls from './mls.js';
 import nwsl from './nwsl.js';
 import wsl from './wsl.js';
 import f1 from './f1.js';
+import seriea from './seriea.js';
+import uecl from './uecl.js';
+import uwcl from './uwcl.js';
+import nascar from './nascar.js';
+import tennis from './tennis.js';
+import ufc from './ufc.js';
 
-export const ADAPTERS = { nfl, cfb, nba, wnba, mcbb, wcbb, mlb, nhl, epl, ucl, uel, mls, nwsl, wsl, f1 };
+export const ADAPTERS = { nfl, cfb, nba, wnba, mcbb, wcbb, mlb, nhl, epl, ucl, uel, mls, nwsl, wsl, f1, seriea, uecl, uwcl, nascar, tennis, ufc };
 
 export function adapter(key) {
   const a = ADAPTERS[key];

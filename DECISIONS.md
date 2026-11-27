@@ -137,6 +137,79 @@ Newest at the bottom of each section.
 - **Favorites:** the WNBA is in Settings → Favorites → Add a team, which uses ESPN's team list
   (including Portland Fire and Toronto Tempo). No WNBA team is preset.
 
+## Off-season
+
+- **Applies to every league, core and optional.** A league with nothing in the next 14 days loses its
+  Look Ahead chip and gets one line in an "Off-season" section instead:
+  - "WNBA returns May 15" when ESPN has the date
+  - "MLB returns Feb 19, 2027 (preseason)" when the first game is spring training
+  - "Tennis returns Jan 9, 2027 (Australian Open)"
+  - "WNBA: off-season" when ESPN has nothing scheduled
+  - "UWCL: nothing in the next 14 days" for a break inside a season
+- **Today** already shows chips only for leagues with games that day, so nothing changed there.
+- **Where the date comes from:** the nightly job (`scripts/lib/offseason.mjs`) records the next date
+  in `predictions.json` (`offSeason`). It looks in this order:
+  1. the league's cached season schedule
+  2. the current season's ESPN calendar
+  3. this year's and next year's calendars (`scoreboard?dates=<year>`)
+- **ESPN calendar quirks:**
+  - MLB's calendar is a blacklist (`calendarIsWhitelist: false`): the listed dates are the days
+    without games.
+  - The NFL's lists weeks.
+  - Tennis lists every ATP event, so the next Grand Slam is read from each major's usual window.
+- **One read of the returning day** says whether it's preseason.
+- **Off-season vs break:** with no date, a league whose current calendar hasn't ended yet is in a
+  break (matchdays can be weeks apart), not the off-season.
+- **As of Nov 27, 2026:**
+  - **MLB:** 2027 schedule published, back for spring training Feb 19.
+  - **WNBA and NWSL:** no 2027 schedule yet.
+  - **NASCAR:** 2026 finale was Nov 8, no 2027 schedule yet.
+
+## Optional leagues
+
+- **Off by default.** They're in Settings → Optional leagues and switched on per phone
+  (`optionalLeagues`). When on, a league gets a Today chip, scores, where to watch and a rating (see
+  below). Every slug was probed first (`docs/probe-report`, plus ad-hoc checks):
+
+  | League | ESPN slug | What it gets |
+  |---|---|---|
+  | Serie A | `soccer/ita.1` | Soccer model, standings |
+  | UEFA Conference League | `soccer/uefa.europa.conf` | Soccer model, standings |
+  | UEFA Women's Champions League | `soccer/uefa.wchampions` | Soccer model, standings |
+  | NASCAR Cup Series | `racing/nascar-premier` | Schedule and results (top three), not rated |
+  | Tennis Grand Slams | `tennis/atp` and `tennis/wta`, majors only | Basic rating from the sets |
+  | UFC | `mma/ufc` | Schedule only, one row per card (main event, venue) |
+
+- **Left out: Unrivaled.** ESPN has no Unrivaled league (`basketball/unrivaled` returns 400, and it
+  isn't in ESPN's list of basketball leagues), so there's no toggle.
+- **Soccer** uses the existing soccer model. There's no backfill yet, so ratings use the default
+  normal-curve calibration from the league constants in `config/rating.js`. Base rates come from the
+  closest core league (EPL, UEL, UCL).
+- **NASCAR isn't rated.** ESPN's NASCAR feed has only the finishing order: no lap data, lead changes,
+  cautions or margin, and the summary endpoint returns 500. So the F1-style rating isn't possible
+  without faking it.
+- **Tennis:**
+  - **What's shown:** the four Grand Slams only, singles, no qualifying. Rounds 1–2 show only matches
+    with a top-16 seed, because a 128-player draw would add dozens of rows to Today; every match from
+    Round 3 on.
+  - **Rating:** base 50 (`rating/tennis.js`), from the set scores alone:
+    - deciding set +22, deciding-set tiebreak +8, four sets of five +8
+    - tiebreaks +7 each, close sets +3 each
+    - comeback from two sets down +12 (from one set down +4)
+    - a straight-sets rout −15, other lopsided sets −4 each
+    - quarterfinal +4, semifinal +7, final +12
+- **UFC** shows the card's broadcasters (Paramount+ since 2026) and nothing else.
+- **Pages:** NASCAR, tennis and UFC rows open no game page, and they never become Top Picks (the cards
+  link to game pages).
+- **Look Ahead:** the nightly job lists every optional league's next 14 days as schedule-only entries
+  (no pre-game model), and the phone shows the ones switched on.
+- **The morning brief** leaves optional leagues out unless `brief.includeOptional` is true in
+  `config/prediction.json`; then it includes only the leagues in `brief.optionalLeagues`. Settings
+  has the matching switch and a "Copy brief setting as config" button, because the brief runs on
+  GitHub and can't read the phone's settings.
+- **New sport icons:** a tennis racket and ball (a plain ball looked like the baseball), and a
+  fighting glove for UFC. NASCAR uses the checkered flag.
+
 ## Where to watch
 
 - Only broadcasters that map to your services are shown. If ESPN lists broadcasters but none map,

@@ -41,6 +41,10 @@ export function getSettings() {
     favorites: Array.isArray(saved.favorites) ? saved.favorites : FAVORITES.map((f) => ({ ...f })),
     services: services(saved),
     hiddenLeagues: Array.isArray(saved.hiddenLeagues) ? saved.hiddenLeagues : [],
+    // Optional leagues (Serie A, NASCAR, tennis, ...) are off until switched on here.
+    optionalLeagues: Array.isArray(saved.optionalLeagues) ? saved.optionalLeagues : [],
+    // Mirrors config/prediction.json brief.includeOptional, which is what the brief reads.
+    briefOptional: !!saved.briefOptional,
     pinFavorites: saved.pinFavorites !== false,
     customized: !!(saved.favorites || saved.services),
   };
@@ -62,9 +66,12 @@ export function resetSettings() {
   return getSettings();
 }
 
+/** Core leagues the user hasn't switched off, plus the optional leagues switched on. */
 export function enabledLeagues() {
-  const hidden = new Set(getSettings().hiddenLeagues);
-  return LEAGUES.filter((l) => !hidden.has(l.key));
+  const { hiddenLeagues, optionalLeagues } = getSettings();
+  const hidden = new Set(hiddenLeagues);
+  const optional = new Set(optionalLeagues);
+  return LEAGUES.filter((l) => (l.optional ? optional.has(l.key) : !hidden.has(l.key)));
 }
 
 /** Team ids that are favorites in a given league. */

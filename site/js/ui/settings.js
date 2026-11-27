@@ -7,7 +7,8 @@ import { getSettings, saveSettings, resetSettings } from '../core/settings.js';
 import { MY_SERVICES } from '../../config/services.js';
 import { appHeader } from './components.js';
 import { THEMES, readTheme, setTheme } from '../core/theme.js';
-import { LEAGUES, LEAGUE_BY_KEY } from '../core/leagues.js';
+import { CORE_LEAGUES, OPTIONAL_LEAGUES, LEAGUE_BY_KEY } from '../core/leagues.js';
+import PREDICTION from '../../config/prediction.json' with { type: 'json' };
 import { ADAPTERS } from '../adapters/index.js';
 import { lastUpdate, clearCaches } from '../app/store.js';
 import { sourceStatus } from '../adapters/espn/client.js';
@@ -68,13 +69,30 @@ export function settingsView(root) {
 
     // Leagues
     parts.push(h('div', { class: 'section-h' }, h('h2', null, 'Leagues')));
-    parts.push(h('div', { class: 'card list' }, LEAGUES.map((l) => row(
+    parts.push(h('div', { class: 'card list' }, CORE_LEAGUES.map((l) => row(
       h('div', { class: 'grow' }, sportIcon(l.sport), l.name),
       toggle(!st.hiddenLeagues.includes(l.key), (on) => {
         const hidden = new Set(getSettings().hiddenLeagues);
         if (on) hidden.delete(l.key); else hidden.add(l.key);
         saveSettings({ hiddenLeagues: [...hidden] });
       }, l.name)))));
+
+    // Optional leagues: other sports on your services, off until switched on.
+    parts.push(h('div', { class: 'section-h' }, h('h2', null, 'Optional leagues'), h('span', { class: 'meta' }, 'off by default')));
+    parts.push(h('div', { class: 'card list' },
+      OPTIONAL_LEAGUES.map((l) => row(
+        h('div', { class: 'grow' }, h('div', null, sportIcon(l.sport), l.name), h('div', { class: 'sub' }, l.note || '')),
+        toggle(st.optionalLeagues.includes(l.key), (on) => {
+          const set = new Set(getSettings().optionalLeagues);
+          if (on) set.add(l.key); else set.delete(l.key);
+          saveSettings({ optionalLeagues: OPTIONAL_LEAGUES.map((x) => x.key).filter((k) => set.has(k)) });
+        }, l.name))),
+      row(h('div', { class: 'grow' }, h('div', null, 'Include optional leagues in the brief'),
+        h('div', { class: 'sub' }, `Off by default. The brief runs on GitHub and reads config/prediction.json (now ${PREDICTION.brief?.includeOptional ? 'on' : 'off'}).`)),
+      toggle(st.briefOptional, (on) => saveSettings({ briefOptional: on }), 'Include optional leagues in the brief')),
+      row(h('div', { class: 'grow' }, h('div', null, 'Copy brief setting as config'), h('div', { class: 'sub' }, 'Paste into the "brief" section of config/prediction.json')),
+        h('button', { class: 'btn', type: 'button', onclick: (e) => copyBriefConfig(e.target) }, 'Copy'))));
+    parts.push(h('p', { class: 'tiny', style: { margin: '6px 4px' } }, "Unrivaled isn't on ESPN, so it can't be added."));
 
     // Home
     parts.push(h('div', { class: 'section-h' }, h('h2', null, 'Today screen')));
@@ -103,9 +121,15 @@ export function settingsView(root) {
       row(h('div', { class: 'grow' }, 'Reset to config defaults'), h('button', { class: 'btn danger', type: 'button', onclick: () => { resetSettings(); draw(); } }, 'Reset'))));
     fill(body, parts);
 
-    Promise.all(LEAGUES.map(async (l) => [l.short, (await getCalibration(l.key)).n])).then((list) => {
+    Promise.all(CORE_LEAGUES.map(async (l) => [l.short, (await getCalibration(l.key)).n])).then((list) => {
       calRows.textContent = `Calibrated on ${list.map(([k, n]) => `${k} ${n}`).join(' · ')} past games.`;
     });
+  }
+
+  function copyBriefConfig(btn) {
+    const st = getSettings();
+    const text = `"includeOptional": ${st.briefOptional},\n"optionalLeagues": ${JSON.stringify(st.optionalLeagues)}\n`;
+    navigator.clipboard?.writeText(text).then(() => { btn.textContent = 'Copied'; }, () => { btn.textContent = 'Copy failed'; });
   }
 
   function copyConfig(btn) {
@@ -117,7 +141,7 @@ export function settingsView(root) {
   function openPicker() {
     const select = h('select', { class: 'input', 'aria-label': 'League' },
       h('option', { value: '' }, 'Choose a league…'),
-      LEAGUES.filter((l) => l.key !== 'f1').map((l) => h('option', { value: l.key }, l.name)));
+      CORE_LEAGUES.filter((l) => l.key !== 'f1').map((l) => h('option', { value: l.key }, l.name)));
     const search = h('input', { type: 'search', placeholder: 'Search teams', 'aria-label': 'Search teams' });
     const results = h('div', { class: 'list' });
     let teams = [];

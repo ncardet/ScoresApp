@@ -430,6 +430,10 @@ export function gameView(root, params) {
     body.append(h('div', { class: 'empty' }, h('div', { class: 'big' }, 'Unknown league')));
     return () => {};
   }
+  if (lg.noGamePage) {
+    body.append(h('div', { class: 'empty' }, h('div', { class: 'big' }, `No game page for ${lg.name}`), 'Scores and results are on Today.'));
+    return () => {};
+  }
   body.append(h('div', { class: 'card', style: { height: '220px', marginTop: '8px' } }));
 
   async function load(force = false) {

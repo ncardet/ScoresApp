@@ -66,6 +66,26 @@
     "f1": {
       "regular": 49,
       "playoff": 50
+    },
+    "seriea": {
+      "regular": 49,
+      "playoff": 54
+    },
+    "uecl": {
+      "regular": 43,
+      "playoff": 64
+    },
+    "uwcl": {
+      "regular": 40,
+      "playoff": 64
+    },
+    "nascar": {
+      "regular": 50,
+      "playoff": 50
+    },
+    "tennis": {
+      "regular": 50,
+      "playoff": 50
     }
   },
   "range": {
@@ -127,13 +147,15 @@
     "starMax": 4
   },
   "brief": {
-    "_doc": "Morning brief: Skip warns about a high-profile game (favorite, star power, national TV or a ranked college team) that projects Dull or has at least this P(Dull).",
+    "_doc": "Morning brief: Skip warns about a high-profile game (favorite, star power, national TV or a ranked college team) that projects Dull or has at least this P(Dull). Optional leagues (Serie A, NASCAR, tennis, ...) stay out unless includeOptional is true; then only the ones listed in optionalLeagues are included.",
     "skipMaxValue": 40,
     "skipMinPDull": 0.35,
     "topN": 5,
     "perLeagueMax": 2,
     "windowStartHour": 7,
-    "windowEndHour": 3
+    "windowEndHour": 3,
+    "includeOptional": false,
+    "optionalLeagues": []
   },
   "sports": {
     "nfl": {

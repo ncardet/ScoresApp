@@ -200,23 +200,25 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
     h('div', { class: `status ${st.cls}` }, circled ? h('span', { class: 'circle-badge sm', title: `Circle this one: ${rating.pred.circle.reasons.join(', ')}` }, '◎') : null, st.text),
     w.status !== 'unknown' ? h('div', { class: `watch${w.status === 'none' ? ' none' : ''}` }, w.short) : null,
   ];
-  if (game.sport === 'racing') {
+  // Optional leagues without a game page (NASCAR, tennis, UFC) are plain rows, not links.
+  const link = (href) => (lg?.noGamePage
+    ? { class: 'game-row static' }
+    : { class: 'game-row', href, onclick: onOpen ? (e) => { e.preventDefault(); onOpen(game); } : null });
+  if (game.sport === 'racing' || game.kind === 'event') {
     const podium = game.state === 'post' && game.drivers?.length
       ? game.drivers.slice(0, 3).map((d, i) => `${i + 1}. ${d.short || d.name}`).join('  ')
-      : '';
-    return h('a', { class: 'game-row', href: `#/game/${game.league}/${encodeURIComponent(game.id)}?e=${game.eventId}`, onclick: onOpen ? (e) => { e.preventDefault(); onOpen(game); } : null },
-      game.isRace ? badgeWithRange(rating, { pending }) : h('span', { class: 'badge none', title: 'Only the race is rated' }, 'F1'),
+      : game.result || '';
+    const mma = game.sport === 'mma';
+    return h(lg?.noGamePage ? 'div' : 'a', link(`#/game/${game.league}/${encodeURIComponent(game.id)}?e=${game.eventId}`),
+      lg?.scheduleOnly ? h('span', { class: 'badge none', title: 'Schedule only: not rated' }, '—')
+        : game.isRace ? badgeWithRange(rating, { pending }) : h('span', { class: 'badge none', title: 'Only the race is rated' }, lg?.short || ''),
       h('div', { class: 'teams' },
-        h('div', { class: 'race-title' }, `${game.shortName} · ${game.sessionLabel}`),
-        h('div', { class: 'race-sub' }, game.circuit),
+        h('div', { class: 'race-title' }, mma ? game.shortName : `${game.shortName} · ${game.sessionLabel}`),
+        h('div', { class: 'race-sub' }, mma ? [game.mainEvent, game.circuit].filter(Boolean).join(' · ') : game.circuit),
         podium ? h('div', { class: 'podium' }, podium) : null),
       h('div', { class: 'row-side' }, sideBits));
   }
-  return h('a', {
-    class: 'game-row',
-    href: `#/game/${game.league}/${encodeURIComponent(game.id)}`,
-    onclick: onOpen ? (e) => { e.preventDefault(); onOpen(game); } : null,
-  },
+  return h(lg?.noGamePage ? 'div' : 'a', link(`#/game/${game.league}/${encodeURIComponent(game.id)}`),
     fav ? h('span', { class: 'fav-flag', 'aria-hidden': 'true' }) : null,
     badgeWithRange(rating, { pending }),
     // Soccer lists the home side first (European convention); US sports list away @ home.
@@ -295,7 +297,7 @@ export function pickCard({ game, rating }, { index = 0 } = {}) {
       teamMark(R, 'xl'));
   if (game.venue || game.circuit) poster.append(h('div', { class: 'pin' }, icon('pin'), game.venue || game.circuit));
   if (rib) poster.append(h('div', { class: `ribbon ${rib.cls}`.trim() }, rib.text));
-  const note = (game.notes || []).filter(Boolean)[0];
+  const note = (game.notes || []).filter((n) => n && n !== lg?.name)[0];
   const when = pre ? formatTime(game.start) : live ? st.text : racing ? 'Finished' : 'Final';
   const matchup = racing ? `${game.gpName || game.shortName} · ${game.sessionLabel || 'Race'}`
     : game.sport === 'soccer' ? `${game.home.short} vs ${game.away.short}` : `${game.away.short} at ${game.home.short}`;

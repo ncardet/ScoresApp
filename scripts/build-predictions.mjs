@@ -16,7 +16,7 @@ import FAVORITES from '../site/config/favorites.js';
 import { ADAPTERS } from '../site/js/adapters/index.js';
 import { getJson, mapLimit } from '../site/js/adapters/espn/client.js';
 import { parseOdds } from '../site/js/adapters/espn/parse.js';
-import { LEAGUE_BY_KEY } from '../site/js/core/leagues.js';
+import { LEAGUE_BY_KEY, OPTIONAL_LEAGUES } from '../site/js/core/leagues.js';
 import { addDays, todayKey, ptParts, ptDateKey } from '../site/js/core/time.js';
 import { predictGame, PREDICTION_VERSION, isPlayoff } from '../site/js/predict/index.js';
 import { simulateSeason, standingsFrom, countsInStandings, FORMATS, seededRng } from '../site/js/predict/simulate.js';
@@ -24,6 +24,7 @@ import { leagueHistory, SEASONS } from './lib/history.mjs';
 import { walk } from './lib/elo-walk.mjs';
 import { scoringStyle } from '../site/js/predict/style.js';
 import { leagueStructure } from './lib/structure.mjs';
+import { nextScheduled, nextSlam } from './lib/offseason.mjs';
 import { displayable, toGame } from './backfill-targets.mjs';
 
 const args = process.argv.slice(2);
@@ -218,7 +219,7 @@ async function leaguePredictions(league, today) {
   const season = current?.games || [];
   const until = addDays(today, CIRCLE_DAYS);
   const upcoming = season.filter((g) => g.st === 'pre' && !g.x && g.day >= today && g.day <= until);
-  if (!upcoming.length) return { games: [], circle: [] };
+  if (!upcoming.length) return { games: [], circle: [], season };
 
   // Percentiles, style, structure.
   const ids = [...new Set(season.flatMap((g) => [g.h.id, g.a.id]))];
@@ -286,7 +287,31 @@ async function leaguePredictions(league, today) {
       if (pred.circle.flagged) circle.push({ key: entry.key, league, start: g.start, day: g.day, home: entry.home, away: entry.away, reasons: pred.circle.reasons });
     } else games.push(entry);
   }
-  return { games, circle };
+  return { games, circle, season };
+}
+
+// ---------- optional leagues: schedule only ----------
+// Look Ahead lists optional leagues (when switched on in Settings) without a pre-game model: one
+// scoreboard read per day for the next 14 days. The phone decides which ones to show.
+async function optionalSchedule(league, today) {
+  const until = addDays(today, HORIZON_DAYS);
+  const days = Array.from({ length: HORIZON_DAYS + 1 }, (_, i) => addDays(today, i));
+  const team = (t) => t && { id: t.id, abbr: t.abbr || '', short: t.short || t.name, logo: t.logo || '', color: t.color || null, rank: t.rank || null };
+  const byKey = new Map();
+  await mapLimit(days, 4, async (day) => {
+    const res = await ADAPTERS[league].scoreboard(day).catch(() => null);
+    for (const g of res?.games || []) {
+      if (g.state !== 'pre' || g.canceled || byKey.has(g.key)) continue;
+      const d = ptDateKey(new Date(g.start));
+      if (d < today || d > until) continue;
+      byKey.set(g.key, {
+        key: g.key, league, id: g.id, eventId: g.eventId, start: g.start, day: d, kind: g.kind || null,
+        gpName: g.kind === 'event' ? g.shortName : g.gpName, circuit: g.sport === 'mma' ? [g.mainEvent, g.circuit].filter(Boolean).join(' · ') : g.circuit,
+        home: team(g.home), away: team(g.away), notes: g.notes || [], broadcasts: (g.broadcasts || []).map((b) => b.name), pred: null,
+      });
+    }
+  });
+  return [...byKey.values()];
 }
 
 async function main() {
@@ -299,19 +324,30 @@ async function main() {
   let prev = null;
   try { prev = JSON.parse(await readFile(`${OUT}/predictions.json`, 'utf8')); } catch { /* none */ }
   const flaggedBefore = new Map((prev?.circle || []).concat((prev?.games || []).filter((g) => g.pred?.circle?.flagged)).map((c) => [c.key, c.flaggedAt || prev?.date]));
-  const leagues = (ONLY || [...Object.keys(SEASONS), 'f1']);
+  const leagues = (ONLY || [...Object.keys(SEASONS), 'f1']).filter((k) => k === 'f1' || SEASONS[k]);
   const games = [];
   const circle = [];
   const errors = [];
+  const offSeason = {};
+  const horizonEnd = addDays(today, HORIZON_DAYS);
   for (const league of leagues) {
     const t0 = Date.now();
     try {
+      let mine = [];
+      let season = [];
       if (league === 'f1') {
-        games.push(...await f1Predictions(today, FAVORITES));
+        mine = await f1Predictions(today, FAVORITES);
+        games.push(...mine);
       } else {
         const r = await leaguePredictions(league, today);
+        mine = r.games;
+        season = r.season;
         games.push(...r.games);
         circle.push(...r.circle);
+      }
+      // Nothing in the next 14 days: Look Ahead shows when the league returns instead of a chip.
+      if (!mine.some((g) => g.day >= today && g.day <= horizonEnd)) {
+        offSeason[league] = await nextScheduled(league, today, { horizon: HORIZON_DAYS, season }).catch(() => ({ returns: null }));
       }
       console.log(`${league.padEnd(5)} ok (${Math.round((Date.now() - t0) / 1000)}s)`);
     } catch (e) {
@@ -319,8 +355,21 @@ async function main() {
       console.log(`${league.padEnd(5)} ERROR ${e.stack || e.message}`);
     }
   }
+  for (const { key: league } of OPTIONAL_LEAGUES.filter((l) => !ONLY || ONLY.includes(l.key))) {
+    try {
+      const mine = await optionalSchedule(league, today);
+      games.push(...mine);
+      if (!mine.length) {
+        offSeason[league] = await (league === 'tennis' ? nextSlam(today, { horizon: HORIZON_DAYS }) : nextScheduled(league, today, { horizon: HORIZON_DAYS })).catch(() => ({ returns: null }));
+      }
+      console.log(`${league.padEnd(6)} ok (schedule only, ${mine.length} events)`);
+    } catch (e) {
+      errors.push(`${league}: ${e.message}`);
+    }
+  }
   // A partial run (--leagues) keeps the other leagues from the previous file.
   if (ONLY && prev) {
+    for (const [k, v] of Object.entries(prev.offSeason || {})) if (!ONLY.includes(k)) offSeason[k] = v;
     games.push(...(prev.games || []).filter((g) => !ONLY.includes(g.league) && g.day >= today));
     circle.push(...(prev.circle || []).filter((c) => !ONLY.includes(c.league) && c.day >= today));
   }
@@ -337,6 +386,7 @@ async function main() {
     model_version: PREDICTION_VERSION,
     games,
     circle,
+    offSeason,
     errors,
   };
   await writeFile(`${OUT}/predictions.json`, `${JSON.stringify(out)}\n`);
