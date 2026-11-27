@@ -35,6 +35,11 @@ function carriers(network, league) {
   return [...new Set([...(base || []), ...(extra || [])])];
 }
 
+/** True when ESPN lists broadcasters but none is on your services (Today's "can watch" toggle). */
+export function cantWatch(game, myServices) {
+  return whereToWatch(game?.broadcasts, myServices, game?.league).status === 'none';
+}
+
 /** Broadcaster names that aren't in config/services.js (the brief logs them for review). */
 export function unmappedNetworks(broadcasts) {
   return [...new Set((broadcasts || []).map((b) => b?.name).filter((n) => n && !carriers(canonicalNetwork(n), '')))];

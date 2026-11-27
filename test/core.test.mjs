@@ -228,3 +228,14 @@ test('What my services cover: services per league from the config, with the know
   const { LEAGUE_CARRIERS } = await import('../site/config/services.js');
   for (const l of LEAGUES) assert.ok(LEAGUE_CARRIERS[l.key]?.length, l.key);
 });
+
+test('"Only games I can watch" screens out games on none of your services, and nothing else', async () => {
+  const { cantWatch } = await import('../site/js/core/watch.js');
+  const g = (league, ...broadcasts) => ({ league, broadcasts });
+  assert.equal(cantWatch(g('nba', { name: 'Spectrum Sports Net', market: 'home' }), MY_SERVICES), true, 'local TV only');
+  assert.equal(cantWatch(g('f1', { name: 'Apple TV', market: 'national' }), MY_SERVICES), true, 'not on your services');
+  assert.equal(cantWatch(g('nba', { name: 'ESPN', market: 'national' }, { name: 'Spectrum Sports Net', market: 'home' }), MY_SERVICES), false);
+  assert.equal(cantWatch(g('mcbb'), MY_SERVICES), false, 'no TV listing stays visible');
+  assert.equal(cantWatch(g('epl', { name: 'Peacock' }), MY_SERVICES.filter((s) => s !== 'Peacock')), true, 'a service switched off in Settings');
+  assert.equal(cantWatch(g('nfl', { name: 'YouTube' }), MY_SERVICES), false, 'free YouTube counts');
+});

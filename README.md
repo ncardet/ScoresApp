@@ -6,7 +6,8 @@ morning-brief feed, and free data sources (ESPN's public site API, plus OpenF1 f
 
 - **Today:** your favorites pinned on top, then **Live now** ranked by current excitement, then every
   other game ranked by rating. Shows times (Pacific), scores, ratings and where to watch on your
-  services. League chips, a date picker, pull-to-refresh, and auto-refresh while games are live.
+  services. League chips, a date picker, pull-to-refresh, and auto-refresh while games are live. The
+  TV button in the top bar hides the games none of your services carry ("Only games I can watch").
 - **Game page:** score header; rating with a tap-to-explain sheet; excitement curve; win probability;
   linescore, scoring, box score and play-by-play. Soccer adds FotMob-style xG, match stats, momentum
   and lineups on a pitch. F1 adds classification, leader by lap, safety cars and the title race.

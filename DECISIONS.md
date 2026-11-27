@@ -235,6 +235,12 @@ Newest at the bottom of each section.
   2025 Chiefs-Chargers Brazil game is listed as "YouTube").
 - **New services start on.** A phone that saved its service toggles before YouTube (free) existed
   gets it switched on; a service switched off afterwards stays off (`servicesKnown`).
+- **"Only games I can watch"** (the TV button in Today's top bar) hides every game whose row says
+  "Not on your services": ESPN lists broadcasters, but none is on a service you have switched on.
+  - It hides favorites too, and in Top Picks, Live now, the list and the chip counts.
+  - Games with no TV listing at all stay visible, since we can't tell.
+  - A line at the end of the list says how many are hidden, with "Show them".
+  - It's remembered on the phone (`sideline.watchable`) and works on any day.
 - **What my services cover** (Settings, read-only) is generated from `config/services.js`:
   - `LEAGUE_CARRIERS` lists the networks each league's games usually air on (2026 rights).
   - The panel maps them to your services. Networks none of your services carry are listed as missing

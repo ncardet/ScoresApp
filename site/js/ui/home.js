@@ -10,8 +10,10 @@ import {
 import { todayKey, addDays, dayLabel, longDayLabel, formatClock, isValidKey } from '../core/time.js';
 import { LEAGUE_BY_KEY, LEAGUES } from '../core/leagues.js';
 import { favoriteFor, getSettings } from '../core/settings.js';
+import { cantWatch } from '../core/watch.js';
 
 const FILTER_KEY = 'sideline.filter';
+const WATCH_KEY = 'sideline.watchable';
 const REFRESH_MS = 45 * 1000;
 
 function readFilter() {
@@ -20,12 +22,20 @@ function readFilter() {
 function writeFilter(v) {
   try { localStorage.setItem(FILTER_KEY, v); } catch { /* ignore */ }
 }
+// "Only games I can watch": hide games that are on none of your services (remembered per phone).
+function readWatch() {
+  try { return localStorage.getItem(WATCH_KEY) === '1'; } catch { return false; }
+}
+function writeWatch(on) {
+  try { localStorage.setItem(WATCH_KEY, on ? '1' : '0'); } catch { /* ignore */ }
+}
 
 const order = (g) => (g.state === 'in' ? 0 : g.state === 'pre' ? 1 : 2);
 
 export function homeView(root, params = {}) {
   const dateKey = isValidKey(params.date) ? params.date : todayKey();
   let filter = readFilter();
+  let watchOnly = readWatch();
   const day = getDay(dateKey);
   const listEl = h('div', { class: 'home-list' });
   const chipsEl = h('div', { class: 'chips', role: 'toolbar', 'aria-label': 'Leagues' });
@@ -40,10 +50,13 @@ export function homeView(root, params = {}) {
     onchange: (e) => { if (isValidKey(e.target.value)) go(e.target.value); },
   });
   const refreshBtn = barButton('refresh', 'Refresh', () => refresh(true));
+  const watchBtn = barButton('tv', 'Only games I can watch', () => setWatchOnly(!watchOnly));
+  watchBtn.setAttribute('aria-pressed', String(watchOnly));
+  watchBtn.title = 'Only games I can watch';
   const today = todayKey();
   const stripTitle = dateKey === today ? "Today's games" : dateKey < today ? 'Results' : 'Schedule';
 
-  const top = appHeader({ title: stripTitle, meta: subEl, actions: [refreshBtn] });
+  const top = appHeader({ title: stripTitle, meta: subEl, actions: [watchBtn, refreshBtn] });
   // Big day heading ("Today" / "Saturday"); tapping it opens the date picker.
   const rel = dayLabel(dateKey);
   const long = longDayLabel(dateKey);
@@ -84,6 +97,13 @@ export function homeView(root, params = {}) {
     );
   }
 
+  function setWatchOnly(on) {
+    watchOnly = on;
+    writeWatch(on);
+    watchBtn.setAttribute('aria-pressed', String(on));
+    render();
+  }
+
   function setFilter(k) {
     filter = k;
     writeFilter(k);
@@ -104,12 +124,24 @@ export function homeView(root, params = {}) {
   }
 
   function render() {
-    const all = entries();
+    const everything = entries();
+    // "Only games I can watch": drop games on none of your services, favorites included.
+    const services = getSettings().services;
+    const all = watchOnly ? everything.filter((e) => !cantWatch(e.game, services)) : everything;
+    const hidden = everything.length - all.length;
+    const showHidden = () => h('button', { class: 'btn', type: 'button', onclick: () => setWatchOnly(false) }, 'Show them');
     renderChips(all);
     renderBanner();
     const pin = getSettings().pinFavorites !== false;
     const shown = all.filter((e) => filter === 'all' || e.game.league === filter);
     clear(listEl);
+    if (everything.length && !all.length) {
+      listEl.append(h('div', { class: 'empty' },
+        h('div', { class: 'big' }, 'No games you can watch'),
+        h('div', null, `${hidden} game${hidden === 1 ? " isn't" : "s aren't"} on your services.`),
+        h('div', { style: { marginTop: '14px' } }, showHidden())));
+      return;
+    }
     if (!all.length) {
       if (day.loading || !day.loadedOnce) listEl.append(skeletonList(6));
       else {
@@ -155,6 +187,10 @@ export function homeView(root, params = {}) {
     }
     if (!favs.length && !live.length && !others.length) {
       listEl.append(h('div', { class: 'empty' }, h('div', { class: 'big' }, `No ${LEAGUE_BY_KEY[filter]?.short || ''} games`), 'Pick another league or day.'));
+    }
+    if (hidden) {
+      listEl.append(h('div', { class: 'hidden-note' },
+        h('span', null, `${hidden} game${hidden === 1 ? '' : 's'} hidden: not on your services`), showHidden()));
     }
   }
 
