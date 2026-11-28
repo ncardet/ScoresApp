@@ -239,3 +239,40 @@ test('"Only games I can watch" screens out games on none of your services, and n
   assert.equal(cantWatch(g('epl', { name: 'Peacock' }), MY_SERVICES.filter((s) => s !== 'Peacock')), true, 'a service switched off in Settings');
   assert.equal(cantWatch(g('nfl', { name: 'YouTube' }), MY_SERVICES), false, 'free YouTube counts');
 });
+
+test('a finished game never goes back to live from an older summary', async () => {
+  const { summaryIsAhead, summaryFresh, stateRank } = await import('../site/js/core/freshness.js');
+  assert.ok(stateRank('pre') < stateRank('in') && stateRank('in') < stateRank('post'));
+  const ttl = { liveTtl: 55e3, finalTtl: 6 * 3600e3, otherTtl: 600e3 };
+  const liveCopy = { at: 1_000_000, detail: { game: { state: 'in', clock: '9.8' } } };
+  const finalGame = { state: 'post' };
+  // Heat at Knicks: the scoreboard says final, the saved summary is from 9.8 s left.
+  assert.equal(summaryFresh(liveCopy, finalGame, 1_000_000 + 5_000, ttl), false, 'a live copy of a finished game is refetched');
+  assert.equal(summaryIsAhead(finalGame, liveCopy.detail.game), false, 'and its status never replaces the final one');
+  // A summary that has already gone final moves a live game forward.
+  assert.equal(summaryIsAhead({ state: 'in' }, { state: 'post' }), true);
+  // Freshness follows the copy's own state.
+  assert.equal(summaryFresh(liveCopy, { state: 'in' }, 1_000_000 + 30_000, ttl), true);
+  assert.equal(summaryFresh(liveCopy, { state: 'in' }, 1_000_000 + 60_000, ttl), false, 'a live copy expires like a live one');
+  const finalCopy = { at: 1_000_000, detail: { game: { state: 'post' } } };
+  assert.equal(summaryFresh(finalCopy, finalGame, 1_000_000 + 3600e3, ttl), true);
+  assert.equal(summaryFresh(undefined, finalGame, 0, ttl), false);
+});
+
+test('logos and flags are requested at the size they are drawn; other images untouched', async () => {
+  const { sizedImage } = await import('../site/js/ui/dom.js');
+  assert.equal(sizedImage('https://a.espncdn.com/i/teamlogos/nba/500/mia.png', 80), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/mia.png&w=80&h=80');
+  assert.equal(sizedImage('https://a.espncdn.com/i/teamlogos/nba/500-dark/mia.png', 160), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500-dark/mia.png&w=160&h=160');
+  assert.equal(sizedImage('https://a.espncdn.com/i/teamlogos/countries/500/usa.png'), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/usa.png&w=80&h=80');
+  assert.equal(sizedImage('https://example.com/logo.png'), 'https://example.com/logo.png');
+  assert.equal(sizedImage('https://a.espncdn.com/combiner/i?img=/i/x.png&w=8&h=8'), 'https://a.espncdn.com/combiner/i?img=/i/x.png&w=8&h=8', 'already resized');
+  assert.equal(sizedImage(''), '');
+});
+
+test('offline-copy cleanup keeps the newest by save time without reading the copies', async () => {
+  const { pruneList } = await import('../site/js/adapters/espn/client.js');
+  const keys = ['http:a', 'http:b', 'http:c', 'http:old'];
+  const index = { 'http:a': 300, 'http:b': 100, 'http:c': 200 };
+  assert.deepEqual(pruneList(keys, index, 2).sort(), ['http:b', 'http:old'], 'unindexed copies count as oldest');
+  assert.deepEqual(pruneList(keys, index, 10), []);
+});

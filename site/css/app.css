@@ -29,7 +29,8 @@
   --mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-* { box-sizing: border-box; }
+/* Pseudo-elements too: the toggle knob and the reason bullets are sized with their borders included. */
+*, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
 body {
   margin: 0;
@@ -67,7 +68,6 @@ a.wordmark:visited { color: var(--on-wasabi); }
 .bar-btn { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: var(--on-wasabi); flex: none; position: relative; overflow: hidden; }
 .bar-btn svg { width: 25px; height: 25px; stroke-width: 2.3; }
 .bar-btn:active { background: color-mix(in srgb, var(--on-wasabi) 14%, transparent); }
-.bar-btn[aria-pressed="true"] { background: var(--on-wasabi); color: var(--wasabi); }
 .hidden-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 4px 6px; font-size: 14px; color: var(--text-2); }
 .bar-btn.spin svg { animation: spin 0.8s linear infinite; }
 .strip {

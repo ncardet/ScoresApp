@@ -44,6 +44,34 @@ Newest at the bottom of each section.
   with "Couldn't reach ESPN; showing data from 10:42am". Each day's list is snapshotted, so the app
   opens instantly. The service worker caches the app shell and team logos.
 
+## Live status and performance
+
+- **A game only moves forward** (scheduled → live → final; `site/js/core/freshness.js`).
+  - The scoreboard and a game's summary arrive at different times, and either can be the older one.
+  - A summary's status replaces the scoreboard's only when it's further along.
+  - A saved summary is judged by its own state, so a copy taken while live is refetched once the
+    scoreboard says the game has ended.
+  - Before this, a summary saved 9.8 s from the end counted as fresh for 6 hours, which kept Heat at
+    Knicks "LIVE" in Top Picks after the final and stopped it getting a final rating.
+- **Team logos and flags come from ESPN's image resizer** at about 3× their drawn size (`sizedImage`
+  in `site/js/ui/dom.js`):
+  - 80 px for row logos (drawn at about 18–26 px), 128 px for medium ones, 160 px for posters (about
+    48 px)
+  - The originals are 500×500 PNGs. On Today (61 games) logo data went from 5.6 MB to 0.5 MB, and
+    decoded image memory from about 120 MB to about 3 MB.
+  - If the resizer fails, the original is tried once before the placeholder.
+- **Offline copies only for game pages you open.** Background ratings fetch each live or finished
+  game's summary (about 44 KB compressed, 440 KB of JSON) but no longer write it to IndexedDB. That
+  was 59 copies, about 26 MB, per Today load.
+- **Cleanup works from an index.** It uses a small index of save times (`meta:http-saved`) instead of
+  loading every stored response 15 s after launch, and keeps 120 copies.
+- **Memory:** at most 12 parsed summaries are kept in memory (was 40).
+- **Today rebuilds a row only when what it shows changes** (state, clock, score, rating, watch label,
+  theme). While ratings arrive, that's about 120 row builds in the first 30 s instead of about 3,600,
+  and logos no longer blink.
+- **Every finished game is still rated in the background,** because the list's order depends on those
+  ratings.
+
 ## Ratings
 
 - **Per-play win probability from ESPN** for NFL, college football, NBA, both college basketball
@@ -444,6 +472,15 @@ page, Standings and Settings, in light and dark; `npm run screenshots <label>` r
 
   The rating badge leads each row and comes first on the game page's rating card. The day heading
   doubles as the date picker: the weekday large, the date under it.
+- **Bar icons:**
+  - **Refresh** is a clockwise arc ending in its arrowhead at the top right; the first version had the
+    arrowhead at the arc's start, pointing the wrong way.
+  - **"Only games I can watch"** shows its state in the icon: a blank TV when off, and when on "ON" in
+    the screen with light fanning out of it, instead of a dark circle behind the button.
+- **Switches:** `*, *::before, *::after { box-sizing: border-box }`. The plain `*` rule didn't reach
+  pseudo-elements, so the toggle knob (26 px plus its border) was 30 px tall in a 30 px track: it
+  overlapped the bottom and right edges and left a gap at the top. The reason bullets on the rating
+  sheet had the same overflow.
 - **Header:** the brand bar is wasabi with `--on-wasabi` text and icons. The title strip under it
   is an ink band, the inverse of the page: nori with rice-paper capitals in light mode, rice paper
   with nori capitals in dark mode (`--strip`, `--on-strip`).

@@ -42,7 +42,9 @@ export function teamColor(team, fallback = null) {
 
 /** Team logo inside a ring of the team's colour (like the avatars on Ball.app). */
 export function teamMark(team, size = '') {
-  return h('span', { class: `tlogo${size ? ` ${size}` : ''}`, style: { '--ring': teamColor(team) } }, logo(teamLogo(team), ''));
+  // Request each logo at about 3× its drawn size (rows ~18 px, lg ~40 px, posters ~48 px).
+  const px = size === 'xl' ? 160 : size === 'lg' ? 128 : 80;
+  return h('span', { class: `tlogo${size ? ` ${size}` : ''}`, style: { '--ring': teamColor(team) } }, logo(teamLogo(team), '', px));
 }
 
 /** Rating badge. `rating` may be null (unrated) and `pending` shows a spinner. */

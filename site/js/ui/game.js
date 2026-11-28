@@ -454,7 +454,7 @@ export function gameView(root, params) {
     const day = found.day || getDay(ptDateKey(new Date(game.start)));
     let detail = found.detail || null;
     try {
-      detail = await loadDetail(game, { force });
+      detail = await loadDetail(game, { force, persist: true });
       if (detail?.game) game = { ...game, ...detail.game, home: { ...game.home, ...detail.game.home }, away: { ...game.away, ...detail.game.away } };
       if (game.sport === 'racing') game = { ...found.game, ...game };
     } catch (e) {

@@ -3,7 +3,7 @@
 // and auto-refresh every ~45 s while a game is live and the app is visible.
 
 import { h, clear, fill, icon, sportIcon } from './dom.js';
-import { gameRow, sectionHeader, skeletonList, appHeader, barButton, picksCarousel } from './components.js';
+import { gameRow, sectionHeader, skeletonList, appHeader, barButton, picksCarousel, watchInfo } from './components.js';
 import {
   loadDay, getDay, subscribe, displayRating, rankScore, refreshLive, hasLive, dataStatus, prefetchPublishedRatings,
 } from '../app/store.js';
@@ -50,7 +50,7 @@ export function homeView(root, params = {}) {
     onchange: (e) => { if (isValidKey(e.target.value)) go(e.target.value); },
   });
   const refreshBtn = barButton('refresh', 'Refresh', () => refresh(true));
-  const watchBtn = barButton('tv', 'Only games I can watch', () => setWatchOnly(!watchOnly));
+  const watchBtn = barButton(watchOnly ? 'tvOn' : 'tv', 'Only games I can watch', () => setWatchOnly(!watchOnly));
   watchBtn.setAttribute('aria-pressed', String(watchOnly));
   watchBtn.title = 'Only games I can watch';
   const today = todayKey();
@@ -101,6 +101,8 @@ export function homeView(root, params = {}) {
     watchOnly = on;
     writeWatch(on);
     watchBtn.setAttribute('aria-pressed', String(on));
+    // The icon shows the state: a blank screen when off, ON with light coming off it when on.
+    fill(watchBtn, icon(on ? 'tvOn' : 'tv'));
     render();
   }
 
@@ -123,7 +125,35 @@ export function homeView(root, params = {}) {
     subEl.textContent = updating ? 'Updating…' : st.fetchedAt ? `Updated ${formatClock(st.fetchedAt)}` : '';
   }
 
+  // Rows are rebuilt only when what they show changes: ratings arrive one game at a time, and
+  // rebuilding every row (and its logos) on each one made the list flicker.
+  const rowCache = new Map();
+  let rowsUsed = new Set();
+  const rowSig = (e, showLeague) => {
+    const g = e.game;
+    const r = e.rating;
+    return [g.state, g.detail, g.clock, g.period, g.home?.score, g.away?.score, g.canceled, g.home?.winner, g.away?.winner,
+      r?.state, r?.value, r?.pred?.low, r?.pred?.high, r?.pred?.circle?.flagged, e.pending, e.fav, showLeague,
+      watchInfo(g).short, document.documentElement.dataset.theme].join('|');
+  };
+  function row(e, showLeague) {
+    const key = e.game.key;
+    const sig = rowSig(e, showLeague);
+    rowsUsed.add(key);
+    const hit = rowCache.get(key);
+    if (hit && hit.sig === sig) return hit.el;
+    const el = gameRow(e, { showLeague });
+    rowCache.set(key, { sig, el });
+    return el;
+  }
+
   function render() {
+    rowsUsed = new Set();
+    renderList();
+    for (const k of rowCache.keys()) if (!rowsUsed.has(k)) rowCache.delete(k);
+  }
+
+  function renderList() {
     const everything = entries();
     // "Only games I can watch": drop games on none of your services, favorites included.
     const services = getSettings().services;
@@ -171,19 +201,19 @@ export function homeView(root, params = {}) {
     if (favs.length) {
       favs.sort((a, b) => order(a.game) - order(b.game) || new Date(a.game.start) - new Date(b.game.start));
       listEl.append(sectionHeader('Favorites', `${favs.length} game${favs.length > 1 ? 's' : ''}`),
-        h('div', { class: 'card list' }, favs.map((e) => gameRow(e, { showLeague }))));
+        h('div', { class: 'card list' }, favs.map((e) => row(e, showLeague))));
     }
     if (live.length) {
       live.sort((a, b) => rankScore(day, b.game) - rankScore(day, a.game));
       listEl.append(sectionHeader('Live now', `${live.length}`, { live: true }),
-        h('div', { class: 'card list' }, live.map((e) => gameRow(e, { showLeague }))));
+        h('div', { class: 'card list' }, live.map((e) => row(e, showLeague))));
     }
     if (others.length) {
       others.sort((a, b) => rankScore(day, b.game) - rankScore(day, a.game) || new Date(a.game.start) - new Date(b.game.start));
       // The strip already says Results / Schedule, so the list heading doesn't repeat it.
       const title = past ? 'All results' : live.length || favs.length || picks.length >= 2 ? 'All games' : 'Games';
       listEl.append(sectionHeader(title, 'by watch priority'),
-        h('div', { class: 'card list' }, others.map((e) => gameRow(e, { showLeague }))));
+        h('div', { class: 'card list' }, others.map((e) => row(e, showLeague))));
     }
     if (!favs.length && !live.length && !others.length) {
       listEl.append(h('div', { class: 'empty' }, h('div', { class: 'big' }, `No ${LEAGUE_BY_KEY[filter]?.short || ''} games`), 'Pick another league or day.'));

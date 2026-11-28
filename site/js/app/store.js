@@ -15,9 +15,11 @@ import { kvGet, kvSet, kvKeys, kvDel } from '../core/kv.js';
 import { enabledLeagues, favoriteTeamIds, favoriteFor, getSettings } from '../core/settings.js';
 import { todayKey, addDays } from '../core/time.js';
 import { LEAGUE_BY_KEY } from '../core/leagues.js';
+import { summaryIsAhead, summaryFresh } from '../core/freshness.js';
 
 const LIVE_DETAIL_TTL = 55 * 1000;
 const DETAIL_CONCURRENCY = 4;
+const DETAIL_CACHE = 12;
 const SNAPSHOT_DAYS = 5;
 export const FAVORITE_BOOST = 5; // Watch Priority bonus (config/prediction.json priority.favorite)
 
@@ -211,8 +213,9 @@ async function rateFromDetail(day, key) {
   const r = day.ratings.get(key) || { predicted: null, current: null };
   const cal = await getCalibration(game.league);
   const rating = rate(detail, cal, { predicted: r.predicted });
-  // The summary can be newer than the scoreboard (game just ended): keep the fresher status.
-  if (detail.game?.state && detail.game.state !== game.state) day.games.set(key, { ...game, ...pickStatus(detail.game) });
+  // The summary can be ahead of the scoreboard (the game just ended), never behind it: a game only
+  // moves forward, so an older live copy can't put a finished game back on the clock.
+  if (summaryIsAhead(game, detail.game)) day.games.set(key, { ...game, ...pickStatus(detail.game) });
   if (rating) {
     r.current = rating.state === 'predicted' ? r.current : rating;
     if (rating.state === 'final') kvSet(finalKey(game), rating).catch(() => {});
@@ -227,15 +230,20 @@ function pickStatus(g) {
 }
 
 /** Load (or reuse) a game's detail. */
-export async function loadDetail(game, { force = false } = {}) {
+/**
+ * Load (or reuse) a game's summary. A saved copy is judged by its own state, and is never reused
+ * once the scoreboard is past it (a copy taken while live, for a game that has ended).
+ * `persist` keeps an offline copy: only for the game page you open, not background ratings.
+ */
+export async function loadDetail(game, { force = false, persist = false } = {}) {
   const cached = details.get(game.key);
-  const ttl = game.state === 'in' ? LIVE_DETAIL_TTL : game.state === 'post' ? 6 * 3600e3 : 10 * 60e3;
-  if (!force && cached && Date.now() - cached.at < ttl) return cached.detail;
+  if (!force && summaryFresh(cached, game, Date.now(), { liveTtl: LIVE_DETAIL_TTL, finalTtl: 6 * 3600e3, otherTtl: 10 * 60e3 })) return cached.detail;
   const a = ADAPTERS[game.league];
-  const detail = await a.summary(game, { persist: true });
+  const detail = await a.summary(game, { persist });
+  details.delete(game.key);
   details.set(game.key, { detail, at: Date.now() });
-  // Keep the in-memory detail cache small.
-  if (details.size > 40) details.delete(details.keys().next().value);
+  // Parsed summaries are large (1-3 MB each): keep only the most recent few in memory.
+  while (details.size > DETAIL_CACHE) details.delete(details.keys().next().value);
   return detail;
 }
 

@@ -72,6 +72,7 @@ export async function getJson(url, { timeout = 12000, retries = 1, persist = fal
       markOk();
       if (persist) {
         kvSet(`http:${url}`, { at: Date.now(), json }).catch(() => {});
+        noteSaved(`http:${url}`);
       }
       return { json, at: Date.now(), stale: false };
     } catch (err) {
@@ -95,13 +96,44 @@ export async function json(url, opts) {
   return (await getJson(url, opts)).json;
 }
 
+// When each offline copy was saved, in one small record, so cleanup never has to load the copies
+// themselves (game summaries are ~440 KB each).
+const INDEX_KEY = 'meta:http-saved';
+let savedIndex = null;
+let indexTimer = null;
+
+async function loadIndex() {
+  savedIndex ??= (await kvGet(INDEX_KEY).catch(() => null)) || {};
+  return savedIndex;
+}
+
+function noteSaved(key) {
+  loadIndex().then((idx) => {
+    idx[key] = Date.now();
+    clearTimeout(indexTimer);
+    indexTimer = setTimeout(() => kvSet(INDEX_KEY, idx).catch(() => {}), 2000);
+  }).catch(() => {});
+}
+
+/**
+ * Which saved copies to delete: everything beyond the newest `keep`, by save time. Copies missing
+ * from the index (saved before it existed) count as oldest.
+ */
+export function pruneList(keys, index, keep) {
+  if (keys.length <= keep) return [];
+  return [...keys].sort((a, b) => (index[b] || 0) - (index[a] || 0)).slice(keep);
+}
+
 /** Drop persisted responses beyond the newest `keep` (called occasionally by the app). */
-export async function prunePersisted(keep = 160) {
+export async function prunePersisted(keep = 120) {
   const keys = await kvKeys('http:');
-  if (keys.length <= keep) return;
-  const entries = await Promise.all(keys.map(async (k) => [k, (await kvGet(k))?.at || 0]));
-  entries.sort((a, b) => b[1] - a[1]);
-  await Promise.all(entries.slice(keep).map(([k]) => kvDel(k)));
+  const idx = await loadIndex();
+  const drop = pruneList(keys, idx, keep);
+  if (!drop.length) return;
+  await Promise.all(drop.map((k) => kvDel(k)));
+  for (const k of drop) delete idx[k];
+  for (const k of Object.keys(idx)) if (!keys.includes(k)) delete idx[k];
+  await kvSet(INDEX_KEY, idx).catch(() => {});
 }
 
 /** Run async tasks with a concurrency limit, preserving order of results. */
