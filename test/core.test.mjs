@@ -276,3 +276,20 @@ test('offline-copy cleanup keeps the newest by save time without reading the cop
   assert.deepEqual(pruneList(keys, index, 2).sort(), ['http:b', 'http:old'], 'unindexed copies count as oldest');
   assert.deepEqual(pruneList(keys, index, 10), []);
 });
+
+test('"All games" by game time: coming up soonest first, finished games after in start order', async () => {
+  const { byGameTime } = await import('../site/js/core/order.js');
+  const e = (id, state, start, canceled = false) => ({ game: { key: id, state, start, canceled } });
+  const games = [
+    e('final-early', 'post', '2026-11-28T17:00:00Z'),
+    e('late', 'pre', '2026-11-29T03:30:00Z'),
+    e('soon', 'pre', '2026-11-28T23:00:00Z'),
+    e('called-off', 'post', '2026-11-28T16:00:00Z', true),
+    e('final-late', 'post', '2026-11-28T20:00:00Z'),
+    e('sooner', 'pre', '2026-11-28T22:00:00Z'),
+  ];
+  assert.deepEqual([...games].sort(byGameTime).map((x) => x.game.key), ['sooner', 'soon', 'late', 'called-off', 'final-early', 'final-late']);
+  // A past day (all finished): plain start order.
+  const past = [e('b', 'post', '2026-11-27T20:00:00Z'), e('a', 'post', '2026-11-27T17:00:00Z')];
+  assert.deepEqual(past.sort(byGameTime).map((x) => x.game.key), ['a', 'b']);
+});

@@ -381,6 +381,9 @@ table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; font-varian
 .seg { display: flex; background: var(--surface); border: var(--stroke-sm) solid var(--text); border-radius: 999px; padding: 3px; margin: 0 0 12px; gap: 3px; }
 .seg button { flex: 1; padding: 8px 8px 7px; border-radius: 999px; font: 800 15px/1 var(--font-cond); text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); }
 .seg button[aria-pressed="true"] { background: var(--wasabi); color: var(--on-wasabi); }
+/* Compact pill in a section header (Today's "All games": Priority | Time). */
+.seg.mini { margin: 0; padding: 2px; gap: 2px; flex: none; align-self: center; }
+.seg.mini button { flex: none; padding: 6px 10px 5px; font-size: 13px; letter-spacing: 0.06em; }
 /* In a settings row (Appearance), the control gets its own full-width line under the label. */
 .set-row:has(> .seg) { flex-wrap: wrap; row-gap: 10px; }
 .set-row > .seg { flex: 1 1 100%; margin: 0; }

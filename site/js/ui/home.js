@@ -11,9 +11,11 @@ import { todayKey, addDays, dayLabel, longDayLabel, formatClock, isValidKey } fr
 import { LEAGUE_BY_KEY, LEAGUES } from '../core/leagues.js';
 import { favoriteFor, getSettings } from '../core/settings.js';
 import { cantWatch } from '../core/watch.js';
+import { byGameTime } from '../core/order.js';
 
 const FILTER_KEY = 'sideline.filter';
 const WATCH_KEY = 'sideline.watchable';
+const SORT_KEY = 'sideline.sort';
 const REFRESH_MS = 45 * 1000;
 
 function readFilter() {
@@ -29,6 +31,13 @@ function readWatch() {
 function writeWatch(on) {
   try { localStorage.setItem(WATCH_KEY, on ? '1' : '0'); } catch { /* ignore */ }
 }
+// "All games" order: 'priority' (Watch Priority) or 'time' (coming up soonest first).
+function readSort() {
+  try { return localStorage.getItem(SORT_KEY) === 'time' ? 'time' : 'priority'; } catch { return 'priority'; }
+}
+function writeSort(v) {
+  try { localStorage.setItem(SORT_KEY, v); } catch { /* ignore */ }
+}
 
 const order = (g) => (g.state === 'in' ? 0 : g.state === 'pre' ? 1 : 2);
 
@@ -36,6 +45,7 @@ export function homeView(root, params = {}) {
   const dateKey = isValidKey(params.date) ? params.date : todayKey();
   let filter = readFilter();
   let watchOnly = readWatch();
+  let sortBy = readSort();
   const day = getDay(dateKey);
   const listEl = h('div', { class: 'home-list' });
   const chipsEl = h('div', { class: 'chips', role: 'toolbar', 'aria-label': 'Leagues' });
@@ -104,6 +114,23 @@ export function homeView(root, params = {}) {
     // The icon shows the state: a blank screen when off, ON with light coming off it when on.
     fill(watchBtn, icon(on ? 'tvOn' : 'tv'));
     render();
+  }
+
+  function setSort(v) {
+    sortBy = v;
+    writeSort(v);
+    render();
+  }
+
+  /** The "All games" order switch: Priority | Time (remembered on the phone). */
+  function sortSwitch() {
+    const opt = (v, label, title) => h('button', {
+      type: 'button', 'aria-pressed': String(sortBy === v), title,
+      onclick: () => { if (sortBy !== v) setSort(v); },
+    }, label);
+    return h('div', { class: 'seg mini', role: 'group', 'aria-label': 'Order of all games' },
+      opt('priority', 'Priority', 'By watch priority'),
+      opt('time', 'Time', 'By game time: coming up soonest first'));
   }
 
   function setFilter(k) {
@@ -209,10 +236,12 @@ export function homeView(root, params = {}) {
         h('div', { class: 'card list' }, live.map((e) => row(e, showLeague))));
     }
     if (others.length) {
-      others.sort((a, b) => rankScore(day, b.game) - rankScore(day, a.game) || new Date(a.game.start) - new Date(b.game.start));
+      // Watch Priority (rating + favorites + star power), or game time: coming up soonest first.
+      if (sortBy === 'time') others.sort(byGameTime);
+      else others.sort((a, b) => rankScore(day, b.game) - rankScore(day, a.game) || new Date(a.game.start) - new Date(b.game.start));
       // The strip already says Results / Schedule, so the list heading doesn't repeat it.
       const title = past ? 'All results' : live.length || favs.length || picks.length >= 2 ? 'All games' : 'Games';
-      listEl.append(sectionHeader(title, 'by watch priority'),
+      listEl.append(sectionHeader(title, sortSwitch()),
         h('div', { class: 'card list' }, others.map((e) => row(e, showLeague))));
     }
     if (!favs.length && !live.length && !others.length) {

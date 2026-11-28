@@ -269,6 +269,13 @@ Newest at the bottom of each section.
   - Games with no TV listing at all stay visible, since we can't tell.
   - A line at the end of the list says how many are hidden, with "Show them".
   - It's remembered on the phone (`sideline.watchable`) and works on any day.
+- **"All games" order** (the Priority | Time pill in its heading; `byGameTime` in
+  `site/js/core/order.js`):
+  - **Priority:** Watch Priority, as before.
+  - **Time:** games still to come first, soonest at the top, then finished and cancelled games in
+    start order.
+  - Top Picks, Favorites (already in time order) and Live now (by excitement) don't change.
+  - The choice is remembered on the phone (`sideline.sort`).
 - **What my services cover** (Settings, read-only) is generated from `config/services.js`:
   - `LEAGUE_CARRIERS` lists the networks each league's games usually air on (2026 rights).
   - The panel maps them to your services. Networks none of your services carry are listed as missing

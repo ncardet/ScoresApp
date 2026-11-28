@@ -233,10 +233,11 @@ export function gameRow(entry, { showLeague = false, onOpen } = {}) {
   );
 }
 
+/** Section heading with a small grey label on the right, or a control (an element) in its place. */
 export function sectionHeader(title, meta, { live = false } = {}) {
   return h('div', { class: 'section-h' },
     h('h2', null, live ? h('span', { class: 'live-dot', 'aria-hidden': 'true' }) : null, title),
-    meta ? h('span', { class: 'meta' }, meta) : null);
+    meta instanceof Node ? meta : meta ? h('span', { class: 'meta' }, meta) : null);
 }
 
 export function skeletonList(n = 5) {

@@ -5,7 +5,8 @@ as an installable PWA for iPhone. Free to run: GitHub Pages for hosting, GitHub 
 morning-brief feed, and free data sources (ESPN's public site API, plus OpenF1 for F1).
 
 - **Today:** your favorites pinned on top, then **Live now** ranked by current excitement, then every
-  other game ranked by rating. Shows times (Pacific), scores, ratings and where to watch on your
+  other game ranked by rating, or by start time with the **Priority | Time** switch (soonest first,
+  finished games after). Shows times (Pacific), scores, ratings and where to watch on your
   services. League chips, a date picker, pull-to-refresh, and auto-refresh while games are live. The
   TV button in the top bar hides the games none of your services carry ("Only games I can watch").
 - **Game page:** score header; rating with a tap-to-explain sheet; excitement curve; win probability;
